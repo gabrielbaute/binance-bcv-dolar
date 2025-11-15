@@ -2,7 +2,8 @@ import requests
 import logging
 from statistics import median
 from typing import List, Optional
-from app.schemas import BinanceRequest
+
+from app.schemas import BinanceRequest, BinanceResponse
    
 class BinanceP2P:
     def __init__(self):
@@ -67,6 +68,8 @@ class BinanceP2P:
             tradeType=trade_type,
             asset=asset
         )
+        if rows > 20:
+            raise ValueError("Rows must be less than or equal to 20")
         return req
 
     def do_request(self, req: BinanceRequest) -> dict:
@@ -109,7 +112,13 @@ class BinanceP2P:
             print("Respuesta de Binance sin datos válidos:", data)
             return None
     
-    def get_pair(self, fiat: str = "VES", asset: str = "USDT", trade_type: str = "BUY", rows: int = 20) -> Optional[float]:
+    def get_pair(
+            self, 
+            fiat: str = "VES", 
+            asset: str = "USDT", 
+            trade_type: str = "BUY", 
+            rows: int = 20
+        ) -> Optional[BinanceResponse]:
         """
         Get the pair.
 
@@ -120,24 +129,29 @@ class BinanceP2P:
             rows (int, optional): Number of rows per page. Defaults to 20, max 20.
 
         Returns:
-            Optional[float]: Pair.
+            Optional[BinanceResponse]: BinanceResponse object.
         """
         body = self.build_request(fiat=fiat, page=1, rows=rows, trade_type=trade_type, asset=asset)
         data = self.do_request(body)
         if not data:
             return None
         precios = self.colect_prices(data)
-        return self.calculate_average_price(precios)
+        pair = BinanceResponse(
+            fiat=fiat,
+            asset=asset,
+            trade_type=trade_type,
+            prices=precios,
+            average_price=self.calculate_average_price(precios),
+            median_price=self.calculate_median_price(precios)
+        )
+        return pair
 
-    def get_usdt_ves_pair(self) -> float:
+    def get_usdt_ves_pair(self) -> BinanceResponse:
         """
         Get the USDT/VES pair.
 
         Returns:
-            float: USDT/VES pair.
+            BinanceResponse: USDT/VES pair data.
         """
-        body = self.build_request(fiat="VES", page=1, rows=20, trade_type="BUY", asset="USDT")
-        data = self.do_request(body)
-        precios = self.colect_prices(data)
-        promedio = self.calculate_average_price(precios)
-        return promedio
+        return self.get_pair(fiat="VES", asset="USDT", trade_type="BUY", rows=20)
+        
