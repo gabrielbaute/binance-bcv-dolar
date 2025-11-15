@@ -1,0 +1,1 @@
+from app.enums.currecies_enum import Currency
