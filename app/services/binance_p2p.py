@@ -1,44 +1,17 @@
 import requests
 import logging
-from statistics import median
+from statistics import median, mean
 from typing import List, Optional
 
 from app.schemas import BinanceRequest, BinanceResponse
    
 class BinanceP2P:
+    """
+    Binance P2P Client.
+    """
     def __init__(self):
         self.url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
         self.logger = logging.getLogger(f"[{self.__class__.__name__}]")
-
-
-    def calculate_median_price(self, prices: List[float]) -> Optional[float]:
-        """
-        Calculate the median price.
-
-        Args:
-            prices (List[float]): List of prices.
-
-        Returns:
-            Optional[float]: Median price.
-        """
-        if prices:
-            return median(prices)
-        return None
-
-    def calculate_average_price(self, prices: List[float]) -> float:
-        """
-        Calculate the average price.
-
-        Args:
-            prices (List[float]): List of prices.
-
-        Returns:
-            float: Average price.
-        """
-        if prices:
-            return sum(prices) / len(prices)
-        else:
-            return None
 
     def build_request(
             self, 
@@ -141,8 +114,8 @@ class BinanceP2P:
             asset=asset,
             trade_type=trade_type,
             prices=precios,
-            average_price=self.calculate_average_price(precios),
-            median_price=self.calculate_median_price(precios)
+            average_price=mean(precios),
+            median_price=median(precios)
         )
         return pair
 
