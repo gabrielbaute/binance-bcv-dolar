@@ -1,3 +1,4 @@
+"""Binance P2P module."""
 import requests
 import logging
 from statistics import median, mean
@@ -11,7 +12,7 @@ class BinanceP2P:
     """
     def __init__(self):
         self.url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
-        self.logger = logging.getLogger(f"[{self.__class__.__name__}]")
+        self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
     def build_request(
             self, 
@@ -82,7 +83,7 @@ class BinanceP2P:
             self.logger.info(f"Obteniendo {len(precios)} precios de Binance P2P")
             return precios
         else:
-            print("Respuesta de Binance sin datos válidos:", data)
+            self.logger.error("Respuesta de Binance sin datos válidos:", data)
             return None
     
     def get_pair(
