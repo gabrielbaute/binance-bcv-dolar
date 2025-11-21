@@ -16,7 +16,7 @@ class BinanceResponse(BaseModel):
     fiat: str
     asset: str
     trade_type: str
-    prices: List[float]
+    prices: Optional[List[float]] = None
     average_price: Optional[float] = None
     median_price: Optional[float] = None
 
