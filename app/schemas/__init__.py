@@ -3,6 +3,8 @@ from app.schemas.binance_response_schemas import BinanceResponse
 from app.schemas.bcv_response_schemas import BCVResponse, BCVCurrencyResponse
 from app.schemas.dolar_response import DolarResponse
 from app.schemas.fiats_pair_response import FiatPairResponse
+from app.schemas.history_response_schemas import BCVHistoryResponse, BinanceHistoryResponse, BCVHistoryItem, BinanceHistoryItem
+
 
 __all__ = [
     "BinanceRequest",
@@ -10,5 +12,9 @@ __all__ = [
     "BCVResponse",
     "BCVCurrencyResponse",
     "DolarResponse",
-    "FiatPairResponse"
+    "FiatPairResponse",
+    "BCVHistoryResponse",
+    "BinanceHistoryResponse",
+    "BCVHistoryItem",
+    "BinanceHistoryItem"
 ]
