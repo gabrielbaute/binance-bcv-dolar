@@ -58,12 +58,12 @@ class BinanceP2P:
         """
         body = req.model_dump()
         try:
-            self.logger.info("Consultando Binance P2P")
+            self.logger.info("Request Binance P2P")
             res = requests.post(self.url, json=body, headers={"accept": "application/json"})
             json_data = res.json()
             return json_data
         except Exception as e:
-            self.logger.error(f"Error consultando Binance P2P: {e}")
+            self.logger.error(f"Error at Binance P2P request: {e}")
             return None
 
     def colect_prices(self, data: dict) -> List[float]:
@@ -80,10 +80,10 @@ class BinanceP2P:
             precios = []
             for adv in data["data"]:
                 precios.append(float(adv["adv"]["price"]))
-            self.logger.info(f"Obteniendo {len(precios)} precios de Binance P2P")
+            self.logger.info(f"Getting prices: {len(precios)}")
             return precios
         else:
-            self.logger.error("Respuesta de Binance sin datos válidos:", data)
+            self.logger.error("Binance response error:", data)
             return None
     
     def get_pair(
