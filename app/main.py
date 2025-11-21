@@ -1,20 +1,22 @@
 import uvicorn
 from fastapi import FastAPI
 
-from app.config import Config
+from app.config import Config, setup_logging
 from app.api.include_routers import include_routers
 from app.scheduler.dolar_scheduler import DolarScheduler
 from app.database.db_config import init_db
 
+setup_logging()
+
 app = FastAPI(title="P2P Exchange Rate API")
 
-# Registrar rutas
+# Register routers
 include_routers(app)
 
-# Inicializar DB
+# Init database
 init_db()
 
-# Iniciar scheduler en el evento startup
+# Init scheduler 
 @app.on_event("startup")
 def startup_event():
     scheduler = DolarScheduler()
