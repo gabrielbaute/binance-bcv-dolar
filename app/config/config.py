@@ -2,6 +2,7 @@
 General configuration for the app.
 """
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,11 +12,12 @@ class Config:
     Config class for environtment variables.
     """
     # Directory and path config
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    INSTANCE_DIR = os.getenv("INSTANCE_DIR", os.path.join(BASE_DIR, "..", "instance"))
+    BASE_DIR = Path(__file__).resolve().parent
+    INSTANCE_DIR = Path(os.getenv("INSTANCE_DIR", BASE_DIR / ".." / "instance"))
+    
     
     # Logging config
-    LOG_DIR = os.getenv("LOG_DIR", os.path.join(BASE_DIR, "logs"))
+    LOG_DIR = Path(os.getenv("LOG_DIR", BASE_DIR / "logs"))
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
     
     # API config
