@@ -19,3 +19,15 @@ class BinanceResponse(BaseModel):
     prices: List[float]
     average_price: Optional[float] = None
     median_price: Optional[float] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "fiat": "VES",
+                "asset": "USDT",
+                "trade_type": "BUY",
+                "prices": [345.50, 346.20, 347.00, 348.10, 349.00],
+                "average_price": 347.16,
+                "median_price": 347.00
+            }
+        }
