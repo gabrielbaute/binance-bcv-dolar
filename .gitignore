@@ -12,3 +12,7 @@ __pycache__/
 # logs
 logs/
 .log
+
+# Database
+instance/
+*.db
