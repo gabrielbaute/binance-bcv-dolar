@@ -1,117 +1,127 @@
-# BnB-BCV: Venezuelan Currency Exchange Rate Scraper
+# BnB-BCV: API Abierta para Tasas de Cambio en Venezuela
 
-![Work in Progress](https://img.shields.io/badge/status-work%20in%20progress-yellow)
-
----
-
-### ⚠️ Under Heavy Development
-
-This project is currently in a very active development phase. APIs, schemas, and functionalities are subject to change without notice. It is not yet recommended for production use.
+![Estado](https://img.shields.io/badge/status-en%20desarrollo-yellow)
+![Licencia](https://img.shields.io/badge/license-GPLv3-blue)
 
 ---
 
-## About The Project
+### ⚠️ Proyecto en Desarrollo Activo
 
-This project was born out of the need for reliable, open-source information regarding the Venezuelan currency exchange market, which is often plagued by speculation and non-transparent sources. Our goal is to provide developers and the general public with direct, unadulterated data from verifiable sources.
+Este proyecto se encuentra en una fase de desarrollo muy activa. Las APIs, esquemas y funcionalidades pueden cambiar sin previo aviso. Aunque ya es funcional, aún no se recomienda para entornos críticos de producción.
 
-We aim to offer a clear and trustworthy alternative to privatized and often speculative currency information providers, empowering the community with tools for better financial awareness.
+---
 
-## Core Features
+## 📌 Acerca del Proyecto
 
-- **Central Bank of Venezuela (BCV):** Scrapes the official USD, EUR, and other currency exchange rates directly from the BCV website.
-- **Binance P2P:** Queries peer-to-peer exchange rates for various currency pairs against USDT (USD Theter), providing a real-world market value.
+BnB-BCV nace de la necesidad de contar con información **confiable y abierta** sobre el mercado cambiario venezolano, un espacio frecuentemente afectado por especulación y fuentes poco transparentes.  
 
-## Getting Started
+Nuestro objetivo es ofrecer a desarrolladores, investigadores y al público en general datos directos y verificables, sin manipulación, para fomentar una mayor conciencia financiera y reducir la dependencia de proveedores privados.
 
-### Prerequisites
+---
 
-- Python 3.8+
+## 🚀 Funcionalidades Principales
 
-### Installation
+- **Banco Central de Venezuela (BCV):** Obtiene las tasas oficiales de USD, EUR y otras monedas directamente desde el portal del BCV.  
+- **Binance P2P:** Consulta las tasas de intercambio peer-to-peer contra USDT, reflejando el valor real de mercado.  
+- **API REST con FastAPI:** Documentada automáticamente en `/docs` con OpenAPI/Swagger.  
+- **SQLite + Docker:** Persistencia ligera y despliegue reproducible en contenedores.  
+- **Healthcheck:** Endpoint `/health` para monitoreo y despliegues en producción.  
 
-1.  **Clone the repository:**
-    ```sh
-    git clone https://github.com/your_username/bnb-bcv.git
-    cd bnb-bcv
-    ```
+---
 
-2.  **Create and activate a virtual environment:**
-    ```sh
-    # For Windows
-    python -m venv venv
-    .\venv\Scripts\activate
+## 🛠️ Instalación y Uso
 
-    # For macOS/Linux
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
+### Prerrequisitos
+- Python 3.11+
+- Docker y Docker Compose (para despliegue recomendado)
 
-3.  **Install the required dependencies:**
-    ```sh
-    pip install -r requirements.txt
-    ```
+### Instalación local
 
-## Usage
+1. Clonar el repositorio:
+   ```sh
+   git clone https://github.com/tu_usuario/bnb-bcv.git
+   cd bnb-bcv
+   ```
 
-The core functionalities are provided as services. Here's a basic example of how to use them:
+2. Crear entorno virtual:
+   ```sh
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. Instalar dependencias:
+   ```sh
+   pip install -r requirements.txt
+   ```
+
+4. Ejecutar la API:
+   ```sh
+   uvicorn app.main:app --reload
+   ```
+
+### Despliegue con Docker
+
+1. Construir y levantar servicios:
+   ```sh
+   docker compose up -d --build
+   ```
+
+2. Acceder a la documentación interactiva:
+   ```
+   http://localhost:8000/docs
+   ```
+
+---
+
+## 📊 Ejemplo de Uso
 
 ```python
-import asyncio
 from app.services.bcv_scrapper import BCVScraper
 from app.services.binance_p2p import BinanceP2P
 
-async def main():
-    # --- Get Official BCV Rates ---
-    print("Fetching data from BCV...")
-    bcv_scraper = BCVScraper()
-    all_rates = bcv_scraper.get_all_exchange_rates()
-    if all_rates.dolar:
-        print(f"Official BCV Rate (USD): {all_rates.dolar.rate:.2f} VEF")
-    if all_rates.euro:
-        print(f"Official BCV Rate (EUR): {all_rates.euro.rate:.2f} VEF")
+# Obtener tasas oficiales del BCV
+bcv_scraper = BCVScraper()
+rates = bcv_scraper.get_all_exchange_rates()
+print(f"Tasa oficial USD: {rates.dolar.rate:.2f} VES")
 
-    print("-" * 20)
-
-    # --- Get Binance P2P Rate for USDT/VEF ---
-    print("\nFetching data from Binance P2P...")
-    binance_p2p = BinanceP2P()
-    # Get the buy rate for USDT with VEF
-    usdt_ves_pair = binance_p2p.get_pair(fiat="VES", asset="USDT", trade_type="BUY", rows=10)
-    
-    if usdt_ves_pair and usdt_ves_pair.prices:
-        print(f"Binance P2P (USDT/VEF) Average Price: {usdt_ves_pair.average_price:.2f} VEF")
-        print(f"Binance P2P (USDT/VEF) Median Price: {usdt_ves_pair.median_price:.2f} VEF")
-
-if __name__ == "__main__":
-    # Note: The BinanceP2P service uses `requests` which is synchronous.
-    # For this example, we run the main function directly.
-    # If you integrate this into an async application, ensure to handle blocking calls appropriately.
-    asyncio.run(main())
+# Obtener tasas P2P de Binance
+binance_p2p = BinanceP2P()
+pair = binance_p2p.get_pair(fiat="VES", asset="USDT", trade_type="BUY", rows=10)
+print(f"Precio promedio USDT/VES: {pair.average_price:.2f}")
 ```
 
-## Roadmap
+---
 
-We have a number of features and improvements planned for the future. Here's what's on our radar:
+## 📅 Roadmap
 
-- [ ] **Database Support:** Persist historical data for trend analysis.
-- [ ] **Automation:** Implement scheduled jobs to fetch data automatically.
-- [ ] **Web Interface:** Create a user-friendly web GUI to display the data.
-- [ ] **Telegram Bot:** A bot to query current rates on the go.
-- [ ] **Historical Charts:** Generate and display charts for currency performance over time.
-- [ ] **Public API:** Expose the data through a well-documented public API.
+- [x] Persistencia histórica para análisis de tendencias  
+- [x] Automatización con jobs programados  
+- [ ] Interfaz web amigable  
+- [ ] Bot de Telegram para consultas rápidas  
+- [ ] Gráficas históricas de desempeño  
+- [x] API pública estable y documentada  (casi)
 
-## Contributing
+---
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+## 🤝 Contribuir
 
-Since the project is in its early stages, the best way to contribute right now is by opening an issue to discuss a feature you\'d like to add or a bug you\'ve found.
+Las contribuciones son bienvenidas. Puedes:  
+1. Hacer un fork del proyecto  
+2. Crear tu rama de feature (`git checkout -b feature/NuevaFeature`)  
+3. Commit de tus cambios (`git commit -m 'Agrega nueva feature'`)  
+4. Push a tu rama (`git push origin feature/NuevaFeature`)  
+5. Abrir un Pull Request  
 
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+También puedes abrir un **issue** para reportar errores o proponer mejoras.
 
-## License
+---
 
-This project is not yet licensed. An open-source license will be added as the project matures.
+## 📜 Licencia
+
+Este proyecto está licenciado bajo la **GNU General Public License v3.0 (GPLv3)**.  
+Esto significa que:  
+- Puedes usarlo y modificarlo libremente, incluso con fines comerciales.  
+- Cualquier distribución derivada debe mantenerse bajo licencia GPLv3.  
+- Se garantiza que el código permanezca abierto y accesible para la comunidad.  
+
+Consulta el archivo [LICENSE](LICENSE) para más detalles.
