@@ -14,7 +14,7 @@ class BCVScraper:
 
     def __init__(self):
         self.url = "https://www.bcv.org.ve"
-        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        self.logger = logging.getLogger(self.__class__.__name__)
         self._soup = self._get_soup()
 
     def _get_soup(self) -> Optional[BeautifulSoup]:

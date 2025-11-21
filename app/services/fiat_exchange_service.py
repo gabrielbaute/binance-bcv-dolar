@@ -12,7 +12,7 @@ class FiatExchengeService():
     Service for getting fiat exchange rates.
     """
     def __init__(self):
-        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.binance = BinanceP2P()
 
     def get_usdt_pair(self, fiat: str = "VES", trade_type: str = "BUY") -> BinanceResponse:

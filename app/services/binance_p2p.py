@@ -12,7 +12,7 @@ class BinanceP2P:
     """
     def __init__(self):
         self.url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
-        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def build_request(
             self, 
