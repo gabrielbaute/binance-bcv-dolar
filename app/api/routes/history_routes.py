@@ -14,6 +14,9 @@ def history_bcv(
     end_date: Optional[datetime] = Query(None, description="Fecha final (YYYY-MM-DD)"),
     currency: Optional[str] = Query(None, description="Moneda a consultar, ej: USD, EUR")
 ):
+    """
+    Returns the historic price of the selected currency.
+    """
     return controller.get_bcv_history(start_date=start_date, end_date=end_date, currency=currency)
 
 @router.get("/binance", response_model=BinanceHistoryResponse, summary="Histórico de tasas Binance")
@@ -24,6 +27,9 @@ def history_binance(
     asset: Optional[str] = Query(None, description="Cripto a consultar, ej: USDT"),
     trade_type: Optional[str] = Query(None, description="Tipo de operación: BUY o SELL")
 ):
+    """
+    Returns the historic price of the VES/USDT pair.
+    """
     return controller.get_binance_history(
         start_date=start_date,
         end_date=end_date,
