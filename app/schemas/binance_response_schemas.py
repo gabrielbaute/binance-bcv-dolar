@@ -1,4 +1,4 @@
-from typing import List, Optional, Any
+from typing import List, Optional
 from pydantic import BaseModel
 
 class BinanceResponse(BaseModel):
@@ -8,6 +8,7 @@ class BinanceResponse(BaseModel):
     Keyword arguments:
         fiat (str): Fiat currency.
         asset (str): Asset (USDT, BTC, etc).
+        trade_type (str): Trade type (BUY or SELL).
         prices (List[float]): List of prices.
         average_price (Optional[float]): Average price.
         median_price (Optional[float]): Median price.

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel
 
-from app.schemas.bcv_response_schema import BCVCurrencyResponse
+from app.schemas.bcv_response_schemas import BCVCurrencyResponse
 from app.schemas.binance_response_schemas import BinanceResponse
 
 class DolarResponse(BaseModel):
