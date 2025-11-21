@@ -15,7 +15,11 @@ Este proyecto se encuentra en una fase de desarrollo muy activa. Las APIs, esque
 
 BnB-BCV nace de la necesidad de contar con información **confiable y abierta** sobre el mercado cambiario venezolano, un espacio frecuentemente afectado por especulación y fuentes poco transparentes.  
 
-Nuestro objetivo es ofrecer a desarrolladores, investigadores y al público en general datos directos y verificables, sin manipulación, para fomentar una mayor conciencia financiera y reducir la dependencia de proveedores privados.
+Nuestro objetivo es ofrecer a desarrolladores, investigadores y al público en general datos directos y verificables, sin manipulación, para fomentar una mayor conciencia financiera.
+
+### 🙏🏾 Reconocimientos
+
+Debemos agradecer al usuario @DevOpsLP, quien publicó primero un script en .gs que sirvió de base para construir el proyecto, pueden consultar su repositorio aquí: https://github.com/DevOpsLP/bcv-binance-google-sheet/tree/main (y si pueden, denle estrellita, se la merece). De no ser por haberme topado con un post suyo en reddit, no habría pensado que era posible usar la API de Binance para obtener el precio del P2P.
 
 ---
 
@@ -70,7 +74,10 @@ Nuestro objetivo es ofrecer a desarrolladores, investigadores y al público en g
    ```
    http://localhost:8000/docs
    ```
-
+   No olviden darle permisos al usuario de docker para poder escribir en los directorios de la app. Pueden hacerlo así:
+   ```sh
+   sudo chown -R 1000:1000 ./logs ./instance
+   ```
 ---
 
 ## 📊 Ejemplo de Uso
