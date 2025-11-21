@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 from sqlalchemy.orm import Session
 
+from app.enums.currecies_enum import Currency
 from app.database.db_config import SessionLocal
 from app.database.models.bcv_sql_model import BCVRate
 from app.database.models.binance_sql_model import BinanceRate
@@ -76,22 +77,38 @@ class HistoryDataController:
         )
         self._commit_or_rollback(session, record)
 
-    def get_bcv_history(self):
+    def get_bcv_history(self, start_date=None, end_date=None, currency=None):
         """
         Get all BCV rates history.
         """
-        session: Session = SessionLocal()
-        try:
-            return session.query(BCVRate).all()
-        finally:
-            session.close()
+        session = SessionLocal()
+        query = session.query(BCVRate)
+        if currency:
+            query = query.filter(BCVRate.currency == currency)
+        if start_date:
+            query = query.filter(BCVRate.date >= start_date)
+        if end_date:
+            query = query.filter(BCVRate.date < end_date)
+        results = query.all()
+        session.close()
+        return {"history": results}
 
-    def get_binance_history(self):
+    def get_binance_history(self, start_date=None, end_date=None, fiat=None, asset=None, trade_type=None):
         """
         Get all Binance rates history.
         """
-        session: Session = SessionLocal()
-        try:
-            return session.query(BinanceRate).all()
-        finally:
-            session.close()
+        session = SessionLocal()
+        query = session.query(BinanceRate)
+        if fiat:
+            query = query.filter(BinanceRate.fiat == fiat)
+        if asset:
+            query = query.filter(BinanceRate.asset == asset)
+        if trade_type:
+            query = query.filter(BinanceRate.trade_type == trade_type)
+        if start_date:
+            query = query.filter(BinanceRate.date >= start_date)
+        if end_date:
+            query = query.filter(BinanceRate.date < end_date)
+        results = query.all()
+        session.close()
+        return {"history": results}
