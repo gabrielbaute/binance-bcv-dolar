@@ -58,7 +58,7 @@ class BinanceP2P:
         """
         body = req.model_dump()
         try:
-            self.logger.info("Request Binance P2P")
+            self.logger.debug("Request Binance P2P")
             res = requests.post(self.url, json=body, headers={"accept": "application/json"})
             json_data = res.json()
             return json_data
@@ -66,7 +66,7 @@ class BinanceP2P:
             self.logger.error(f"Error at Binance P2P request: {e}")
             return None
 
-    def colect_prices(self, data: dict) -> List[float]:
+    def colect_prices(self, data: dict, fiat: Optional[str] = None) -> List[float]:
         """
         Colect prices from Binance P2P response.
 
@@ -80,13 +80,13 @@ class BinanceP2P:
             precios = []
             for adv in data["data"]:
                 precios.append(float(adv["adv"]["price"]))
-            self.logger.info(f"Getting prices: {len(precios)}")
+            self.logger.info(f"Getting prices: {len(precios)} for {fiat}")
             return precios
         else:
             self.logger.error("Binance response error:", data)
             return None
 
-    def calculate_med(self, prices: Optional[List[float]]) -> Dict[str, float]:
+    def calculate_med(self, prices: Optional[List[float]]) -> Dict[str, Optional[float]]:
         """
         Calculate the median price.
 
@@ -97,6 +97,7 @@ class BinanceP2P:
             Dict[str, float]: Median and average price
         """
         if not prices:
+            self.logger.warning("Empty price list received from Binance")
             return {"median_price": None, "average_price": None}
         try:
             median_price = median(prices)
@@ -128,8 +129,9 @@ class BinanceP2P:
         body = self.build_request(fiat=fiat, page=1, rows=rows, trade_type=trade_type, asset=asset)
         data = self.do_request(body)
         if not data:
+            self.logger.warning("No data received from Binance")
             return None
-        precios = self.colect_prices(data)
+        precios = self.colect_prices(data, fiat=fiat)
         medians = self.calculate_med(precios)
     
         pair = BinanceResponse(
