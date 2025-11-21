@@ -37,7 +37,7 @@ class BCVResponse(BaseModel):
     rublo: Optional[BCVCurrencyResponse]
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "dolar": {
                     "currency": "USD",

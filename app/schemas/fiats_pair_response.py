@@ -25,7 +25,7 @@ class FiatPairResponse(BaseModel):
     date: datetime
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "examples": {
                 "normal_case": {
                     "summary": "Respuesta con datos",

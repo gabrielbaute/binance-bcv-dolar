@@ -9,7 +9,7 @@ class BCVHistoryItem(BaseModel):
     date: datetime
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "currency": "USD",
@@ -27,7 +27,7 @@ class BinanceHistoryItem(BaseModel):
     date: datetime
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": 10,
                 "fiat": "VES",

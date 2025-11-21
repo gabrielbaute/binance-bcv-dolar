@@ -24,7 +24,7 @@ class DolarResponse(BaseModel):
     date: datetime
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "bcv_dolar": {
                     "currency": "USD",
