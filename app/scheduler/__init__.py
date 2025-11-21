@@ -1,0 +1,1 @@
+from app.scheduler.dolar_scheduler import DolarScheduler
