@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.services import BCVScraper
 from app.enums.currecies_enum import Currency
@@ -28,3 +28,23 @@ def euro_bcv():
 def all_bcv():
     scraper = BCVScraper()
     return scraper.get_all_exchange_rates()
+
+@router.get("/query", response_model=BCVResponse)
+def query_bcv(
+    currency: str = Query(..., description="Currency to query", enum=["dolar", "euro", "yuan", "lira", "rublo"])
+    ):
+    scraper = BCVScraper()
+    currencies = {
+        "dolar": Currency.DOLAR,
+        "euro": Currency.EURO,
+        "yuan": Currency.YUAN,
+        "lira": Currency.LIRA,
+        "rublo": Currency.RUBLE
+    }
+    currency = currencies.get(currency.lower())
+    if not currency:
+        return {
+            "error": "Invalid currency",
+            "message": "Currency must be one of the following: dolar, euro, yuan, lira, rublo"
+            }
+    return scraper.get_exchange_rate(currency)
