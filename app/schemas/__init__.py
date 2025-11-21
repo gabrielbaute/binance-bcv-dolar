@@ -4,6 +4,7 @@ from app.schemas.bcv_response_schemas import BCVResponse, BCVCurrencyResponse
 from app.schemas.dolar_response import DolarResponse
 from app.schemas.fiats_pair_response import FiatPairResponse
 from app.schemas.history_response_schemas import BCVHistoryResponse, BinanceHistoryResponse, BCVHistoryItem, BinanceHistoryItem
+from app.schemas.webhook_payload_schemas import WebhookPayload
 
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     "BCVHistoryResponse",
     "BinanceHistoryResponse",
     "BCVHistoryItem",
-    "BinanceHistoryItem"
+    "BinanceHistoryItem",
+    "WebhookPayload"
 ]
