@@ -68,7 +68,7 @@ class FiatExchengeService():
             fiat_1_p2p_sell=fiat_1_p2p_sell,
             fiat_2_p2p_buy=fiat_2_p2p_buy,
             fiat_2_p2p_sell=fiat_2_p2p_buy,
-            exchange_rate_f1_f2=exchange_rate_f1_f2,
-            exchange_rate_f2_f1=exchange_rate_f2_f1,
+            average_exchange_rate_f1_f2=exchange_rate_f1_f2,
+            average_exchange_rate_f2_f1=exchange_rate_f2_f1,
             date=datetime.now()
         ) 
