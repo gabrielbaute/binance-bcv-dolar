@@ -2,7 +2,7 @@
 import requests
 import logging
 from statistics import median, mean
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from app.schemas import BinanceRequest, BinanceResponse
    
@@ -85,7 +85,27 @@ class BinanceP2P:
         else:
             self.logger.error("Binance response error:", data)
             return None
-    
+
+    def calculate_med(self, prices: Optional[List[float]]) -> Dict[str, float]:
+        """
+        Calculate the median price.
+
+        Args:
+            prices (list): List of prices.
+
+        Returns:
+            Dict[str, float]: Median and average price
+        """
+        if not prices:
+            return {"median_price": None, "average_price": None}
+        try:
+            median_price = median(prices)
+            average_price = mean(prices)
+            return {"median_price": median_price, "average_price": average_price}
+        except Exception as e:
+            self.logger.error(f"Error calculating median price: {e}")
+            return {"median_price": None, "average_price": None}
+
     def get_pair(
             self, 
             fiat: str = "VES", 
@@ -110,13 +130,15 @@ class BinanceP2P:
         if not data:
             return None
         precios = self.colect_prices(data)
+        medians = self.calculate_med(precios)
+    
         pair = BinanceResponse(
             fiat=fiat,
             asset=asset,
             trade_type=trade_type,
             prices=precios,
-            average_price=mean(precios),
-            median_price=median(precios)
+            average_price=medians.get("average_price"),
+            median_price=medians.get("median_price")
         )
         return pair
 
