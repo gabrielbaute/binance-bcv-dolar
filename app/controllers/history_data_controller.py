@@ -75,3 +75,23 @@ class HistoryDataController:
             date=datetime.now()
         )
         self._commit_or_rollback(session, record)
+
+    def get_bcv_history(self):
+        """
+        Get all BCV rates history.
+        """
+        session: Session = SessionLocal()
+        try:
+            return session.query(BCVRate).all()
+        finally:
+            session.close()
+
+    def get_binance_history(self):
+        """
+        Get all Binance rates history.
+        """
+        session: Session = SessionLocal()
+        try:
+            return session.query(BinanceRate).all()
+        finally:
+            session.close()
