@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Exchange Rate Dashboard</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#667eea">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-chart-line"></i> P2P Exchange Rate Dashboard</h1>
+            <p>Monitor real-time exchange rates from Binance P2P and BCV</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Exchange Rate Cards -->
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fab fa-bitcoin"></i> Binance P2P</h3>
+                        <span class="status-indicator" id="binance-status">Loading...</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="rate-display">
+                            <span class="currency">USD/VES</span>
+                            <span class="rate" id="binance-rate">--</span>
+                        </div>
+                        <div class="rate-info">
+                            <small>Last updated: <span id="binance-time">--</span></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-university"></i> BCV Rate</h3>
+                        <span class="status-indicator" id="bcv-status">Loading...</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="rate-display">
+                            <span class="currency">USD/VES</span>
+                            <span class="rate" id="bcv-rate">--</span>
+                        </div>
+                        <div class="rate-info">
+                            <small>Last updated: <span id="bcv-time">--</span></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-calculator"></i> Average Rate</h3>
+                        <span class="status-indicator" id="average-status">Loading...</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="rate-display">
+                            <span class="currency">USD/VES</span>
+                            <span class="rate" id="average-rate">--</span>
+                        </div>
+                        <div class="rate-info">
+                            <small>Based on current rates</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="chart-section">
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-area"></i> Rate History</h3>
+                        <div class="chart-controls">
+                            <select id="time-range">
+                                <option value="24h">Last 24 Hours</option>
+                                <option value="7d">Last 7 Days</option>
+                                <option value="30d">Last 30 Days</option>
+                            </select>
+                            <button id="refresh-chart" class="btn btn-secondary">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="rateChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Section -->
+            <div class="controls-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-cogs"></i> Controls</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="controls-grid">
+                            <button id="refresh-data" class="btn btn-primary">
+                                <i class="fas fa-refresh"></i> Refresh Data
+                            </button>
+                            <button id="export-data" class="btn btn-secondary">
+                                <i class="fas fa-download"></i> Export CSV
+                            </button>
+                            <div class="auto-refresh">
+                                <label for="auto-refresh-toggle">
+                                    <input type="checkbox" id="auto-refresh-toggle" checked>
+                                    Auto Refresh (30s)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 P2P Exchange Rate API. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
