@@ -6,7 +6,7 @@ from app.api.include_routers import include_routers
 from app.scheduler.dolar_scheduler import DolarScheduler
 from app.database.db_config import init_db
 
-setup_logging()
+setup_logging(log_dir=Config.LOG_DIR)
 
 app = FastAPI(title="P2P Exchange Rate API")
 
@@ -14,7 +14,7 @@ app = FastAPI(title="P2P Exchange Rate API")
 include_routers(app)
 
 # Init database
-init_db()
+init_db(instance_dir=Config.INSTANCE_DIR)
 
 # Init scheduler 
 @app.on_event("startup")
