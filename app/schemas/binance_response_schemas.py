@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class BinanceResponse(BaseModel):
     """
@@ -20,32 +20,25 @@ class BinanceResponse(BaseModel):
     average_price: Optional[float] = None
     median_price: Optional[float] = None
 
-    class Config:
-        json_schema_extra = {
-            "examples": {
-                "normal_case": {
-                    "summary": "Respuesta con datos",
-                    "description": "Ejemplo típico con lista de precios y cálculo de media/mediana.",
-                    "value": {
-                        "fiat": "VES",
-                        "asset": "USDT",
-                        "trade_type": "BUY",
-                        "prices": [345.50, 346.20, 347.00, 348.10, 349.00],
-                        "average_price": 347.16,
-                        "median_price": 347.00
-                    }
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "fiat": "VES",
+                    "asset": "USDT",
+                    "trade_type": "BUY",
+                    "prices": [345.50, 346.20, 347.00, 348.10, 349.00],
+                    "average_price": 347.16,
+                    "median_price": 347.00
                 },
-                "empty_case": {
-                    "summary": "Respuesta sin datos",
-                    "description": "Ejemplo cuando Binance devuelve lista vacía.",
-                    "value": {
-                        "fiat": "VES",
-                        "asset": "USDT",
-                        "trade_type": "BUY",
-                        "prices": [],
-                        "average_price": None,
-                        "median_price": None
-                    }
+                {
+                    "fiat": "VES",
+                    "asset": "USDT",
+                    "trade_type": "BUY",
+                    "prices": [],
+                    "average_price": None,
+                    "median_price": None
                 }
-            }
+            ]
         }
+    )
