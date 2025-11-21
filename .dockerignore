@@ -1,0 +1,18 @@
+# Entornos virtuales
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de configuración locales
+.env
+*.log
+
+# Git
+.git
+.gitignore
+
+# Otros
+*.sqlite
+*.db
