@@ -144,6 +144,7 @@ body {
 /* Chart Section */
 .chart-section {
     width: 100%;
+    margin-bottom: 20px;
 }
 
 .chart-card {
@@ -354,4 +355,352 @@ body {
 
 .notification.info {
     background: #17a2b8;
+}
+
+/* Tab Navigation Styles */
+.tab-navigation {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    padding: 5px;
+    backdrop-filter: blur(10px);
+}
+
+.tab-button {
+    flex: 1;
+    max-width: 200px;
+    padding: 15px 30px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    border-radius: 45px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.tab-button:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tab-button.active {
+    background: rgba(255, 255, 255, 0.9);
+    color: #2c3e50;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Tab Content */
+.tab-content {
+    position: relative;
+}
+
+.tab-pane {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Calculator Styles */
+.calculator-section {
+    width: 100%;
+}
+
+.calculator-card {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.calculator-subtitle {
+    margin-top: 10px;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.calculator-form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.currency-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.currency-btn {
+    padding: 12px 25px;
+    border: 2px solid #667eea;
+    background: white;
+    color: #667eea;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.currency-btn:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.currency-btn.active {
+    background: #667eea;
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.amount-input {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.amount-input label {
+    font-weight: 500;
+    color: #2c3e50;
+    text-align: center;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 2px solid #e0e6ed;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.3s ease;
+}
+
+.input-group:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.currency-symbol {
+    padding: 15px;
+    background: #f8f9fa;
+    font-weight: bold;
+    color: #2c3e50;
+    border-right: 1px solid #e0e6ed;
+}
+
+#amount-input {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    outline: none;
+    font-size: 1.1rem;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+}
+
+.currency-code {
+    padding: 15px;
+    background: #f8f9fa;
+    font-weight: bold;
+    color: #2c3e50;
+    border-left: 1px solid #e0e6ed;
+}
+
+.conversion-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.result-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.result-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.binance-result {
+    border-color: #667eea;
+}
+
+.bcv-result {
+    border-color: #f093fb;
+}
+
+.average-result {
+    border-color: #28a745;
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.result-header h4 {
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.result-header i {
+    color: #667eea;
+}
+
+.bcv-result .result-header i {
+    color: #f093fb;
+}
+
+.average-result .result-header i {
+    color: #28a745;
+}
+
+.result-amount {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 10px;
+    font-family: 'Courier New', monospace;
+}
+
+.result-symbol {
+    font-size: 1.2rem;
+    color: #666;
+    font-weight: bold;
+}
+
+.result-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.result-currency {
+    font-size: 1rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.result-rate {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.calculator-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Responsive adjustments for calculator */
+@media (max-width: 768px) {
+    .tab-navigation {
+        flex-direction: column;
+        gap: 5px;
+        border-radius: 15px;
+        padding: 10px;
+    }
+    
+    .tab-button {
+        max-width: none;
+        border-radius: 10px;
+        padding: 12px 20px;
+    }
+    
+    .currency-toggle {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .currency-btn {
+        width: 200px;
+    }
+    
+    .conversion-results {
+        grid-template-columns: 1fr;
+    }
+    
+    .calculator-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .calculator-actions .btn {
+        width: 200px;
+    }
+    
+    .input-group {
+        font-size: 0.9rem;
+    }
+    
+    #amount-input {
+        font-size: 1rem;
+    }
+    
+    .result-value {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .tab-button {
+        font-size: 0.9rem;
+        padding: 10px 15px;
+    }
+    
+    .calculator-form {
+        gap: 20px;
+    }
+    
+    .result-card {
+        padding: 15px;
+    }
+    
+    .result-value {
+        font-size: 1.3rem;
+    }
+    
+    .currency-btn {
+        width: 160px;
+        font-size: 0.9rem;
+        padding: 10px 20px;
+    }
 }

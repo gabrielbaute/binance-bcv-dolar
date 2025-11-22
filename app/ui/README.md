@@ -1,6 +1,36 @@
 # UI Frontend
 
-This folder contains the frontend user interface for the P2P Exchange Rate API.
+This folder contains the frontend user interface for the P2P Exchange Rate API with advanced tab navigation and calculator functionality.
+
+## Structure
+
+```
+ui/
+├── index.html              # Main HTML file with tab navigation
+├── static/
+│   ├── css/
+│   │   └── styles.css      # Main stylesheet with responsive design and tab/calculator styles
+│   ├── js/
+│   │   ├── app.js          # Main JavaScript application with tab and calculator functionality
+│   │   └── sw.js           # Service Worker for PWA functionality
+│   ├── assets/
+│   │   └── README.md       # Assets folder for images, icons, etc.
+│   └── manifest.json       # PWA manifest file
+```
+
+## New Features Added
+
+### Tab Navigation System
+- **Rate History Tab**: Historical charts and data export functionality
+- **Calculator Tab**: Bi-directional currency conversion tool
+- **Smooth Transitions**: Animated tab switching with modern design
+
+### Advanced Calculator
+- **Bi-directional conversion**: Convert USD ↔ VES
+- **Multiple rate sources**: Binance P2P, BCV Official, and Average rates
+- **Real-time calculations**: Updates as you type
+- **Currency toggle**: Easy switching between input currencies
+- **Clear functionality**: Reset calculator with one click
 
 ## Structure
 
