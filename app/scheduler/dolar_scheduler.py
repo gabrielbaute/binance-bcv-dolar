@@ -22,7 +22,13 @@ class DolarScheduler():
     def _send_alert(self, title: str, event: str, priority: WebhookPriority, msg: str, tags: str = None):
         """
         Helper method to send notifications.
-        Since we are in a Thread (BackgroundScheduler), blocking calls are fine.
+
+        Args:
+            title (str): Title of notification
+            event (str): Event of notification
+            priority (WebhookPriority): Priority of notification
+            msg (str): Message of notification
+            tags (str, optional): Tags of notification. Defaults to None.
         """
         payload = WebhookPayload(
             title=title,
@@ -97,7 +103,6 @@ class DolarScheduler():
                 msg=err_msg,
                 tags="warning"
             )
-
 
     def scheduler_jobs(self):
         """
