@@ -2,7 +2,12 @@ class ExchangeRateApp {
     constructor() {
         this.chart = null;
         this.autoRefreshInterval = null;
-        this.apiBaseUrl = 'http://localhost:8000';
+        this.apiBaseUrl = '/api';
+        this.currentRates = {
+            binance: 0,
+            bcv: 0,
+            average: 0
+        };
         
         this.init();
     }
@@ -12,6 +17,8 @@ class ExchangeRateApp {
         this.initChart();
         this.loadInitialData();
         this.setupAutoRefresh();
+        this.initTabs();
+        this.initCalculator();
     }
 
     setupEventListeners() {
@@ -44,6 +51,34 @@ class ExchangeRateApp {
             const timeRange = document.getElementById('time-range').value;
             this.updateChart(timeRange);
         });
+
+        // Tab navigation
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                this.switchTab(e.target.closest('.tab-button').dataset.tab);
+            });
+        });
+
+        // Calculator events
+        document.getElementById('toggle-usd').addEventListener('click', () => {
+            this.setCurrencyMode('USD');
+        });
+
+        document.getElementById('toggle-ves').addEventListener('click', () => {
+            this.setCurrencyMode('VES');
+        });
+
+        document.getElementById('amount-input').addEventListener('input', (e) => {
+            this.calculateConversion();
+        });
+
+        // document.getElementById('calculate-btn').addEventListener('click', () => {
+        //     this.calculateConversion();
+        // });
+
+        document.getElementById('clear-calc').addEventListener('click', () => {
+            this.clearCalculator();
+        });
     }
 
     async loadInitialData() {
@@ -68,12 +103,15 @@ class ExchangeRateApp {
             if (!response.ok) throw new Error('Failed to fetch Binance rate');
             
             const data = await response.json();
+            this.currentRates.binance = parseFloat(data.average_price);
             document.getElementById('binance-rate').textContent = this.formatRate(data.average_price);
             document.getElementById('binance-time').textContent = this.formatTime(new Date().toISOString());
+            document.getElementById('binance-rate-calc').textContent = this.formatRate(data.average_price);
             this.updateStatus('binance-status', 'online');
         } catch (error) {
             console.error('Error loading Binance rate:', error);
             document.getElementById('binance-rate').textContent = 'Error';
+            document.getElementById('binance-rate-calc').textContent = 'Error';
             this.updateStatus('binance-status', 'error');
         }
     }
@@ -86,12 +124,15 @@ class ExchangeRateApp {
             if (!response.ok) throw new Error('Failed to fetch BCV rate');
             
             const data = await response.json();
+            this.currentRates.bcv = parseFloat(data.rate);
             document.getElementById('bcv-rate').textContent = this.formatRate(data.rate);
             document.getElementById('bcv-time').textContent = this.formatTime(data.date);
+            document.getElementById('bcv-rate-calc').textContent = this.formatRate(data.rate);
             this.updateStatus('bcv-status', 'online');
         } catch (error) {
             console.error('Error loading BCV rate:', error);
             document.getElementById('bcv-rate').textContent = 'Error';
+            document.getElementById('bcv-rate-calc').textContent = 'Error';
             this.updateStatus('bcv-status', 'error');
         }
     }
@@ -104,11 +145,14 @@ class ExchangeRateApp {
             if (!response.ok) throw new Error('Failed to fetch average rate');
             
             const data = await response.json();
+            this.currentRates.average = parseFloat(data.average_usdt_ves);
             document.getElementById('average-rate').textContent = this.formatRate(data.average_usdt_ves);
+            document.getElementById('average-rate-calc').textContent = this.formatRate(data.average_usdt_ves);
             this.updateStatus('average-status', 'online');
         } catch (error) {
             console.error('Error loading average rate:', error);
             document.getElementById('average-rate').textContent = 'Error';
+            document.getElementById('average-rate-calc').textContent = 'Error';
             this.updateStatus('average-status', 'error');
         }
     }
@@ -405,6 +449,122 @@ class ExchangeRateApp {
         setTimeout(() => {
             notification.remove();
         }, 5000);
+    }
+
+    // Tab Management Functions
+    initTabs() {
+        // Show the first tab by default
+        this.switchTab('history');
+    }
+
+    switchTab(tabName) {
+        // Remove active class from all tabs and panes
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+        // Add active class to selected tab and pane
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(`${tabName}-tab`).classList.add('active');
+
+        // If switching to calculator tab, refresh rates
+        if (tabName === 'calculator') {
+            this.updateCalculatorRates();
+        }
+    }
+
+    // Calculator Functions
+    initCalculator() {
+        this.currentCurrency = 'USD';
+        this.setCurrencyMode('USD');
+    }
+
+    setCurrencyMode(currency) {
+        this.currentCurrency = currency;
+        
+        // Update button states
+        document.querySelectorAll('.currency-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`toggle-${currency.toLowerCase()}`).classList.add('active');
+
+        // Update input display
+        if (currency === 'USD') {
+            document.getElementById('input-symbol').textContent = '$';
+            document.getElementById('input-currency').textContent = 'USD';
+        } else {
+            document.getElementById('input-symbol').textContent = 'Bs.';
+            document.getElementById('input-currency').textContent = 'VES';
+        }
+
+        // Update result currencies
+        this.updateResultCurrencies();
+        
+        // Recalculate if there's an amount
+        this.calculateConversion();
+    }
+
+    updateResultCurrencies() {
+        const targetCurrency = this.currentCurrency === 'USD' ? 'VES' : 'USD';
+        const targetSymbol = targetCurrency === 'USD' ? '$' : 'Bs.';
+
+        document.getElementById('binance-symbol').textContent = targetSymbol;
+        document.getElementById('binance-currency').textContent = targetCurrency;
+        document.getElementById('bcv-symbol').textContent = targetSymbol;
+        document.getElementById('bcv-currency').textContent = targetCurrency;
+        document.getElementById('average-symbol').textContent = targetSymbol;
+        document.getElementById('average-currency').textContent = targetCurrency;
+    }
+
+    updateCalculatorRates() {
+        // Update the displayed rates in the calculator
+        document.getElementById('binance-rate-calc').textContent = this.formatRate(this.currentRates.binance);
+        document.getElementById('bcv-rate-calc').textContent = this.formatRate(this.currentRates.bcv);
+        document.getElementById('average-rate-calc').textContent = this.formatRate(this.currentRates.average);
+    }
+
+    calculateConversion() {
+        const amount = parseFloat(document.getElementById('amount-input').value) || 0;
+        
+        if (amount <= 0) {
+            this.clearResults();
+            return;
+        }
+
+        let binanceResult, bcvResult, averageResult;
+
+        if (this.currentCurrency === 'USD') {
+            // Convert USD to VES
+            binanceResult = amount * this.currentRates.binance;
+            bcvResult = amount * this.currentRates.bcv;
+            averageResult = amount * this.currentRates.average;
+        } else {
+            // Convert VES to USD
+            binanceResult = amount / this.currentRates.binance;
+            bcvResult = amount / this.currentRates.bcv;
+            averageResult = amount / this.currentRates.average;
+        }
+
+        // Update result displays
+        document.getElementById('binance-result').textContent = this.formatAmount(binanceResult);
+        document.getElementById('bcv-result').textContent = this.formatAmount(bcvResult);
+        document.getElementById('average-result').textContent = this.formatAmount(averageResult);
+    }
+
+    clearCalculator() {
+        document.getElementById('amount-input').value = '';
+        this.clearResults();
+    }
+
+    clearResults() {
+        document.getElementById('binance-result').textContent = '0.00';
+        document.getElementById('bcv-result').textContent = '0.00';
+        document.getElementById('average-result').textContent = '0.00';
+    }
+
+    formatAmount(amount) {
+        if (typeof amount !== 'number' || isNaN(amount)) return '0.00';
+        return new Intl.NumberFormat('es-VE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
     }
 }
 
