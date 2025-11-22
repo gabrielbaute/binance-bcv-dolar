@@ -63,20 +63,53 @@ Debemos agradecer al usuario @DevOpsLP, quien publicó primero un script en .gs 
    uvicorn app.main:app --reload
    ```
 
-### Despliegue con Docker
+### Despliegue con Docker (recomendado)
+1. Desplegar con docker-compose:
+Puedes emplear el archivo de ejemplo de docker compose que tenemos en el repo, también puedes copiar y pegar:
+   ```yml
+   services:
+      dolar_vzl:
+         container_name: dolar_vzl
+         image: ghcr.io/gabrielbaute/binance-bcv-dolar:latest
+         restart: unless-stopped
+         ports:
+            - "${API_PORT:-8000}:8000"
+         environment:
+            - API_PORT=${API_PORT:-8000}
+            - API_HOST=${API_HOST:-0.0.0.0}
+            - INSTANCE_DIR=${INSTANCE_DIR:-/instance}
+            - LOG_DIR=${LOG_DIR:-/logs}
+            - NTFY_URL=${NTFY_URL:-}
+            - NTFY_TOPIC=${NTFY_TOPIC:-}
+         volumes:
+            - ./instance:/instance
+            - ./logs:/logs
+         healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:${API_PORT:-8000}/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+   ```
+   Esto te dará los valores por defecto.
 
-1. Construir y levantar servicios:
+2. Construir y levantar servicios: Si prefieres hacer el build por tu cuenta, usa el docker-compose disponible en el repositorio
    ```sh
    docker compose up -d --build
    ```
 
-2. Acceder a la documentación interactiva:
+3. Acceder a la documentación interactiva:
    ```
    http://localhost:8000/docs
    ```
    No olviden darle permisos al usuario de docker para poder escribir en los directorios de la app. Pueden hacerlo así:
    ```sh
    sudo chown -R 1000:1000 ./logs ./instance
+   ```
+4. Acceder a la interfaz gráfica.
+   La interfaz gráfica está disponible en la raíz del proyecto:
+   ```
+   http://localhost:8000/
    ```
 ---
 
@@ -103,10 +136,11 @@ print(f"Precio promedio USDT/VES: {pair.average_price:.2f}")
 
 - [x] Persistencia histórica para análisis de tendencias  
 - [x] Automatización con jobs programados  
-- [ ] Interfaz web amigable  
+- [x] Interfaz web amigable  
 - [ ] Bot de Telegram para consultas rápidas  
 - [ ] Gráficas históricas de desempeño  
 - [x] API pública estable y documentada  (casi)
+- [x] Deploy en docker
 
 ---
 

@@ -1,6 +1,7 @@
 services:
   dolar_vzl:
     container_name: dolar_vzl
+    image: ghcr.io/gabrielbaute/binance-bcv-dolar:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -12,6 +13,8 @@ services:
       - API_HOST=${API_HOST:-0.0.0.0}
       - INSTANCE_DIR=${INSTANCE_DIR:-/instance}
       - LOG_DIR=${LOG_DIR:-/logs}
+      - NTFY_URL=${NTFY_URL:-}
+      - NTFY_TOPIC=${NTFY_TOPIC:-}
     volumes:
       - ./instance:/instance
       - ./logs:/logs
