@@ -1,0 +1,21 @@
+{
+    "name": "P2P Exchange Rate Dashboard",
+    "short_name": "ExchangeRate",
+    "description": "Monitor real-time exchange rates from Binance P2P and BCV",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#667eea",
+    "theme_color": "#667eea",
+    "icons": [
+        {
+            "src": "/static/assets/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/static/assets/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

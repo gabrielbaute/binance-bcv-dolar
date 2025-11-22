@@ -12,9 +12,9 @@ def include_routers(app: FastAPI):
     """
     Include routers for API routes
     """
-    app.include_router(bcv_router)
-    app.include_router(dolar_router)
-    app.include_router(binance_router)
-    app.include_router(history_router)
-    app.include_router(fiat_router)
+    app.include_router(bcv_router, prefix="/api")
+    app.include_router(dolar_router, prefix="/api")
+    app.include_router(binance_router, prefix="/api")
+    app.include_router(history_router, prefix="/api")
+    app.include_router(fiat_router, prefix="/api")
     app.include_router(health_router)
