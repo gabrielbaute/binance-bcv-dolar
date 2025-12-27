@@ -1,6 +1,6 @@
 # BnB-BCV: API Abierta para Tasas de Cambio en Venezuela
 
-Version: 0.1.3
+Version: 0.1.4
 
 ![Estado](https://img.shields.io/badge/status-en%20desarrollo-yellow)
 ![Licencia](https://img.shields.io/badge/license-GPLv3-blue)
