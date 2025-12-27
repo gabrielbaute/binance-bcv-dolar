@@ -1,21 +1,113 @@
 {
-    "name": "P2P Exchange Rate Dashboard",
-    "short_name": "ExchangeRate",
-    "description": "Monitor real-time exchange rates from Binance P2P and BCV",
+    "name": "Tasas de Cambio P2P Venezuela - Binance & BCV",
+    "short_name": "Tasas P2P VE",
+    "description": "Dashboard de tasas de cambio en tiempo real para Venezuela: Binance P2P, BCV oficial y calculadora USD/VES con gráficos históricos",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
+    "orientation": "portrait-primary",
     "background_color": "#667eea",
     "theme_color": "#667eea",
+    "lang": "es-VE",
+    "dir": "ltr",
+    "categories": ["finance", "business", "utilities"],
+    "screenshots": [
+        {
+            "src": "/static/assets/screenshot-wide.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide"
+        },
+        {
+            "src": "/static/assets/screenshot-mobile.png",
+            "sizes": "750x1334",
+            "type": "image/png",
+            "form_factor": "narrow"
+        }
+    ],
     "icons": [
+        {
+            "src": "/static/assets/icon-72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/static/assets/icon-96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/static/assets/icon-128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/static/assets/icon-144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/static/assets/icon-152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "any"
+        },
         {
             "src": "/static/assets/icon-192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/static/assets/icon-384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "/static/assets/icon-512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         }
-    ]
+    ],
+    "shortcuts": [
+        {
+            "name": "Calculadora",
+            "short_name": "Calc",
+            "description": "Abrir calculadora de conversión USD/VES",
+            "url": "/?tab=calculator",
+            "icons": [
+                {
+                    "src": "/static/assets/calculator-icon.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Historial",
+            "short_name": "History",
+            "description": "Ver gráficos históricos de tasas",
+            "url": "/?tab=history",
+            "icons": [
+                {
+                    "src": "/static/assets/chart-icon.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ],
+    "share_target": {
+        "action": "/",
+        "method": "GET",
+        "params": {
+            "title": "title",
+            "text": "text",
+            "url": "url"
+        }
+    }
 }

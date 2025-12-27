@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Sitemap
+Sitemap: {base_url}/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
