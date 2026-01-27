@@ -246,7 +246,7 @@ class ExchangeRateApp {
 
             // Fetch both history data in parallel
             const [bcvResponse, binanceResponse] = await Promise.all([
-                fetch(`${this.apiBaseUrl}/history/bcv?start_date=${startDateStr}&end_date=${endDateStr}&currency=USD`),
+                fetch(`${this.apiBaseUrl}/history/bcv?start_date=${startDateStr}&end_date=${endDateStr}&currency=DOLAR`),
                 fetch(`${this.apiBaseUrl}/history/binance?start_date=${startDateStr}&end_date=${endDateStr}&fiat=VES&asset=USDT&trade_type=BUY`)
             ]);
             
@@ -309,7 +309,7 @@ class ExchangeRateApp {
             const endDateStr = endDate.toISOString().split('T')[0];
 
             const [bcvResponse, binanceResponse] = await Promise.all([
-                fetch(`${this.apiBaseUrl}/history/bcv?start_date=${startDateStr}&end_date=${endDateStr}&currency=USD`),
+                fetch(`${this.apiBaseUrl}/history/bcv?start_date=${startDateStr}&end_date=${endDateStr}&currency=DOLAR`),
                 fetch(`${this.apiBaseUrl}/history/binance?start_date=${startDateStr}&end_date=${endDateStr}&fiat=VES&asset=USDT&trade_type=BUY`)
             ]);
             
@@ -320,6 +320,9 @@ class ExchangeRateApp {
             const bcvData = await bcvResponse.json();
             const binanceData = await binanceResponse.json();
             
+            console.log('BCV Data:', bcvData);
+            console.log('Binance Data:', binanceData);
+
             // Create CSV content
             let csvContent = "Date,BCV_Rate,Binance_Rate\n";
             
