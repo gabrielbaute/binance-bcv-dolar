@@ -3,7 +3,16 @@
 from enum import StrEnum
 
 class Currency(StrEnum):
-    """Enum for representing currencies."""
+    """
+    Enum for representing currencies.
+
+    Attributes:
+        DOLAR (str): Represents the US Dollar.
+        EURO (str): Represents the Euro.
+        YUAN (str): Represents the Yuan.
+        LIRA (str): Represents the Turkish Lira.
+        RUBLE (str): Represents the Russian Ruble.
+    """
     DOLAR = "dolar"
     EURO = "euro"
     YUAN = "yuan"
@@ -18,7 +27,12 @@ class Currency(StrEnum):
     
     @property
     def description(self) -> str:
-        """Returns a description of the currency."""
+        """
+        Returns a description of the currency.
+
+        Returns:
+            str: A string describing the currency.
+        """
         return {
             Currency.DOLAR: "Dólar estadounidense",
             Currency.EURO: "Euro",

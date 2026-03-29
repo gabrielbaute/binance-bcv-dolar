@@ -3,6 +3,13 @@ from enum import Enum
 class WebhookPriority(Enum):
     """
     Enum for NTFY priority levels.
+
+    Attributes:
+        max (str): Represents the maximum priority.
+        high (str): Represents the high priority.
+        default (str): Represents the default priority.
+        low (str): Represents the low priority.
+        min (str): Represents the minimum priority.
     """
     max = 'max'
     high = 'high'

@@ -8,7 +8,7 @@ class BCVCurrencyResponse(BaseModel):
     """
     Schema for the response from BCV for a single currency.
 
-    Keyword arguments:
+    Attributes:
         currency (Currency): Currency tracked by BCV.
         rate (Optional[float]): Rate of the currency.
         date (datetime): Date of the response.
@@ -32,6 +32,13 @@ class BCVCurrencyResponse(BaseModel):
 class BCVResponse(BaseModel):
     """
     Schema for the general response from BCV to all currencies.
+
+    Attributes:
+        dolar (Optional[BCVCurrencyResponse]): BCV dolar response.
+        euro (Optional[BCVCurrencyResponse]): BCV euro response.
+        yuan (Optional[BCVCurrencyResponse]): BCV yuan response.
+        lira (Optional[BCVCurrencyResponse]): BCV lira response.
+        rublo (Optional[BCVCurrencyResponse]): BCV rublo response.
     """
     dolar: Optional[BCVCurrencyResponse]
     euro: Optional[BCVCurrencyResponse]

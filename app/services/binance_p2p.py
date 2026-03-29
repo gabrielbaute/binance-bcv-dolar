@@ -72,6 +72,7 @@ class BinanceP2P:
 
         Args:
             data (dict): Response data.
+            fiat (Optional[str]): Fiat currency for logging purposes.
 
         Returns:
             List[float]: List of prices.
@@ -91,7 +92,7 @@ class BinanceP2P:
         Calculate the median price.
 
         Args:
-            prices (list): List of prices.
+            prices (Optional[List[float]]): List of prices.
 
         Returns:
             Dict[str, float]: Median and average price

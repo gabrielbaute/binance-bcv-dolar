@@ -4,13 +4,12 @@ from pydantic import BaseModel, ConfigDict
 
 from app.schemas.bcv_response_schemas import BCVCurrencyResponse
 from app.schemas.binance_response_schemas import BinanceResponse
-from app.enums import Currency
 
 class DolarResponse(BaseModel):
     """
     Schema for dolar prices from BCV and Binance for Venezuela interest case.
 
-    Keyword arguments:
+    Attributes:
         bcv_dolar (Optional[BCVCurrencyResponse]): BCV dolar response.
         bcv_euro (Optional[BCVCurrencyResponse]): BCV euro response.
         binance_usdt_ves_buy (Optional[BinanceResponse]): Binance USDT/VES response at Buy trade type.

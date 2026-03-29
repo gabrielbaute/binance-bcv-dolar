@@ -1,11 +1,11 @@
 from typing import List, Optional, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class BinanceRequest(BaseModel):
     """
     Schema for the request to Binance P2P.
 
-    Keyword arguments:
+    Attributes:
         fiat (str): Fiat currency.
         page (int): Page number.
         rows (int): Number of rows per page.
@@ -38,3 +38,26 @@ class BinanceRequest(BaseModel):
     classifies: List[str] = ["mass", "profession", "fiat_trade"]
     tradedWith: bool = False
     followed: bool = False
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "fiat": "VES",
+                    "tradeType": "SELL",
+                    "asset": "USDT",
+                    "countries": ["Venezuela"],
+                    "proMerchantAds": False,
+                    "shieldMerchantAds": False,
+                    "filterType": "tradable",
+                    "periods": [],
+                    "additionalKycVerifyFilter": 0,
+                    "publisherType": None,
+                    "payTypes": [],
+                    "classifies": ["mass", "profession", "fiat_trade"],
+                    "tradedWith": False,
+                    "followed": False
+                }
+            ]
+        }
+    )
