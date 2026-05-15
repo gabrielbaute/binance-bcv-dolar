@@ -58,7 +58,7 @@ Issues = "https://github.com/gabrielbaute/binance-bcv-dolar/issues"
 packages = ["app"]
 
 [tool.bumpver]
-current_version = "0.1.4"
+current_version = "0.1.5"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
