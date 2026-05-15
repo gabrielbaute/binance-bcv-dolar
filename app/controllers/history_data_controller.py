@@ -11,6 +11,7 @@ from app.database.models.bcv_sql_model import BCVRate
 from app.database.models.binance_sql_model import BinanceRate
 from app.schemas.bcv_response_schemas import BCVCurrencyResponse
 from app.schemas.binance_response_schemas import BinanceResponse
+from app.schemas.history_response_schemas import BinanceHistoryItem, BinanceHistoryResponse, BCVHistoryItem, BCVHistoryResponse
 
 class HistoryDataController:
     """
@@ -77,9 +78,19 @@ class HistoryDataController:
         )
         self._commit_or_rollback(session, record)
 
-    def get_bcv_history(self, start_date=None, end_date=None, currency=None):
+    def get_bcv_history(
+            self, 
+            start_date: datetime = None, 
+            end_date: datetime =None, 
+            currency: str = None
+        ) -> BCVHistoryResponse:
         """
         Get all BCV rates history.
+
+        Args:
+            start_date (datetime, optional): Start date for the query.
+            end_date (datetime, optional): End date for the query.
+            currency (str, optional): Currency to filter the query (DOLAR or EURO).
         """
         session = SessionLocal()
         query = session.query(BCVRate)
@@ -91,11 +102,36 @@ class HistoryDataController:
             query = query.filter(BCVRate.date < end_date)
         results = query.all()
         session.close()
-        return {"history": results}
+        
+        results = [
+            BCVHistoryItem(
+                id=result.id,
+                currency=result.currency,
+                rate=result.rate,
+                date=result.date
+            )
+            for result in results
+        ]
 
-    def get_binance_history(self, start_date=None, end_date=None, fiat=None, asset=None, trade_type=None):
+        return BCVHistoryResponse(count=len(results), history=results)
+
+    def get_binance_history(
+            self, 
+            start_date: datetime = None, 
+            end_date: datetime = None, 
+            fiat: str = None, 
+            asset: str = None, 
+            trade_type: str = None
+        ) -> BinanceHistoryResponse:
         """
         Get all Binance rates history.
+
+        Args:
+            start_date (datetime, optional): Start date for the query.
+            end_date (datetime, optional): End date for the query.
+            fiat (str, optional): Fiat currency to filter the query.
+            asset (str, optional): Asset to filter the query (USDT by default).
+            trade_type (str, optional): Trade type to filter the query (actually only BUY works for now).
         """
         session = SessionLocal()
         query = session.query(BinanceRate)
@@ -111,4 +147,17 @@ class HistoryDataController:
             query = query.filter(BinanceRate.date < end_date)
         results = query.all()
         session.close()
-        return {"history": results}
+
+        results = [
+            BinanceHistoryItem(
+                id=result.id,
+                fiat=result.fiat,
+                asset=result.asset,
+                trade_type=result.trade_type,
+                average_price=result.average_price,
+                date=result.date
+            )
+            for result in results
+        ]
+
+        return BinanceHistoryResponse(count=len(results), history=results)

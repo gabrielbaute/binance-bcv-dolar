@@ -246,7 +246,7 @@ class ExchangeRateApp {
 
             // Fetch both history data in parallel
             const [bcvResponse, binanceResponse] = await Promise.all([
-                fetch(`${this.apiBaseUrl}/history/bcv?start_date=${startDateStr}&end_date=${endDateStr}&currency=USD`),
+                fetch(`${this.apiBaseUrl}/history/bcv?start_date=${startDateStr}&end_date=${endDateStr}&currency=DOLAR`),
                 fetch(`${this.apiBaseUrl}/history/binance?start_date=${startDateStr}&end_date=${endDateStr}&fiat=VES&asset=USDT&trade_type=BUY`)
             ]);
             
@@ -261,15 +261,15 @@ class ExchangeRateApp {
             const allDates = new Set();
             
             // Collect all unique dates
-            if (bcvData.data) {
-                bcvData.data.forEach(item => {
-                    if (item.created_at) allDates.add(item.created_at.split('T')[0]);
+            if (bcvData.history) {
+                bcvData.history.forEach(item => {
+                    if (item.date) allDates.add(item.date.split('T')[0]);
                 });
             }
             
-            if (binanceData.data) {
-                binanceData.data.forEach(item => {
-                    if (item.created_at) allDates.add(item.created_at.split('T')[0]);
+            if (binanceData.history) {
+                binanceData.history.forEach(item => {
+                    if (item.date) allDates.add(item.date.split('T')[0]);
                 });
             }
 
@@ -278,12 +278,12 @@ class ExchangeRateApp {
             
             // Create data arrays with matching dates
             const bcvPrices = sortedDates.map(date => {
-                const item = bcvData.data?.find(d => d.created_at?.startsWith(date));
-                return item ? parseFloat(item.price) : null;
+                const item = bcvData.history?.find(d => d.date?.startsWith(date));
+                return item ? parseFloat(item.rate) : null;
             });
             
             const binancePrices = sortedDates.map(date => {
-                const item = binanceData.data?.find(d => d.created_at?.startsWith(date));
+                const item = binanceData.history?.find(d => d.date?.startsWith(date));
                 return item ? parseFloat(item.average_price) : null;
             });
 
@@ -309,7 +309,7 @@ class ExchangeRateApp {
             const endDateStr = endDate.toISOString().split('T')[0];
 
             const [bcvResponse, binanceResponse] = await Promise.all([
-                fetch(`${this.apiBaseUrl}/history/bcv?start_date=${startDateStr}&end_date=${endDateStr}&currency=USD`),
+                fetch(`${this.apiBaseUrl}/history/bcv?start_date=${startDateStr}&end_date=${endDateStr}&currency=DOLAR`),
                 fetch(`${this.apiBaseUrl}/history/binance?start_date=${startDateStr}&end_date=${endDateStr}&fiat=VES&asset=USDT&trade_type=BUY`)
             ]);
             
@@ -320,21 +320,24 @@ class ExchangeRateApp {
             const bcvData = await bcvResponse.json();
             const binanceData = await binanceResponse.json();
             
+            console.log('BCV Data:', bcvData);
+            console.log('Binance Data:', binanceData);
+
             // Create CSV content
             let csvContent = "Date,BCV_Rate,Binance_Rate\n";
             
             // Combine and process data
             const allDates = new Set();
-            if (bcvData.data) bcvData.data.forEach(item => allDates.add(item.created_at?.split('T')[0]));
-            if (binanceData.data) binanceData.data.forEach(item => allDates.add(item.created_at?.split('T')[0]));
+            if (bcvData.history) bcvData.history.forEach(item => allDates.add(item.date?.split('T')[0]));
+            if (binanceData.history) binanceData.history.forEach(item => allDates.add(item.date?.split('T')[0]));
             
             const sortedDates = Array.from(allDates).sort();
             
             sortedDates.forEach(date => {
-                const bcvItem = bcvData.data?.find(d => d.created_at?.startsWith(date));
-                const binanceItem = binanceData.data?.find(d => d.created_at?.startsWith(date));
+                const bcvItem = bcvData.history?.find(d => d.date?.startsWith(date));
+                const binanceItem = binanceData.history?.find(d => d.date?.startsWith(date));
                 
-                const bcvPrice = bcvItem ? bcvItem.price : '';
+                const bcvPrice = bcvItem ? bcvItem.rate : '';
                 const binancePrice = binanceItem ? binanceItem.average_price : '';
                 
                 csvContent += `${date},${bcvPrice},${binancePrice}\n`;

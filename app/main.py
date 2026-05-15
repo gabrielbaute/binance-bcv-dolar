@@ -12,7 +12,21 @@ from app.database.db_config import init_db
 
 setup_logging(log_dir=str(Config.LOG_DIR))
 
-app = FastAPI(title="P2P Exchange Rate API")
+# Definir lifespan
+async def lifespan(app: FastAPI):
+    # --- Startup ---
+    # Inicializar DB
+    init_db(instance_dir=Config.INSTANCE_DIR)
+
+    # Inicializar scheduler
+    scheduler = DolarScheduler()
+    scheduler.start()
+
+    # yield mantiene la app viva hasta que se cierre
+    yield
+
+# Crear app con lifespan
+app = FastAPI(title="P2P Exchange Rate API", lifespan=lifespan)
 
 # Templates directory
 TEMPLATES_DIR = Path("app/ui/templates")

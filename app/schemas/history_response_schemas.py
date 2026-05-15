@@ -8,7 +8,7 @@ class BCVHistoryItem(BaseModel):
 
     Attributes:
         id (int): Database ID of the record.
-        currency (str): Currency symbol (e.g., USD, EUR).
+        currency (str): Currency type (e.g., DOLAR, EURO).
         rate (float): Exchange rate value.
         date (datetime): Timestamp of the record.
     """
@@ -22,7 +22,7 @@ class BCVHistoryItem(BaseModel):
             "examples": [
                 {
                     "id": 1,
-                    "currency": "USD",
+                    "currency": "DOLAR",
                     "rate": 40.25,
                     "date": "2025-11-21T00:00:00"
                 }
@@ -69,24 +69,27 @@ class BCVHistoryResponse(BaseModel):
     Schema for a list of historical BCV records.
 
     Attributes:
+        count (int): Number of historical items.
         history (List[BCVHistoryItem]): List of historical items.
     """
+    count: int = 0
     history: List[BCVHistoryItem]
 
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [
                 {
+                    "count": 2,
                     "history": [
                         {
                             "id": 1,
-                            "currency": "USD",
+                            "currency": "DOLAR",
                             "rate": 40.25,
                             "date": "2025-11-21T00:00:00"
                         },
                         {
                             "id": 2,
-                            "currency": "EUR",
+                            "currency": "EURO",
                             "rate": 42.50,
                             "date": "2025-11-21T00:00:00"
                         }
@@ -101,14 +104,17 @@ class BinanceHistoryResponse(BaseModel):
     Schema for a list of historical Binance records.
 
     Attributes:
+        count (int): Number of historical items.
         history (List[BinanceHistoryItem]): List of historical items.
     """
+    count: int = 0
     history: List[BinanceHistoryItem]
 
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [
                 {
+                    "count": 2,
                     "history": [
                         {
                             "id": 10,
