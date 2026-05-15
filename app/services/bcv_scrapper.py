@@ -46,12 +46,15 @@ class BCVScraper:
             self.logger.error(f"Currency container not found for {currency}")
             return None
 
-        valor_div = div_container.find("div", {"class": "col-sm-6 col-xs-6 centrado"})
-        if not valor_div:
-            self.logger.error(f"Exchange rate not found for {currency}")
-            return None
+        strong_tag = div_container.find("strong", {"class": "strong-tb"})
+        if not strong_tag:
+            valor_div = div_container.find("div", class_=lambda c: c and "centrado" in c)
+            if not valor_div:
+                self.logger.error(f"Exchange rate not found for {currency}")
+                return None
+            return valor_div.get_text(strip=True)
 
-        return valor_div.get_text(strip=True)
+        return strong_tag.get_text(strip=True)
 
     def get_exchange_rate(self, currency: Currency) -> Optional[BCVCurrencyResponse]:
         """
