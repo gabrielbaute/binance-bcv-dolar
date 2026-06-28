@@ -12,6 +12,9 @@ from app.enums import WebhookPriority, Currency
 
 class DolarScheduler():
     def __init__(self):
+        """
+        Initialize the DolarScheduler. This scheduler is responsible for periodically fetching exchange rates from BCV and Binance, saving them to the database, and sending notifications about updates or errors.
+        """
         self.controller = HistoryDataController()
         self.bcv = BCVScraper()
         self.binance = BinanceP2P()
@@ -39,9 +42,15 @@ class DolarScheduler():
         )
         self.notifier.emit(payload)
 
-    def save_bcv_rates(self):
+    def save_bcv_rates(self) -> None:
         """
         Save BCV rates.
+
+        Returns:
+            None
+
+        Exception:
+            Logs error and sends alert if there is an issue fetching or saving BCV rates.
         """
         self.logger.info("Saving BCV rates...")
         try:
@@ -72,9 +81,15 @@ class DolarScheduler():
                 tags="warning,skull"
             )
 
-    def save_binance_rate(self):
+    def save_binance_rate(self) -> None:
         """
         Save Binance rates.
+
+        Returns:
+            None
+        
+        Exception:
+            Logs error and sends alert if there is an issue fetching or saving Binance rates.
         """
         self.logger.info("Saving Binance rates...")
         try:
@@ -104,18 +119,24 @@ class DolarScheduler():
                 tags="warning"
             )
 
-    def scheduler_jobs(self):
+    def scheduler_jobs(self) -> None:
         """
         Scheduler jobs.
+        
+        Returns:
+            None
         """
         self.scheduler.add_job(self.save_bcv_rates, "cron", hour=0, minute=0)
         self.scheduler.add_job(self.save_binance_rate, "cron", hour=6)
         self.scheduler.add_job(self.save_binance_rate, "cron", hour=13)
         self.scheduler.add_job(self.save_binance_rate, "cron", hour=18)
 
-    def start(self):
+    def start(self) -> None:
         """
         Start scheduler.
+        
+        Returns:
+            None
         """
         self.logger.info("Starting scheduler...")
         self.scheduler_jobs()

@@ -1,12 +1,13 @@
 """BCV Scraper module."""
 
-import requests
 import logging
 from datetime import datetime
 from bs4 import BeautifulSoup
 from typing import Optional
+from requests import Session, RequestException
 
 from app.enums.currecies_enum import Currency
+from app.errors.app_errors import BCVConnectionError
 from app.schemas import BCVCurrencyResponse, BCVResponse
 
 class BCVScraper:
@@ -14,19 +15,36 @@ class BCVScraper:
 
     def __init__(self):
         self.url = "https://www.bcv.org.ve"
+        self.session = Session()
         self.logger = logging.getLogger(self.__class__.__name__)
         self._soup = self._get_soup()
 
     def _get_soup(self) -> Optional[BeautifulSoup]:
-        """Get and parse the HTML content from the BCV website."""
+        """
+        Get and parse the HTML content from the BCV website.
+        
+        Returns:
+            Optional[BeautifulSoup]: The parsed HTML content, or None if there was an error.
+        
+        Raises:
+            BCVConnectionError: If there was an error connecting to the BCV website.
+        """
         try:
-            response = requests.get(self.url, verify=False, timeout=15)
+            response = self.session.get(self.url, verify=False, timeout=15)
             response.raise_for_status()
             self.logger.info(f"Connected to {self.url}")
             return BeautifulSoup(response.text, "html.parser")
-        except requests.RequestException as e:
+        except RequestException as e:
             self.logger.error(f"Error connecting to {self.url}: {e}")
-            return None
+            raise BCVConnectionError(
+                details={"url": self.url, "error": str(e)}
+            )
+        except Exception as e:
+            self.logger.error(f"Unexpected error while connecting to {self.url}: {e}")
+            raise BCVConnectionError(
+                message="Unexpected error while connecting to the BCV website.",
+                details={"url": self.url, "error": str(e)}
+            )
 
     def _get_currency_raw(self, currency: Currency) -> Optional[str]:
         """

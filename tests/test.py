@@ -5,6 +5,6 @@ setup_logging()
 
 if __name__ == "__main__":
     binance = BinanceP2P()
-    precios = binance.get_pair(fiat="BRL", asset="USDT", trade_type="BUY", rows=20)
-    print(precios)
+    precios = binance.get_pair(fiat="PEN", asset="USDT", trade_type="BUY", rows=20)
+    print(precios.model_dump_json(indent=7))
 

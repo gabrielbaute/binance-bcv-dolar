@@ -6,5 +6,5 @@ setup_logging()
 if __name__ == "__main__":
     binance = BinanceP2P()
     price = binance.get_usdt_ves_pair()
-    print(price)
+    print(price.model_dump_json(indent=4))
 

@@ -1,9 +1,12 @@
 """Binance P2P module."""
 import requests
 import logging
+from requests import Session
+from requests.exceptions import RequestException
 from statistics import median, mean
 from typing import List, Optional, Dict
 
+from app.errors import BinanceConnectionError
 from app.schemas import BinanceRequest, BinanceResponse
    
 class BinanceP2P:
@@ -12,6 +15,7 @@ class BinanceP2P:
     """
     def __init__(self):
         self.url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
+        self.session = Session()
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def build_request(
@@ -55,16 +59,29 @@ class BinanceP2P:
 
         Returns:
             dict: Response data.
+        
+        Raises:
+            BinanceConnectionError: If there was an error connecting to Binance P2P.
         """
         body = req.model_dump()
         try:
             self.logger.debug("Request Binance P2P")
-            res = requests.post(self.url, json=body, headers={"accept": "application/json"})
+            res = self.session.post(self.url, json=body, headers={"Content-Type": "application/json"}, timeout=15)
+            res.raise_for_status()
+            self.logger.debug("Response Binance P2P")
             json_data = res.json()
             return json_data
-        except Exception as e:
+        except RequestException as e:
             self.logger.error(f"Error at Binance P2P request: {e}")
-            return None
+            raise BinanceConnectionError(
+                details={"error": str(e)}
+            )
+        except ValueError as e:
+            self.logger.error(f"Error parsing Binance P2P response: {e}")
+            raise BinanceConnectionError(
+                message="Error parsing Binance P2P response.",
+                details={"error": str(e)}
+            )
 
     def colect_prices(self, data: dict, fiat: Optional[str] = None) -> List[float]:
         """
@@ -72,6 +89,7 @@ class BinanceP2P:
 
         Args:
             data (dict): Response data.
+            fiat (Optional[str]): Fiat currency for logging purposes.
 
         Returns:
             List[float]: List of prices.
@@ -91,7 +109,7 @@ class BinanceP2P:
         Calculate the median price.
 
         Args:
-            prices (list): List of prices.
+            prices (Optional[List[float]]): List of prices.
 
         Returns:
             Dict[str, float]: Median and average price
