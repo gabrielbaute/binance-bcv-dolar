@@ -32,7 +32,7 @@ class BinanceService:
         self.url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
         self.request_session = Session()
         self.database_session = databasesession
-        self.controller = BinanceController(databasesession=databasesession) if databasesession else None
+        self.controller = BinanceController(session=databasesession) if databasesession else None
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def _build_request(

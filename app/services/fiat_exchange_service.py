@@ -19,7 +19,7 @@ class FiatExchangeService():
     def __init__(self, database_session: AsyncSession):
         self.database_session = database_session
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.binance = BinanceService(database_session=database_session)
+        self.binance = BinanceService(databasesession=database_session)
 
     def _get_real_time_usdt_pair(self, fiat: FiatCurrency, trade_type: TradeType) -> Optional[BinanceRealTimeResponse]:
         """

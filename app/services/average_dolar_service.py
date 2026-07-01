@@ -22,7 +22,7 @@ class DolarVenezuelaService:
             database_session (AsyncSession): Active transactional instance mapping to persistent storage layers.
         """
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.bcv = BCVService(database_session=database_session)
+        self.bcv = BCVService(databasesession=database_session)
         self.binance = BinanceService(databasesession=database_session)
 
     def get_real_time_average_dolar(self) -> Optional[RealTimeDolarResponse]:

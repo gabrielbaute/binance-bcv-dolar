@@ -72,7 +72,7 @@ async def get_db_session(
     try:
         yield session
     finally:
-        await session.close()
+        await session.aclose()
 
 
 def get_bcv_service(database_session: AsyncSession = Depends(get_db_session)) -> BCVService:
@@ -85,7 +85,7 @@ def get_bcv_service(database_session: AsyncSession = Depends(get_db_session)) ->
     Returns:
         BCVService: Bound functional logic matching official currency updates.
     """
-    return BCVService(database_session=database_session)
+    return BCVService(databasesession=database_session)
 
 
 def get_binance_service(database_session: AsyncSession = Depends(get_db_session)) -> BinanceService:
@@ -98,7 +98,7 @@ def get_binance_service(database_session: AsyncSession = Depends(get_db_session)
     Returns:
         BinanceService: Configured component pointing to P2P order books.
     """
-    return BinanceService(database_session=database_session)
+    return BinanceService(databasesession=database_session)
 
 
 def get_dolar_vzla_service(
