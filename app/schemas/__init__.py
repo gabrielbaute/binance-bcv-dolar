@@ -1,9 +1,17 @@
 from app.schemas.binance_request_schema import BinanceRequest
-from app.schemas.binance_response_schemas import BinanceResponse
 from app.schemas.dolar_response import DolarResponse
 from app.schemas.fiats_pair_response import FiatPairResponse
 from app.schemas.history_response_schemas import BCVHistoryResponse, BinanceHistoryResponse, BCVHistoryItem, BinanceHistoryItem
 from app.schemas.webhook_payload_schemas import WebhookPayload
+
+from app.schemas.binance_response_schemas import (
+    BinanceRealTimeResponse,
+    BinanceCurrencyListResponse,
+    BinanceCurrencyResponse,
+    BinanceCurrencyCreate,
+    BinanceCurrencyUpdate
+)
+
 from app.schemas.bcv_response_schemas import (
     BCVResponse, 
     BCVCurrencyCreate, 
@@ -15,7 +23,11 @@ from app.schemas.bcv_response_schemas import (
 
 __all__ = [
     "BinanceRequest",
-    "BinanceResponse",
+    "BinanceRealTimeResponse",
+    "BinanceCurrencyListResponse",
+    "BinanceCurrencyResponse",
+    "BinanceCurrencyCreate",
+    "BinanceCurrencyUpdate",
     "BCVResponse",
     "BCVCurrencyCreate",
     "BCVCurrencyUpdate",

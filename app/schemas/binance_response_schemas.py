@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.enums import TradeType, BinanceAsset, FiatCurrency
 
-class BinanceResponse(BaseModel):
+class BinanceRealTimeResponse(BaseModel):
     """
     Schema for the response from Binance P2P.
 
