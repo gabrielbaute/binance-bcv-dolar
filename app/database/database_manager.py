@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 
 from app.config import Config, config
 
-
 class DatabaseManager:
     """
     SQLite database connection manager using SQLAlchemy and SQLModel.
