@@ -18,7 +18,7 @@ class DolarScheduler():
         Initialize the DolarScheduler. This scheduler is responsible for periodically fetching exchange rates from BCV and Binance, saving them to the database, and sending notifications about updates or errors.
         """
         self.config = config
-        self.notifier = NtfyWebhookService()
+        self.notifier = NtfyWebhookService(config=self.config)
         self.binance_service = BinanceService(databasesession=databasesession)
         self.bcv_service = BCVService(databasesession=databasesession)
         self.scheduler = AsyncIOScheduler(timezone=timezone("America/Caracas"))
