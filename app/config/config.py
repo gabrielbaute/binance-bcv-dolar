@@ -22,16 +22,16 @@ class Config(BaseSettings):
     LOGS_DIR: Path = BASE_DIR / "logs"
     
     
-    # ------------ LOGGING ------------  
+    # ----------- LOGGING -------------
     LOG_LEVEL: str = "INFO"
     
-    # ------------ API ------------   
+    # ----------- API -----------------
     API_HOST: str = "127.0.0.1"  
     API_PORT: int = 8000  
     API_RELOAD: bool = False  
     API_LOG_LEVEL: str = "info"
 
-    # ------------ DATABASE ------------  
+    # ----------- DATABASE ------------
     DATABASE_URL: str = str(f"sqlite+aiosqlite:///{INSTANCE_DIR / f'dolar_vzla.db'}")  
     DATABASE_ECHO: bool = False  
     DATABASE_POOL_SIZE: int = 5  
@@ -39,9 +39,15 @@ class Config(BaseSettings):
     DATABASE_POOL_TIMEOUT: int = 30  
     DATABASE_POOL_PRE_PING: bool = True
 
-    # ------------ WEBHOOKS ------------  
+    # ----------- WEBHOOKS ------------
     NTFY_TOPIC: str
     NTFY_URL: str
+
+    # ----------- CRONJOBS ------------
+    BINANCE_EXTRA_FIATS: str
+    BINANCE_EXTRA_CRON: str
+    BINANCE_VES_CRON: str
+    BCV_CRON: str
 
     model_config = SettingsConfigDict(  
         env_file=".env",  
