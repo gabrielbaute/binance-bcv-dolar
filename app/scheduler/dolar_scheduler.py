@@ -46,53 +46,57 @@ class DolarScheduler():
 
     async def save_bcv_rates(self) -> None:
         """
-        Save BCV rates.
+        Fetch and persist all officially supported exchange rates from Banco Central de Venezuela.
+
+        Iterates dynamically through the configured currency matrix, handling potential individual scraping or persistence anomalies defensively without interrupting the overall execution loop. Emits a consolidated notification metrics payload.
 
         Returns:
             None
-
-        Exception:
-            Logs error and sends alert if there is an issue fetching or saving BCV rates.
         """
-        self.logger.info("Saving BCV rates...")
-        try:
-            dolar = await self.bcv_service.save_rate_to_db(Currency.DOLAR)
-            if not dolar:
-                self.logger.error(f"Error saving {Currency.DOLAR.value} on database.")
+        self.logger.info("Starting batch synchronization for all active BCV currency assets...")
+        updated_rates_summary: list[str] = []
 
-            euro = await self.bcv_service.save_rate_to_db(Currency.EURO)
-            if not euro:
-                self.logger.error(f"Error saving {Currency.EURO.value} on database.")
+        for cur in Currency.to_list():
+            try:
+                cur_save = await self.bcv_service.save_rate_to_db(cur)
+                if not cur_save:
+                    self.logger.error(f"Execution skipped for asset {cur.value}: Persistence routine returned invalid state.")
+                    continue
+                
+                # Report construction
+                msg = f"• {cur.value.upper()}: **{cur_save.rate:.4f} Bs/{cur.value}**"
+                self.logger.info(f"Database sync successful for asset metric: {msg}")
+                updated_rates_summary.append(msg)
 
-            msg = f"BCV Rates Updated: USD **{dolar.rate} | EUR {euro.rate}**"
-            self.logger.info(msg)
+            except DatabaseOperationError as e:
+                err_msg = f"Database tracking constraint violation saving BCV token {cur.value}: {e}"
+                self.logger.error(err_msg)
+                self._send_alert(
+                    title="Database Integrity Error",
+                    event="server_error", 
+                    priority=WebhookPriority.high, 
+                    msg=err_msg, 
+                    tags="warning,skull"
+                )
+            except Exception as e:
+                err_msg = f"Unhandled pipeline disruption isolating BCV token {cur.value}: {e}"
+                self.logger.error(err_msg)
+                self._send_alert(
+                    title="BCV Request Exception",
+                    event="bcv_error", 
+                    priority=WebhookPriority.high, 
+                    msg=err_msg, 
+                    tags="warning,skull"
+                )
+
+        if updated_rates_summary:
+            consolidated_message = "Official Central Bank updates synchronized:\n" + "\n".join(updated_rates_summary)
             self._send_alert(
-                title="BCV Rates Updated",
+                title="BCV Rates Batch Updated",
                 event="bcv_update", 
                 priority=WebhookPriority.default, 
-                msg=msg, 
-                tags="bank,venezuela"
-            )
-
-        except DatabaseOperationError as e:
-            err_msg = f"Dabasa operation error error saving BCV rates: {e}"
-            self.logger.error(err_msg)
-            self._send_alert(
-                title="Server Error",
-                event="server_error", 
-                priority=WebhookPriority.high, 
-                msg=err_msg, 
-                tags="warning,skull"
-            )
-        except Exception as e:
-            err_msg = f"Unknown error saving BCV rates: {e}"
-            self.logger.error(err_msg)
-            self._send_alert(
-                title="BCV Request Error",
-                event="bcv_error", 
-                priority=WebhookPriority.high, 
-                msg=err_msg, 
-                tags="warning,skull"
+                msg=consolidated_message, 
+                tags="bank,venezuela,chart_with_upwards_trend"
             )
 
     async def save_currency_binance_rate(self, currency: FiatCurrency, asset: BinanceAsset) -> bool:
