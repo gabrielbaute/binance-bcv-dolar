@@ -101,6 +101,35 @@ class BinanceController(
         """
         register = await self._get_or_raise(register_id)
         return BinanceCurrencyResponse.model_validate(register)
+    
+    async def get_last_register_by_pair(
+        self, 
+        asset: BinanceAsset, 
+        fiat: FiatCurrency, 
+        trade_type: TradeType = TradeType.BUY
+    ) -> Optional[BinanceCurrencyResponse]:
+        """
+        Retrieve the most recent record for a specific asset-fiat-trade_type combination.
+
+        Args:
+            asset (BinanceAsset): Cryptocurrency token target (e.g., USDT).
+            fiat (FiatCurrency): Local fiat currency token target (e.g., VES).
+            trade_type (TradeType): Order book context perspective.
+        Returns:
+            Optional[BinanceCurrencyResponse]: The latest record if found, else None.
+        """
+        where_clause = [
+            BinanceRateSQLModel.asset == asset,
+            BinanceRateSQLModel.fiat == fiat,
+            BinanceRateSQLModel.trade_type == trade_type,
+        ]
+
+        last_register = await self.get_last_register_with_conditions(
+            where_clause=where_clause, sort_by_attribute="date"
+        )
+        if last_register is None:
+            return None
+        return BinanceCurrencyResponse.model_validate(last_register)
 
     async def update_register_rate(
         self, register_id: UUID, rate: BinanceCurrencyUpdate
