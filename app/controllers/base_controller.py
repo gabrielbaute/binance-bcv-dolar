@@ -53,6 +53,25 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 
+    async def get_last_register_with_conditions(
+        self, 
+        where_clause: List[Any],
+        sort_by_attribute: str = "date"
+    ) -> Optional[ModelType]:
+        """
+        Retrieve the last register that matches the given conditions.
+
+        Args:
+            where_clause (List[Any]): List of SQL Alchemy conditional expressions.
+
+        Returns:
+            Optional[ModelType]: The object found or None.
+        """
+        order_column = getattr(self.model, sort_by_attribute)
+        statement = select(self.model).where(*where_clause).order_by(order_column.desc()).limit(1)
+        result = await self.session.execute(statement)
+        return result.scalar_one_or_none()
+
     async def get_multi(
         self, skip: int = 0, limit: int = 100
     ) -> List[ModelType]:
