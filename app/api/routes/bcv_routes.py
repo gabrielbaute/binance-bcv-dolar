@@ -1,65 +1,59 @@
-from fastapi import APIRouter, Query
+from typing import Tuple
+from fastapi import APIRouter, Query, Depends
 
-from app.services import BCVScraper
-from app.enums.currecies_enum import Currency
-from app.schemas import BCVCurrencyResponse, BCVResponse
+from app.enums import Currency
+from app.services import BCVService
+from app.api.dependencies import get_bcv_service
+from app.schemas import (
+    BCVResponse,
+    BCVCurrencyResponse,
+    BCVCurrencyRealTimeResponse
+)
 
 router = APIRouter(prefix="/bcv", tags=["BCV"])
 
-@router.get("/realtime", response_model=BCVCurrencyResponse)
-def realtime_bcv():
+@router.get("/realtime", response_model=Tuple[BCVCurrencyRealTimeResponse])
+def realtime_bcv(
+    bcv_service: BCVService = Depends(get_bcv_service)
+):
     """
     The Euro/Dollar exchange rate for the day has been updated, according to the Central Bank of Venezuela (BCV).
     """
-    scraper = BCVScraper()
-    return {
-        "dolar": scraper.get_exchange_rate(Currency.DOLAR),
-        "euro": scraper.get_exchange_rate(Currency.EURO)
-    }
+    dolar = bcv_service.get_real_time_exchange_rate(Currency.DOLAR)
+    euro = bcv_service.get_real_time_exchange_rate(Currency.EURO)
+    return dolar, euro
 
 @router.get("/dolar", response_model=BCVCurrencyResponse)
-def dolar_bcv():
+async def dolar_bcv(
+    bcv_service: BCVService = Depends(get_bcv_service)
+):
     """
     It provides the daily dollar exchange rate, according to the Central Bank of Venezuela (BCV). The daily rate is set the previous day, when banks close their exchange desks and report to the BCV, which publishes the average rate at 5 pm, Venezuelan time.
     """
-    scraper = BCVScraper()
-    return scraper.get_exchange_rate(Currency.DOLAR)
+    return await bcv_service.get_exchange_rate(currency=Currency.DOLAR)
 
 @router.get("/euro", response_model=BCVCurrencyResponse)
-def euro_bcv():
+async def euro_bcv(
+    bcv_service: BCVService = Depends(get_bcv_service)
+):
     """
     It provides the daily euro exchange rate, according to the Central Bank of Venezuela (BCV). The daily rate is set the previous day, when banks close their exchange desks and report to the BCV, which publishes the average rate at 5 pm, Venezuelan time.
     """
-    scraper = BCVScraper()
-    return scraper.get_exchange_rate(Currency.EURO)
+    return await bcv_service.get_exchange_rate(currency=Currency.EURO)
 
-@router.get("/all", response_model=BCVResponse)
-def all_bcv():
-    """
-    Returns the average exchange rate for the day for the five currencies registered by the BCV in the banking system: dolar, euro, yuan, lira and rublo.
-    """
-    scraper = BCVScraper()
-    return scraper.get_all_exchange_rates()
-
-@router.get("/query", response_model=BCVResponse)
-def query_bcv(
-    currency: str = Query(..., description="Currency to query", enum=["dolar", "euro", "yuan", "lira", "rublo"])
+@router.get("/query", response_model=BCVCurrencyResponse)
+async def query_bcv(
+    currency: str = Query(..., description="Currency to query", enum=["dolar", "euro", "yuan", "lira", "rublo"]),
+    bcv_service: BCVService = Depends(get_bcv_service)
     ):
     """
     Returns the average echange rate for the day for the selected currency.
     """
-    scraper = BCVScraper()
-    currencies = {
-        "dolar": Currency.DOLAR,
-        "euro": Currency.EURO,
-        "yuan": Currency.YUAN,
-        "lira": Currency.LIRA,
-        "rublo": Currency.RUBLE
-    }
-    currency = currencies.get(currency.lower())
-    if not currency:
-        return {
-            "error": "Invalid currency",
-            "message": "Currency must be one of the following: dolar, euro, yuan, lira, rublo"
-            }
-    return scraper.get_exchange_rate(currency)
+    enum_currency = Currency.map_currency(currency)
+    return await bcv_service.get_exchange_rate(enum_currency)
+
+@router.get("/all", response_model=BCVResponse)
+async def get_real_time_all(
+    bcv_service: BCVService = Depends(get_bcv_service)
+):
+    return await bcv_service.get_all_exchange_rates()
