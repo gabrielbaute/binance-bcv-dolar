@@ -16,3 +16,6 @@ logs/
 # Database
 instance/
 *.db
+
+# Repomix
+repomix-output.xml
