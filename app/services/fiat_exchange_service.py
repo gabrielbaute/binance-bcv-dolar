@@ -12,7 +12,7 @@ from app.schemas import (
     BinanceRealTimeResponse
 )
 
-class FiatExchengeService():
+class FiatExchangeService():
     """
     Service for getting fiat exchange rates with USDT.
     """
