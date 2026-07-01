@@ -1,4 +1,5 @@
 """Lista de divisas soportadas por el BCV."""
+from typing import List
 from enum import StrEnum
 
 class Currency(StrEnum):
@@ -50,7 +51,7 @@ class Currency(StrEnum):
         return self.value.lower()
     
     @staticmethod
-    def to_list() -> list:
+    def to_list() -> List[Currency]:
         currencies_list = [
             Currency.DOLAR,
             Currency.EURO,
@@ -60,3 +61,17 @@ class Currency(StrEnum):
         ]
 
         return currencies_list
+    
+    @staticmethod
+    def map_currency(str_currency: str) -> 'Currency':
+        currencies_map = {
+            "dolar": Currency.DOLAR,
+            "euro": Currency.EURO,
+            "yuan": Currency.YUAN,
+            "lira": Currency.LIRA,
+            "rublo": Currency.RUBLE
+        }
+        try:
+            return currencies_map.get(str_currency)
+        except Exception:
+            raise ValueError("Currency not suported.")
