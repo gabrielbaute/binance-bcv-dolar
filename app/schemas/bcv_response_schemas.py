@@ -48,7 +48,7 @@ class BCVCurrencyResponse(BaseModel):
         rate (Optional[float]): Rate of the currency.
         date (datetime): Date of the response.
     """
-    id: Optional[UUID] = None
+    id: UUID = None
     currency: Currency
     trade_type: TradeType = TradeType.SELL
     rate: float
@@ -58,13 +58,43 @@ class BCVCurrencyResponse(BaseModel):
         json_schema_extra={
             "examples": [
                 {
-                    "currency": "USD",
+                    "id": "123e4567-e89b-12d3-a456-426614174000",
+                    "currency": "DOLAR",
+                    "trade_type": "SELL",
                     "rate": 245.545621,
                     "date": "2025-11-21T07:43:14.890702"
                 }
             ]
         }
     )
+
+class BCVCurrencyRealTimeResponse(BaseModel):
+    """
+    Schema for the real time response from BCV for a single currency.
+
+    Attributes:
+        currency (Currency): Currency tracked by BCV.
+        trade_type (TradeType): Trade type operation for the currency.
+        rate (Optional[float]): Rate of the currency.
+        date (datetime): Date of the response.
+    """
+    currency: Currency
+    trade_type: TradeType = TradeType.SELL
+    rate: float
+    date: datetime
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "currency": "DOLAR",
+                    "rate": 245.545621,
+                    "date": "2025-11-21T07:43:14.890702"
+                }
+            ]
+        }
+    )
+
 
 class BCVCurrencyListResponse(BaseModel):
     """
@@ -99,7 +129,7 @@ class BCVResponse(BaseModel):
             "examples": [
                 {
                     "dolar": {
-                        "currency": "USD",
+                        "currency": "DOLAR",
                         "rate": 245.545621,
                         "date": "2025-11-21T07:43:14.890702"
                     },
