@@ -52,6 +52,9 @@ class Currency(StrEnum):
     
     @staticmethod
     def to_list() -> List[Currency]:
+        """
+        Returns a list with all currencies suported.
+        """
         currencies_list = [
             Currency.DOLAR,
             Currency.EURO,
@@ -64,6 +67,15 @@ class Currency(StrEnum):
     
     @staticmethod
     def map_currency(str_currency: str) -> 'Currency':
+        """
+        Maps a strings expresion to a enum expresion.
+
+        Args:
+            str_currency(str): Currency in string.
+        
+        Returns:
+            Currency: Currency in enum form.
+        """
         currencies_map = {
             "dolar": Currency.DOLAR,
             "euro": Currency.EURO,
