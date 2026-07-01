@@ -93,6 +93,26 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
         """
         register = await self._get_or_raise(register_id)
         return BCVCurrencyResponse.model_validate(register)
+    
+    async def get_last_register_by_currency(self, currency: Currency, trade_type: TradeType = TradeType.SELL) -> Optional[BCVCurrencyResponse]:
+        """
+        Fetch the most recent rate for a specific currency and trade type.
+
+        Args:
+            currency (Currency): Target currency enumeration.
+            trade_type (TradeType): Trade operation type.
+
+        Returns:
+            Optional[BCVCurrencyResponse]: The most recent rate for the specified currency and trade type, or None if not found.
+        """
+        where_clause = [
+            BCVRateSQLModel.currency == currency,
+            BCVRateSQLModel.trade_type == trade_type
+        ]
+        last_register = await self.get_last_register_with_conditions(where_clause=where_clause, sort_by_attribute="date")
+        if last_register is None:
+            return None
+        return BCVCurrencyResponse.model_validate(last_register)
 
     async def update_register_rate(self, register_id: UUID, rate: BCVCurrencyUpdate) -> BCVCurrencyResponse:
         """Modify fields on an existing record.
