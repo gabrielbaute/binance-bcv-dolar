@@ -11,7 +11,8 @@ from app.enums import Currency, TradeType
 from app.controllers import BCVController
 from app.errors import (
     BCVConnectionError, 
-    DatabaseSessionError, 
+    DatabaseSessionError,
+    DatabaseOperationError, 
     BCVReadingRateError,
     RegisterNotFoundError
 )
@@ -161,7 +162,10 @@ class BCVService:
             return saved_rate
         except Exception as e:
             self.logger.error(f"Error saving rate to database: {e}")
-            return None
+            raise DatabaseOperationError(
+                message="Error while saving currency record",
+                details={"currency": currency, "error:": e}
+            )
 
     async def get_exchange_rate(self, currency: Currency) -> Optional[BCVCurrencyResponse]:
         """
