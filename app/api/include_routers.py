@@ -8,13 +8,13 @@ from app.api.routes.fiat_routes import router as fiat_router
 from app.api.routes.health_routes import router as health_router
 
 
-def include_routers(app: FastAPI):
+def include_routers(app: FastAPI, prefix: str):
     """
     Include routers for API routes
     """
-    app.include_router(bcv_router, prefix="/api")
-    app.include_router(dolar_router, prefix="/api")
-    app.include_router(binance_router, prefix="/api")
-    app.include_router(history_router, prefix="/api")
-    app.include_router(fiat_router, prefix="/api")
-    app.include_router(health_router)
+    app.include_router(bcv_router, prefix=prefix)
+    app.include_router(dolar_router, prefix=prefix)
+    app.include_router(binance_router, prefix=prefix)
+    app.include_router(history_router, prefix=prefix)
+    app.include_router(fiat_router, prefix=prefix)
+    app.include_router(health_router, prefix=prefix)
