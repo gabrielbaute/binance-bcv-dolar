@@ -15,7 +15,7 @@ from app.services import (
     BCVService,
     BinanceService,
     DolarVenezuelaService,
-    FiatExchengeService,
+    FiatExchangeService,
     NtfyWebhookService,
 )
 
@@ -116,9 +116,9 @@ def get_dolar_vzla_service(
     return DolarVenezuelaService(database_session=database_session)
 
 
-def get_fiat_exchenge_service(
+def get_fiat_exchange_service(
     database_session: AsyncSession = Depends(get_db_session)
-) -> FiatExchengeService:
+) -> FiatExchangeService:
     """
     Inject the cross-currency fiat conversion service utilizing cross-rate calculations.
 
@@ -128,4 +128,4 @@ def get_fiat_exchenge_service(
     Returns:
         FiatExchengeService: Active service tracking foreign pairs and exchange indices.
     """
-    return FiatExchengeService(database_session=database_session)
+    return FiatExchangeService(database_session=database_session)
