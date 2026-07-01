@@ -1,7 +1,7 @@
 """Fiat Pair Service module."""
 import logging
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional, Union, List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.binance_service import BinanceService
@@ -110,6 +110,83 @@ class FiatExchengeService():
             date=datetime.now()
         )
     
+    #TODO: This method requiere a refactor and detailed review, as it is complex and has multiple responsibilities. Consider breaking it down into smaller methods for clarity and maintainability.
+    async def get_historical_pair(
+            self, 
+            fiat_1: FiatCurrency, 
+            fiat_2: FiatCurrency,
+            start_date: datetime,
+            end_date: datetime,
+            skip: int = 0,
+            limit: int = 100
+    ) -> list[FiatPairResponse]:
+        """
+        Fetch chronologically synchronized cross-pricing metrics between two specific fiat currencies.
+
+        Args:
+            fiat_1 (FiatCurrency): Source operational fiat currency.
+            fiat_2 (FiatCurrency): Target destination fiat currency.
+            start_date (datetime): Lower chronological boundary.
+            end_date (datetime): Upper chronological boundary.
+            skip (int): Pagination offset window marker. Defaults to 0.
+            limit (int): Pagination maximum payload constraints. Defaults to 100.
+
+        Returns:
+            list[FiatPairResponse]: Aligned sequence of historical cross rate contexts.
+        """
+        self.logger.info(f"Getting historical data for pair: {fiat_1.value} - {fiat_2.value} from {start_date} to {end_date}")
+
+        f1_buy_res = await self.binance.get_binance_pair_by_time_range(
+            fiat=fiat_1, asset=BinanceAsset.USDT, trade_type=TradeType.BUY, 
+            start_time=start_date, end_time=end_date, skip=skip, limit=limit
+        )
+        f1_sell_res = await self.binance.get_binance_pair_by_time_range(
+            fiat=fiat_1, asset=BinanceAsset.USDT, trade_type=TradeType.SELL, 
+            start_time=start_date, end_time=end_date, skip=skip, limit=limit
+        )
+        f2_buy_res = await self.binance.get_binance_pair_by_time_range(
+            fiat=fiat_2, asset=BinanceAsset.USDT, trade_type=TradeType.BUY, 
+            start_time=start_date, end_time=end_date, skip=skip, limit=limit
+        )
+        f2_sell_res = await self.binance.get_binance_pair_by_time_range(
+            fiat=fiat_2, asset=BinanceAsset.USDT, trade_type=TradeType.SELL, 
+            start_time=start_date, end_time=end_date, skip=skip, limit=limit
+        )
+
+        def build_timeline_map(currencies):
+            return {currency.date.strftime("%Y-%m-%d %H:%M"): currency for currency in currencies}
+
+        map_f1_buy = build_timeline_map(f1_buy_res.currencies)
+        map_f1_sell = build_timeline_map(f1_sell_res.currencies)
+        map_f2_buy = build_timeline_map(f2_buy_res.currencies)
+        map_f2_sell = build_timeline_map(f2_sell_res.currencies)
+
+        historic: list[FiatPairResponse] = []
+
+        for timeline_key, f1_buy_item in map_f1_buy.items():
+            f1_buy_item = map_f1_buy.get(timeline_key)
+            f1_sell_item = map_f1_sell.get(timeline_key)
+            f2_buy_item = map_f2_buy.get(timeline_key)
+            f2_sell_item = map_f2_sell.get(timeline_key)
+
+            if not (f1_buy_item and f1_sell_item and f2_buy_item and f2_sell_item):
+                self.logger.debug(f"Skipping timeline frame {timeline_key} due to incomplete metrics alignment.")
+                continue
+
+            historic.append(
+                FiatPairResponse(
+                    fiat_1_p2p_buy=f1_buy_item,
+                    fiat_1_p2p_sell=f1_sell_item,
+                    fiat_2_p2p_buy=f2_buy_item,
+                    fiat_2_p2p_sell=f2_sell_item,
+                    average_exchange_rate_f1_f2=self._calculate_exchange_rate(f1_buy_item, f2_sell_item),
+                    average_exchange_rate_f2_f1=self._calculate_exchange_rate(f2_buy_item, f1_sell_item),
+                    date=f1_buy_item.date
+                )
+            )
+
+        return historic
+
     def get_real_time_pair(self, fiat_1: FiatCurrency, fiat_2: FiatCurrency) -> FiatPairResponse:
         """
         Fetch real-time cross-pricing metrics between two specific fiat currencies from Binance P2P.
@@ -138,4 +215,4 @@ class FiatExchengeService():
             average_exchange_rate_f1_f2=exchange_rate_f1_f2,
             average_exchange_rate_f2_f1=exchange_rate_f2_f1,
             date=datetime.now()
-        ) 
+        )
