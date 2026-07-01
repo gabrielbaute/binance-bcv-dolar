@@ -1,6 +1,6 @@
 from app.schemas.binance_request_schema import BinanceRequest
-from app.schemas.dolar_response import DolarResponse
 from app.schemas.fiats_pair_response import FiatPairResponse
+from app.schemas.dolar_response import DolarResponse, RealTimeDolarResponse
 from app.schemas.history_response_schemas import BCVHistoryResponse, BinanceHistoryResponse, BCVHistoryItem, BinanceHistoryItem
 from app.schemas.webhook_payload_schemas import WebhookPayload
 
@@ -35,6 +35,7 @@ __all__ = [
     "BCVCurrencyListResponse",
     "BCVCurrencyRealTimeResponse",
     "DolarResponse",
+    "RealTimeDolarResponse",
     "FiatPairResponse",
     "BCVHistoryResponse",
     "BinanceHistoryResponse",
