@@ -1,36 +1,52 @@
 """
 General configuration for the app.
 """
-import os
-from pathlib import Path
-from dotenv import load_dotenv
+from pathlib import Path  
+from pydantic import Field  
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv()
+from app.config.app_version import __version__
 
-class Config:
+class Config(BaseSettings):
     """
     Config class for environtment variables.
     """
-    APP_NAME = "P2P Exchange Tracker"
-    APP_VERSION = "0.1.0"
+    # ------------ APP INFO ------------  
+    APP_NAME: str = "P2P Exchange Tracker"
+    APP_VERSION: str =  __version__
 
+    # ------------ Directories and config path ------------  
     # Directory and path config
-    BASE_DIR = Path(__file__).resolve().parent
-    INSTANCE_DIR = Path(os.getenv("INSTANCE_DIR", BASE_DIR / ".." / "instance"))
+    BASE_DIR: Path = Path(__file__).resolve().parent
+    INSTANCE_DIR: Path = BASE_DIR / "instance"
+    LOGS_DIR: Path = BASE_DIR / "logs"
     
     
-    # Logging config
-    LOG_DIR = Path(os.getenv("LOG_DIR", BASE_DIR / "logs"))
-    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+    # ------------ LOGGING ------------  
+    LOG_LEVEL: str = "INFO"
     
-    # API config
-    API_PORT = int(os.getenv("API_PORT", 8000))
-    API_HOST = os.getenv("API_HOST", "0.0.0.0")
+    # ------------ API ------------   
+    API_HOST: str = "127.0.0.1"  
+    API_PORT: int = 8000  
+    API_RELOAD: bool = False  
+    API_LOG_LEVEL: str = "info"
 
-    # Database config
-    DATABASE_URL = f"sqlite:///{os.path.join(INSTANCE_DIR, 'exchange_rates.db')}"
-    DATABASE_CONNECT_ARGS = {"check_same_thread": False}
+    # ------------ DATABASE ------------  
+    DATABASE_URL: str = str(f"sqlite+aiosqlite:///{INSTANCE_DIR / f'dolar_vzla.db'}")  
+    DATABASE_ECHO: bool = False  
+    DATABASE_POOL_SIZE: int = 5  
+    DATABASE_POOL_RECYCLE: int = 3600  
+    DATABASE_POOL_TIMEOUT: int = 30  
+    DATABASE_POOL_PRE_PING: bool = True
 
-    # Webhooks
-    NTFY_TOPIC = os.getenv("NTFY_TOPIC", "p2p_tracker_alerts")
-    NTFY_URL = os.getenv("NTFY_URL", "https://ntfy.sh")
+    # ------------ WEBHOOKS ------------  
+    NTFY_TOPIC: str
+    NTFY_URL: str
+
+    model_config = SettingsConfigDict(  
+        env_file=".env",  
+        env_file_encoding="utf-8",  
+        extra="ignore"  
+    )
+
+config = Config()
