@@ -1,5 +1,4 @@
 """Lista de divisas soportadas por el BCV."""
-
 from enum import StrEnum
 
 class Currency(StrEnum):
@@ -52,7 +51,7 @@ class Currency(StrEnum):
     
     @staticmethod
     def to_list() -> list:
-        list = [
+        currencies_list = [
             Currency.DOLAR,
             Currency.EURO,
             Currency.YUAN,
@@ -60,4 +59,4 @@ class Currency(StrEnum):
             Currency.RUBLE
         ]
 
-        return list
+        return currencies_list
