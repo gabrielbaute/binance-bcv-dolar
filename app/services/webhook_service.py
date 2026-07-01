@@ -9,17 +9,18 @@ class NtfyWebhookService:
     """
     Service class to handle NTFY notifications asynchronously.
     """
-    def __init__(self):
+    def __init__(self, config: Config):
         """Initializes the Ntfy service with configuration."""
-        self.topic = Config.NTFY_TOPIC
-        self.base_url = Config.NTFY_URL
+        self.topic = config.NTFY_TOPIC
+        self.base_url = config.NTFY_URL
         self.webhook_url = f"{self.base_url.rstrip('/')}/{self.topic}"
-        self.app_name = Config.APP_NAME
-        self.app_version = Config.APP_VERSION
+        self.app_name = config.APP_NAME
+        self.app_version = config.APP_VERSION
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def _format_message(self, payload: WebhookPayload) -> str:
-        """Formatear el mensaje para NTFY.
+        """
+        Formatear el mensaje para NTFY.
         
         Args:
             payload (WebhookPayload): Content of the notification.
@@ -30,7 +31,8 @@ class NtfyWebhookService:
         return msg
 
     def _format_headers(self, payload: WebhookPayload) -> Dict[str, str]:
-        """Format the headers for NTFY.
+        """
+        Format the headers for NTFY.
         
         Args:
             payload (WebhookPayload): Content of the notification.
@@ -54,7 +56,8 @@ class NtfyWebhookService:
         return headers
 
     def emit(self, payload: WebhookPayload) -> Optional[int]:
-        """Emit a NTFY notification
+        """
+        Emit a NTFY notification
         
         Args:
             payload (WebhookPayload): Notification content.
