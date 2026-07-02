@@ -6,6 +6,10 @@ venv/
 __pycache__/
 *pyc
 
+# Tests
+*.coverage
+.pytest_cache/
+
 # environtment
 *.env
 
