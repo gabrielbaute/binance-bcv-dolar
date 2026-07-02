@@ -100,7 +100,7 @@ class BCVService:
             currency (Currency): The currency to get the exchange rate for.
 
         Returns:
-            Optional[BCVCurrencyRealTimeResponse]: The exchange rate for the currency, or None if not found.
+            BCVCurrencyRealTimeResponse: The exchange rate for the currency.
 
         Raises:
             BCVReadingRateError: If the raw value cannot be converted to a float or if the currency is not found on the BCV website.
