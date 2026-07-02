@@ -54,7 +54,7 @@ class BinanceController(
             BinanceCurrencyListResponse: Validated response payload API model.
         """
         return BinanceCurrencyListResponse(
-            currencies=[BinanceCurrencyResponse.model_validate(rate) for rate in rates],
+            currencies=[BinanceCurrencyResponse.model_validate(rate.model_dump()) for rate in rates],
             count=total,
         )
 
@@ -88,7 +88,7 @@ class BinanceController(
             BinanceCurrencyResponse: Validated output serialization model.
         """
         new_rate = await self.create(obj_in=rate)
-        return BinanceCurrencyResponse.model_validate(new_rate)
+        return BinanceCurrencyResponse.model_validate(new_rate.model_dump())
 
     async def get_register_by_id(self, register_id: UUID) -> BinanceCurrencyResponse:
         """Look up a validated historical record entity snapshot.
@@ -100,7 +100,7 @@ class BinanceController(
             BinanceCurrencyResponse: Output instance visualization model.
         """
         register = await self._get_or_raise(register_id)
-        return BinanceCurrencyResponse.model_validate(register)
+        return BinanceCurrencyResponse.model_validate(register.model_dump())
     
     async def get_last_register_by_pair(
         self, 
@@ -129,7 +129,7 @@ class BinanceController(
         )
         if last_register is None:
             return None
-        return BinanceCurrencyResponse.model_validate(last_register)
+        return BinanceCurrencyResponse.model_validate(last_register.model_dump())
 
     async def update_register_rate(
         self, register_id: UUID, rate: BinanceCurrencyUpdate
@@ -145,7 +145,7 @@ class BinanceController(
         """
         db_obj = await self._get_or_raise(register_id)
         updated_obj = await self.update(db_obj=db_obj, obj_in=rate)
-        return BinanceCurrencyResponse.model_validate(updated_obj)
+        return BinanceCurrencyResponse.model_validate(updated_obj.model_dump())
 
     async def delete_register_rate(self, register_id: UUID) -> BinanceCurrencyResponse:
         """Erase a tracking data row inside a session execution block.
@@ -158,7 +158,7 @@ class BinanceController(
         """
         db_obj = await self._get_or_raise(register_id)
         await self.remove(id=register_id)
-        return BinanceCurrencyResponse.model_validate(db_obj)
+        return BinanceCurrencyResponse.model_validate(db_obj.model_dump())
 
     async def get_registers_by_pair(
         self,
