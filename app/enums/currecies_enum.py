@@ -51,7 +51,7 @@ class Currency(StrEnum):
         return self.value.lower()
     
     @staticmethod
-    def to_list() -> List[Currency]:
+    def to_list() -> List['Currency']:
         """
         Returns a list with all currencies suported.
         """
