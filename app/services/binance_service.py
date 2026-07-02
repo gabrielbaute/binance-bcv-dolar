@@ -183,12 +183,12 @@ class BinanceService:
         )
         return pair
 
-    def get_real_time_usdt_ves_pair(self) -> BinanceRealTimeResponse:
+    def get_real_time_usdt_ves_pair(self) -> Optional[BinanceRealTimeResponse]:
         """
         Get the USDT/VES pair.
 
         Returns:
-            BinanceRealTimeResponse: USDT/VES pair data for BUY trade type.
+            Optional[BinanceRealTimeResponse]: USDT/VES pair data for BUY trade type.
         """
         return self.get_real_time_pair(fiat=FiatCurrency.VES, asset=BinanceAsset.USDT, trade_type=TradeType.BUY, rows=20)
     

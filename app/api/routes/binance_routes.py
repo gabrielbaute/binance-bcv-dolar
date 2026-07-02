@@ -11,7 +11,7 @@ from app.schemas import (
 
 router = APIRouter(prefix="/binance", tags=["Binance"])
 
-@router.get("/realtime_ves", response_model=BinanceRealTimeResponse)
+@router.get("/realtime_ves", response_model=Optional[BinanceRealTimeResponse])
 def realtime_binance_ves(
     binance_service: BinanceService = Depends(get_binance_service)
 ):
@@ -20,7 +20,7 @@ def realtime_binance_ves(
     """
     return binance_service.get_real_time_usdt_ves_pair()
 
-@router.get("/real_time_pair", response_model=BinanceRealTimeResponse, summary="Request for a specific pair in Binance P2P market")
+@router.get("/real_time_pair", response_model=Optional[BinanceRealTimeResponse], summary="Request for a specific pair in Binance P2P market")
 def get_binance_pair(
     fiat: FiatCurrency = Query(..., description="Target local fiat currency (e.g., VES, PEN)."),
     asset: BinanceAsset = Query(BinanceAsset.USDT, description="Crypto token backing transaction pairs."),
