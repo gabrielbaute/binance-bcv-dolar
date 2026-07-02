@@ -48,7 +48,7 @@ class BCVCurrencyResponse(BaseModel):
         rate (Optional[float]): Rate of the currency.
         date (datetime): Date of the response.
     """
-    id: UUID = None
+    id: UUID
     currency: Currency
     trade_type: TradeType = TradeType.SELL
     rate: float
