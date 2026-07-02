@@ -1,6 +1,7 @@
 """
 General configuration for the app.
 """
+import sys
 from pathlib import Path  
 from pydantic import Field  
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -17,7 +18,7 @@ class Config(BaseSettings):
 
     # ------------ Directories and config path ------------  
     # Directory and path config
-    BASE_DIR: Path = Path(__file__).resolve().parent
+    BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
     INSTANCE_DIR: Path = BASE_DIR / "instance"
     LOGS_DIR: Path = BASE_DIR / "logs"
     
@@ -54,5 +55,23 @@ class Config(BaseSettings):
         env_file_encoding="utf-8",  
         extra="ignore"  
     )
+
+    def __init__(self, **values):
+        """
+        Initialize configuration settings, forcing physical directory verification layout.
+        """
+        super().__init__(**values)
+        self.ensure_dirs()
+        
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = f"sqlite+aiosqlite:///{self.INSTANCE_DIR / 'dolar_vzla.db'}"
+
+    def ensure_dirs(self) -> None:
+        try:
+            self.INSTANCE_DIR.mkdir(parents=True, exist_ok=True)
+            self.LOGS_DIR.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            print(f" CRITICAL ERROR: Could not create directory {dir}. check permissions.")
+            sys.exit(1)
 
 config = Config()
