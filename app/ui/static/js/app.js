@@ -2,7 +2,7 @@ class ExchangeRateApp {
     constructor() {
         this.chart = null;
         this.autoRefreshInterval = null;
-        this.apiBaseUrl = '/api';
+        this.apiBaseUrl = '/api/v1';
         this.currentRates = {
             binance: 0,
             bcv: 0,
@@ -100,12 +100,17 @@ class ExchangeRateApp {
             this.updateStatus('binance-status', 'loading');
             const response = await fetch(`${this.apiBaseUrl}/binance/realtime_ves`);
             
-            if (!response.ok) throw new Error('Failed to fetch Binance rate');
+            if (!response.ok) {
+                const body = await response.text();
+                throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
+            }
             
             const data = await response.json();
-            this.currentRates.binance = parseFloat(data.average_price);
+            if (!data || data.average_price == null) throw new Error('No Binance data available');
+            
+            this.currentRates.binance = data.average_price;
             document.getElementById('binance-rate').textContent = this.formatRate(data.average_price);
-            document.getElementById('binance-time').textContent = this.formatTime(new Date().toISOString());
+            document.getElementById('binance-time').textContent = this.formatTime(data.date || new Date().toISOString());
             document.getElementById('binance-rate-calc').textContent = this.formatRate(data.average_price);
             this.updateStatus('binance-status', 'online');
         } catch (error) {
@@ -121,10 +126,15 @@ class ExchangeRateApp {
             this.updateStatus('bcv-status', 'loading');
             const response = await fetch(`${this.apiBaseUrl}/bcv/dolar`);
             
-            if (!response.ok) throw new Error('Failed to fetch BCV rate');
+            if (!response.ok) {
+                const body = await response.text();
+                throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
+            }
             
             const data = await response.json();
-            this.currentRates.bcv = parseFloat(data.rate);
+            if (!data || data.rate == null) throw new Error('No BCV data available');
+            
+            this.currentRates.bcv = data.rate;
             document.getElementById('bcv-rate').textContent = this.formatRate(data.rate);
             document.getElementById('bcv-time').textContent = this.formatTime(data.date);
             document.getElementById('bcv-rate-calc').textContent = this.formatRate(data.rate);
@@ -140,12 +150,17 @@ class ExchangeRateApp {
     async loadAverageRate() {
         try {
             this.updateStatus('average-status', 'loading');
-            const response = await fetch(`${this.apiBaseUrl}/dolar/venezuela`);
+            const response = await fetch(`${this.apiBaseUrl}/dolar/dolar_promedio`);
             
-            if (!response.ok) throw new Error('Failed to fetch average rate');
+            if (!response.ok) {
+                const body = await response.text();
+                throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
+            }
             
             const data = await response.json();
-            this.currentRates.average = parseFloat(data.average_usdt_ves);
+            if (!data || data.average_usdt_ves == null) throw new Error('No average data available');
+            
+            this.currentRates.average = data.average_usdt_ves;
             document.getElementById('average-rate').textContent = this.formatRate(data.average_usdt_ves);
             document.getElementById('average-rate-calc').textContent = this.formatRate(data.average_usdt_ves);
             this.updateStatus('average-status', 'online');
@@ -250,8 +265,13 @@ class ExchangeRateApp {
                 fetch(`${this.apiBaseUrl}/history/binance?start_date=${startDateStr}&end_date=${endDateStr}&fiat=VES&asset=USDT&trade_type=BUY`)
             ]);
             
-            if (!bcvResponse.ok || !binanceResponse.ok) {
-                throw new Error('Failed to fetch history data');
+            if (!bcvResponse.ok) {
+                const body = await bcvResponse.text();
+                throw new Error(`BCV history HTTP ${bcvResponse.status}: ${body.slice(0, 200)}`);
+            }
+            if (!binanceResponse.ok) {
+                const body = await binanceResponse.text();
+                throw new Error(`Binance history HTTP ${binanceResponse.status}: ${body.slice(0, 200)}`);
             }
             
             const bcvData = await bcvResponse.json();
@@ -261,14 +281,14 @@ class ExchangeRateApp {
             const allDates = new Set();
             
             // Collect all unique dates
-            if (bcvData.history) {
-                bcvData.history.forEach(item => {
+            if (bcvData.currencies) {
+                bcvData.currencies.forEach(item => {
                     if (item.date) allDates.add(item.date.split('T')[0]);
                 });
             }
             
-            if (binanceData.history) {
-                binanceData.history.forEach(item => {
+            if (binanceData.currencies) {
+                binanceData.currencies.forEach(item => {
                     if (item.date) allDates.add(item.date.split('T')[0]);
                 });
             }
@@ -278,12 +298,12 @@ class ExchangeRateApp {
             
             // Create data arrays with matching dates
             const bcvPrices = sortedDates.map(date => {
-                const item = bcvData.history?.find(d => d.date?.startsWith(date));
+                const item = bcvData.currencies?.find(d => d.date?.startsWith(date));
                 return item ? parseFloat(item.rate) : null;
             });
             
             const binancePrices = sortedDates.map(date => {
-                const item = binanceData.history?.find(d => d.date?.startsWith(date));
+                const item = binanceData.currencies?.find(d => d.date?.startsWith(date));
                 return item ? parseFloat(item.average_price) : null;
             });
 
@@ -328,14 +348,14 @@ class ExchangeRateApp {
             
             // Combine and process data
             const allDates = new Set();
-            if (bcvData.history) bcvData.history.forEach(item => allDates.add(item.date?.split('T')[0]));
-            if (binanceData.history) binanceData.history.forEach(item => allDates.add(item.date?.split('T')[0]));
+            if (bcvData.currencies) bcvData.currencies.forEach(item => allDates.add(item.date?.split('T')[0]));
+            if (binanceData.currencies) binanceData.currencies.forEach(item => allDates.add(item.date?.split('T')[0]));
             
             const sortedDates = Array.from(allDates).sort();
             
             sortedDates.forEach(date => {
-                const bcvItem = bcvData.history?.find(d => d.date?.startsWith(date));
-                const binanceItem = binanceData.history?.find(d => d.date?.startsWith(date));
+                const bcvItem = bcvData.currencies?.find(d => d.date?.startsWith(date));
+                const binanceItem = binanceData.currencies?.find(d => d.date?.startsWith(date));
                 
                 const bcvPrice = bcvItem ? bcvItem.rate : '';
                 const binancePrice = binanceItem ? binanceItem.average_price : '';
@@ -396,7 +416,7 @@ class ExchangeRateApp {
     }
 
     formatRate(rate) {
-        if (typeof rate !== 'number') return '--';
+        if (typeof rate !== 'number' || isNaN(rate)) return '--';
         return new Intl.NumberFormat('es-VE', {
             style: 'currency',
             currency: 'VES',
