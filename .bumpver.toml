@@ -1,0 +1,23 @@
+[bumpver]
+current_version = "0.1.5"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit = true
+tag = true
+push = false
+commit_message = "bump version {old_version} -> {new_version}"
+tag_message = "{new_version}"
+tag_scope = "global"
+
+[bumpver.file_patterns]
+"pyproject.toml" = [
+    'version = "{version}"',
+]
+"app/__init__.py" = [
+    '__version__ = "{version}"',
+]
+"app/config/app_version.py" = [
+    '__version__ = "{version}"'
+]
+"README.md" = [
+    "Version: {version}",
+]
