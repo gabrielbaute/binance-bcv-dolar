@@ -1,7 +1,7 @@
 """
 Module defining API endpoints for cross-currency fiat exchange and remittance arbitrage calculations.
 """
-
+from typing import Optional
 from fastapi import APIRouter, Depends, Query
 
 from app.enums import FiatCurrency
@@ -12,7 +12,7 @@ from app.schemas.fiats_pair_response import FiatPairResponse
 router = APIRouter(prefix="/arbitrage", tags=["Remesas/Arbitraje"])
 
 
-@router.get("/pair", response_model=FiatPairResponse, summary="Get fiat/fiat pair from last database record.")
+@router.get("/pair", response_model=Optional[FiatPairResponse], summary="Get fiat/fiat pair from last database record.")
 async def get_fiat_pair(
     fiat_1: FiatCurrency = Query(..., description="First local fiat currency tracking asset."),
     fiat_2: FiatCurrency = Query(..., description="Second local fiat currency tracking asset."),

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Query, Depends
 
 from app.services import BinanceService
@@ -32,7 +32,7 @@ def get_binance_pair(
     """
     return binance_service.get_real_time_pair(fiat=fiat, asset=asset, trade_type=trade_type, rows=20)
 
-@router.get("/ves_usdt_pair", response_model=List[BinanceCurrencyResponse])
+@router.get("/ves_usdt_pair", response_model=Optional[List[BinanceCurrencyResponse]])
 async def get_ves_usdt_pair(
     binance_service: BinanceService = Depends(get_binance_service)
 ):
@@ -47,7 +47,7 @@ async def get_ves_usdt_pair(
     )
     return [sell_price, buy_price]
 
-@router.get("/pairs_last_record", response_model=List[BinanceCurrencyResponse])
+@router.get("/pairs_last_record", response_model=Optional[List[BinanceCurrencyResponse]])
 async def get_pairs_last_record(
     fiat: FiatCurrency = Query(..., description="Target historical operational fiat asset."),
     asset: BinanceAsset = Query(BinanceAsset.USDT, description="Crypto token matching data arrays."),

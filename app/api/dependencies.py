@@ -54,7 +54,7 @@ def get_ntfy_service(config_inst: Config = Depends(get_config_instance)) -> Ntfy
 
 
 async def get_db_session(
-    db_mngr: DatabaseManager = Depends(get_db_manager)
+    db_manager: DatabaseManager = Depends(get_db_manager)
 ) -> AsyncGenerator[AsyncSession, None]:
     """
     Generate and manage the lifecycle of an isolated transactional database session.
@@ -68,11 +68,8 @@ async def get_db_session(
     Yields:
         AsyncGenerator[AsyncSession, None]: Active transactional pipeline targeting SQLite storage layers.
     """
-    session: AsyncSession = db_mngr.get_session()
-    try:
+    async for session in db_manager.get_session():
         yield session
-    finally:
-        await session.aclose()
 
 
 def get_bcv_service(database_session: AsyncSession = Depends(get_db_session)) -> BCVService:

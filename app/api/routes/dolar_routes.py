@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends
 
 from app.services import DolarVenezuelaService
@@ -6,7 +7,7 @@ from app.schemas import DolarResponse, RealTimeDolarResponse
 
 router = APIRouter(prefix="/dolar", tags=["Dolar Promedio"])
 
-@router.get("/dolar_promedio", response_model=DolarResponse)
+@router.get("/dolar_promedio", response_model=Optional[DolarResponse])
 async def dolar_promedio(
     dolar_service: DolarVenezuelaService = Depends(get_dolar_vzla_service)
 ):
