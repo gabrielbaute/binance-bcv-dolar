@@ -46,7 +46,7 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
             BCVCurrencyListResponse: Structured API list payload.
         """
         return BCVCurrencyListResponse(
-            currencies=[BCVCurrencyResponse.model_validate(rate) for rate in rates],
+            currencies=[BCVCurrencyResponse.model_validate(rate.model_dump()) for rate in rates],
             count=total
         )
 
@@ -80,7 +80,7 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
             BCVCurrencyResponse: Output response validation schema.
         """
         new_rate = await self.create(obj_in=rate)
-        return BCVCurrencyResponse.model_validate(new_rate)
+        return BCVCurrencyResponse.model_validate(new_rate.model_dump())
 
     async def get_register_by_id(self, register_id: UUID) -> BCVCurrencyResponse:
         """Retrieve validated rate by unique identifier.
@@ -92,7 +92,7 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
             BCVCurrencyResponse: Output validation model data.
         """
         register = await self._get_or_raise(register_id)
-        return BCVCurrencyResponse.model_validate(register)
+        return BCVCurrencyResponse.model_validate(register.model_dump())
     
     async def get_last_register_by_currency(self, currency: Currency, trade_type: TradeType = TradeType.SELL) -> Optional[BCVCurrencyResponse]:
         """
@@ -112,7 +112,7 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
         last_register = await self.get_last_register_with_conditions(where_clause=where_clause, sort_by_attribute="date")
         if last_register is None:
             return None
-        return BCVCurrencyResponse.model_validate(last_register)
+        return BCVCurrencyResponse.model_validate(last_register.model_dump())
 
     async def update_register_rate(self, register_id: UUID, rate: BCVCurrencyUpdate) -> BCVCurrencyResponse:
         """Modify fields on an existing record.
@@ -126,7 +126,7 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
         """
         db_obj = await self._get_or_raise(register_id)
         updated_obj = await self.update(db_obj=db_obj, obj_in=rate)
-        return BCVCurrencyResponse.model_validate(updated_obj)
+        return BCVCurrencyResponse.model_validate(updated_obj.model_dump())
 
     async def delete_register_rate(self, register_id: UUID) -> BCVCurrencyResponse:
         """Remove record execution task.
@@ -139,7 +139,7 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
         """
         db_obj = await self._get_or_raise(register_id)
         await self.remove(id=register_id)
-        return BCVCurrencyResponse.model_validate(db_obj)
+        return BCVCurrencyResponse.model_validate(db_obj.model_dump())
 
     async def get_registers_by_currency(
         self, 
