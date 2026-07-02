@@ -94,3 +94,10 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 addopts = "-v --cov=app --cov-report=term-missing"
+
+[dependency-groups]
+dev = [
+    "bumpver>=2026.1132",
+    "mypy>=2.1.0",
+    "pytest>=9.1.1",
+]
