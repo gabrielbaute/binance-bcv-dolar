@@ -98,6 +98,7 @@ class DolarScheduler():
                 msg=consolidated_message, 
                 tags="bank,venezuela,chart_with_upwards_trend"
             )
+            self.logger.info(f"BCV Rate succesfully saved: {len(updated_rates_summary)}")
 
     async def save_currency_binance_rate(self, currency: FiatCurrency, asset: BinanceAsset) -> bool:
         self.logger.info("Saving Binance rates...")
@@ -172,12 +173,14 @@ class DolarScheduler():
             CronTrigger.from_crontab(self.config.BCV_CRON),
             id="bcv_rates_job"
         )
+        self.logger.info(f"BCV successfully scheduled with cron {self.config.BCV_CRON}")
         
         self.scheduler.add_job(
             self.save_binance_ves_usdt_rate, 
             CronTrigger.from_crontab(self.config.BINANCE_VES_CRON),
             id="binance_ves_job"
         )
+        self.logger.info(f"VES/USDT pair successfully scheduled with cron {self.config.BINANCE_VES_CRON}")
 
         extra_fiats_raw = self.config.BINANCE_EXTRA_FIATS
         if extra_fiats_raw:
