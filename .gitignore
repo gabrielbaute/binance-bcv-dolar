@@ -16,6 +16,9 @@ logs/
 # Database
 instance/
 *.db
+*.db-shm
+*.db-wal
 
 # Repomix
+*.egg-info
 repomix-output.xml
