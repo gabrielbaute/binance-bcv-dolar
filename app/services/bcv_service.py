@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 from datetime import datetime
 from bs4 import BeautifulSoup
-from requests import Session, RequestException
+from requests import Session, RequestException, ConnectTimeout
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import Currency, TradeType
@@ -55,6 +55,12 @@ class BCVService:
             self.logger.error(f"Error connecting to {self.url}: {e}")
             raise BCVConnectionError(
                 message="Error connecting to the BCV website.",
+                details={"url": self.url, "error": str(e)}
+            )
+        except ConnectTimeout as e:
+            self.logger.error(f"Request time expired: {e}")
+            raise BCVConnectionError(
+                message="The request time out while attemp to connect.",
                 details={"url": self.url, "error": str(e)}
             )
         except Exception as e:
