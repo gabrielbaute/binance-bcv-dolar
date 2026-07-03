@@ -6,5 +6,6 @@ from app.errors.app_errors import (
     DatabaseOperationError,
     BCVReadingRateError,
     BinanceConnectionError, 
-    BinanceRequestError
+    BinanceRequestError,
+    MigrationError
 )
