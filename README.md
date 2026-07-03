@@ -5,14 +5,6 @@ Version: 0.1.5
 ![Estado](https://img.shields.io/badge/status-en%20desarrollo-yellow)
 ![Licencia](https://img.shields.io/badge/license-GPLv3-blue)
 
----
-
-### ⚠️ Proyecto en Desarrollo Activo
-
-Este proyecto se encuentra en una fase de desarrollo muy activa. Las APIs, esquemas y funcionalidades pueden cambiar sin previo aviso. Aunque ya es funcional, aún no se recomienda para entornos críticos de producción.
-
----
-
 ## 📌 Acerca del Proyecto
 
 BnB-BCV nace de la necesidad de contar con información **confiable y abierta** sobre el mercado cambiario venezolano, un espacio frecuentemente afectado por especulación y fuentes poco transparentes.  
@@ -39,30 +31,33 @@ Debemos agradecer al usuario @DevOpsLP, quien publicó primero un script en .gs 
 
 ### Prerrequisitos
 - Python 3.11+
+- [uv](https://docs.astral.sh/uv/) (Administrador de paquetes y entornos de Python)
 - Docker y Docker Compose (para despliegue recomendado)
 
 ### Instalación local
 
 1. Clonar el repositorio:
    ```sh
-   git clone https://github.com/tu_usuario/bnb-bcv.git
-   cd bnb-bcv
+   git clone [https://github.com/gabrielbaute/binance-bcv-dolar.git](https://github.com/gabrielbaute/binance-bcv-dolar.git)
+   cd binance-bcv-dolar
    ```
 
-2. Crear entorno virtual:
+2. Inicializar el entorno e instalar dependencias:
+`uv` leerá los archivos `pyproject.toml` y `uv.lock` para crear un entorno virtual (`.venv`) e instalar todo lo necesario en un solo paso:
+
    ```sh
-   python3 -m venv venv
-   source venv/bin/activate
+   uv sync
    ```
 
-3. Instalar dependencias:
+3. Ejecutar la API:
+Puedes levantar el servidor de desarrollo directamente utilizando `uv run`, lo cual asegura que se ejecute dentro del contexto del entorno virtual correcto sin necesidad de activarlo manualmente:
    ```sh
-   pip install -r requirements.txt
+   uv run uvicorn app.main:app --reload
    ```
 
-4. Ejecutar la API:
+   O alternativamente:
    ```sh
-   uvicorn app.main:app --reload
+   uv run app/main.py
    ```
 
 ### Despliegue con Docker (recomendado)
@@ -79,10 +74,12 @@ Puedes emplear el archivo de ejemplo de docker compose que tenemos en el repo, t
          environment:
             - API_PORT=${API_PORT:-8000}
             - API_HOST=${API_HOST:-0.0.0.0}
-            - INSTANCE_DIR=${INSTANCE_DIR:-/instance}
-            - LOG_DIR=${LOG_DIR:-/logs}
             - NTFY_URL=${NTFY_URL:-}
             - NTFY_TOPIC=${NTFY_TOPIC:-}
+            - BINANCE_EXTRA_FIATS=${BINANCE_EXTRA_FIATS:-}
+            - BINANCE_EXTRA_CRON=${BINANCE_EXTRA_CRON:-}
+            - BINANCE_VES_CRON=${BINANCE_VES_CRON:-}
+            - BCV_CRON=${BCV_CRON:-}
          volumes:
             - ./instance:/instance
             - ./logs:/logs
@@ -115,6 +112,23 @@ Puedes emplear el archivo de ejemplo de docker compose que tenemos en el repo, t
    ```
 ---
 
+### Variables de Entorno
+
+El proyecto se configura mediante las siguientes variables de entorno. Puedes crear un archivo `.env` en la raíz del proyecto basándote en esta tabla:
+
+| Variable | Tipo | Por Defecto | Descripción |
+| --- | --- | --- | --- |
+| **`LOG_LEVEL`** | Cadena (`str`) | `INFO` | Nivel de severidad para el rastreo del sistema (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`). |
+| **`API_PORT`** | Entero (`int`) | `8000` | Puerto en el que se expondrá la API de la aplicación. |
+| **`API_HOST`** | Cadena (`str`) | `0.0.0.0` | Dirección de host para la escucha del servidor de la API. |
+| **`NTFY_URL`** | Cadena (`str`) | *Obligatorio* | URL del servidor de notificaciones basado en NTFY para el envío de alertas y reportes. |
+| **`NTFY_TOPIC`** | Cadena (`str`) | *Obligatorio* | Tópico específico de NTFY donde se suscribirán los clientes para recibir las alertas. |
+| **`BINANCE_EXTRA_FIATS`** | Cadena (`str`) | `PEN,ARS` | Lista de monedas locales (fiat) adicionales a procesar, separadas estrictamente por comas. |
+| **`BINANCE_EXTRA_CRON`** | Cadena (`str`) | `0 */3 * * *` | Expresión Cron que define la frecuencia de actualización para las monedas fiat extra (ej: cada 3 horas). |
+| **`BINANCE_VES_CRON`** | Cadena (`str`) | `*/30 * * * *` | Expresión Cron que define la frecuencia para el par nativo principal (ej: cada 30 minutos todos los días). |
+| **`BCV_CRON`** | Cadena (`str`) | `0 0 * * *` | Expresión Cron que define cuándo se ejecuta el recolector del BCV (ej: todos los días a la medianoche). |
+
+---
 ## 📊 Ejemplo de Uso
 
 ```python
@@ -140,7 +154,7 @@ print(f"Precio promedio USDT/VES: {pair.average_price:.2f}")
 - [x] Automatización con jobs programados  
 - [x] Interfaz web amigable  
 - [ ] Bot de Telegram para consultas rápidas  
-- [ ] Gráficas históricas de desempeño  
+- [x] Gráficas históricas de desempeño  
 - [x] API pública estable y documentada  (casi)
 - [x] Deploy en docker
 
