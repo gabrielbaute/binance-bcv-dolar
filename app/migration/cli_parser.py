@@ -42,7 +42,7 @@ EJEMPLOS:
 
     # Comando: migrate
     migrate_parser = subparsers.add_parser("migrate", help="Ejecuta la migración de datos", description="Migra los datos de la base de datos antigua a la nueva estructura.",)
-    migrate_parser.add_argument("--old-db", default="instance/dolar_vzla_old.db", help="Ruta a la base de datos antigua (SQLite).",)
+    migrate_parser.add_argument("--old-db", default="instance/exchange_rates.db", help="Ruta a la base de datos antigua (SQLite).",)
     migrate_parser.add_argument("--new-db", default="instance/dolar_vzla.db", help="Ruta a la base de datos nueva (SQLite).", )
     migrate_parser.add_argument("--batch-size", type=int, default=1000, help="Tamaño del lote para inserciones (default: 1000).",)
     migrate_parser.add_argument("--dry-run", action="store_true", help="Simula la migración sin escribir en la base de datos.",)

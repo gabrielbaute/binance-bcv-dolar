@@ -20,7 +20,6 @@ async def main():
     parser = create_parser()
     args = parser.parse_args()
     
-    # Configurar logging usando DolarVzlaLogger
     DolarVzlaLogger.setup_logging(
         logs_dir=config.LOGS_DIR,
         level=args.log_level
