@@ -1,4 +1,17 @@
 # ==========================================
+# Etapa 0: Builder Frontend (TypeScript -> Bundle)
+# ==========================================
+FROM node:20-alpine AS ui-builder
+
+WORKDIR /app
+
+COPY package.json tsconfig.json ./
+COPY app/ui/src ./app/ui/src
+COPY app/ui/static ./app/ui/static
+
+RUN npm install && npm run build:ui
+
+# ==========================================
 # Etapa 1: Constructor (Builder Nativo con uv)
 # ==========================================
 FROM python:3.11-slim AS builder
@@ -55,6 +68,9 @@ COPY --from=builder --chown=dolar_vzl:dolar_vzl /app/.venv /app/.venv
 
 # Copiar la aplicación garantizando que el usuario no privilegiado sea el dueño
 COPY --chown=dolar_vzl:dolar_vzl . .
+
+# Sobrescribir el bundle con la compilacion generada en la etapa frontend
+COPY --from=ui-builder --chown=dolar_vzl:dolar_vzl /app/app/ui/static/js/app.js /app/app/ui/static/js/app.js
 
 # Diagnóstico de salud del contenedor usando la ruta asignada
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

@@ -1,0 +1,16 @@
+{
+  "name": "binance-bcv-dolar-ui",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build:ui": "esbuild app/ui/src/main.ts --bundle --minify --target=es2020 --outfile=app/ui/static/js/app.js",
+    "build:ui:dev": "esbuild app/ui/src/main.ts --bundle --sourcemap --target=es2020 --outfile=app/ui/static/js/app.js --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.6",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1"
+  }
+}

@@ -1,10 +1,9 @@
-const CACHE_NAME = 'exchange-rate-v1';
+const CACHE_NAME = 'exchange-rate-v2';
 const urlsToCache = [
     '/',
     '/static/css/styles.css',
     '/static/js/app.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
-    'https://cdn.jsdelivr.net/npm/chart.js'
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
 self.addEventListener('install', event => {
