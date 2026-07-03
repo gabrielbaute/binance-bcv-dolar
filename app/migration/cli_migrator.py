@@ -2,7 +2,9 @@
 CLI principal para la migración de la base de datos.
 
 Uso:
-    python -m scripts.cli_migrator --help
+    python -m app.migrations.main --help
+    O bien usando UV:
+    uv run app/migration/main.py --help
 """
 import sys
 import asyncio
