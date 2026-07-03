@@ -64,7 +64,7 @@ class DolarScheduler():
                     continue
                 
                 # Report construction
-                msg = f"• {cur.value.upper()}: **{cur_save.rate:.4f} Bs/{cur.value}**"
+                msg = f"• {cur.value.upper()}: **{cur_save.rate:.3f} Bs/{cur.value}**"
                 self.logger.info(f"Database sync successful for asset metric: {msg}")
                 updated_rates_summary.append(msg)
 
@@ -118,7 +118,7 @@ class DolarScheduler():
             if not asset_fiat_sell:
                 self.logger.error(f"Error saving {currency.value} at {TradeType.SELL.value} type operation on Database.")
 
-            msg = f"Binance USDT/VES Updated: **{asset_fiat_buy.average_price} {currency.value}/{asset.value}** at Buy, **{asset_fiat_sell.average_price} {currency.value}/{asset.value}** at Sell"
+            msg = f"Binance USDT/VES Updated: **{asset_fiat_buy.average_price:.3f} {currency.value}/{asset.value}** at Buy, **{asset_fiat_sell.average_price:.3f} {currency.value}/{asset.value}** at Sell"
             self.logger.info(msg)
             self._send_alert(
                 title="Binance USDT/VES Updated",
