@@ -1,25 +1,25 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 from pydantic import BaseModel, ConfigDict
-from app.schemas.binance_response_schemas import BinanceResponse
+from app.schemas.binance_response_schemas import BinanceCurrencyResponse, BinanceRealTimeResponse
 
 class FiatPairResponse(BaseModel):
     """
     Schema for fiat pair prices from Binance.
 
     Attributes:
-        fiat_1_p2p_buy (Optional[BinanceResponse]): Fiat 1 P2P response for buy.
-        fiat_1_p2p_sell (Optional[BinanceResponse]): Fiat 1 P2P response for sell.
-        fiat_2_p2p_buy (Optional[BinanceResponse]): Fiat 2 P2P response for buy.
-        fiat_2_p2p_sell (Optional[BinanceResponse]): Fiat 2 P2P response for sell.
+        fiat_1_p2p_buy (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Fiat 1 P2P response for buy.
+        fiat_1_p2p_sell (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Fiat 1 P2P response for sell.
+        fiat_2_p2p_buy (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Fiat 2 P2P response for buy.
+        fiat_2_p2p_sell (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Fiat 2 P2P response for sell.
         average_exchange_rate_f1_f2 (Optional[float]): Exchange rate from Fiat 1 to Fiat 2.
         average_exchange_rate_f2_f1 (Optional[float]): Exchange rate from Fiat 2 to Fiat 1.
         date (datetime): Date of the response.
     """
-    fiat_1_p2p_buy: Optional[BinanceResponse]
-    fiat_1_p2p_sell: Optional[BinanceResponse]
-    fiat_2_p2p_buy: Optional[BinanceResponse]
-    fiat_2_p2p_sell: Optional[BinanceResponse]
+    fiat_1_p2p_buy: Union[BinanceCurrencyResponse, BinanceRealTimeResponse]
+    fiat_1_p2p_sell: Union[BinanceCurrencyResponse, BinanceRealTimeResponse]
+    fiat_2_p2p_buy: Union[BinanceCurrencyResponse, BinanceRealTimeResponse]
+    fiat_2_p2p_sell: Union[BinanceCurrencyResponse, BinanceRealTimeResponse]
     average_exchange_rate_f1_f2: Optional[float]
     average_exchange_rate_f2_f1: Optional[float]
     date: datetime

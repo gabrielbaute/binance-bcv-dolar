@@ -1,2 +1,2 @@
-from app.config.config import Config
-from app.config.logging_config import setup_logging
+from app.config.config import Config, config
+from app.config.logging_config import DolarVzlaLogger

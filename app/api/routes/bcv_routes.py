@@ -1,65 +1,52 @@
-from fastapi import APIRouter, Query
+"""
+Module defining API endpoints for official Banco Central de Venezuela (BCV) exchange rate matrices.
+"""
+from typing import List, Optional
+from fastapi import APIRouter, Depends, Query
 
-from app.services import BCVScraper
-from app.enums.currecies_enum import Currency
-from app.schemas import BCVCurrencyResponse, BCVResponse
+from app.enums import Currency
+from app.services import BCVService
+from app.api.dependencies import get_bcv_service
+from app.schemas import BCVCurrencyResponse, BCVCurrencyRealTimeResponse, BCVResponse
 
 router = APIRouter(prefix="/bcv", tags=["BCV"])
 
-@router.get("/realtime", response_model=BCVCurrencyResponse)
-def realtime_bcv():
+@router.get("/realtime", response_model=List[BCVCurrencyRealTimeResponse])
+def realtime_bcv(bcv_service: BCVService = Depends(get_bcv_service)):
     """
-    The Euro/Dollar exchange rate for the day has been updated, according to the Central Bank of Venezuela (BCV).
+    Retrieve live exchange rates matching structural parser elements for dominant assets (USD/EUR) directly from the BCV portal.
     """
-    scraper = BCVScraper()
-    return {
-        "dolar": scraper.get_exchange_rate(Currency.DOLAR),
-        "euro": scraper.get_exchange_rate(Currency.EURO)
-    }
+    dolar = bcv_service.get_real_time_exchange_rate(Currency.DOLAR)
+    euro = bcv_service.get_real_time_exchange_rate(Currency.EURO)
+    return [dolar, euro]
 
-@router.get("/dolar", response_model=BCVCurrencyResponse)
-def dolar_bcv():
-    """
-    It provides the daily dollar exchange rate, according to the Central Bank of Venezuela (BCV). The daily rate is set the previous day, when banks close their exchange desks and report to the BCV, which publishes the average rate at 5 pm, Venezuelan time.
-    """
-    scraper = BCVScraper()
-    return scraper.get_exchange_rate(Currency.DOLAR)
 
-@router.get("/euro", response_model=BCVCurrencyResponse)
-def euro_bcv():
+@router.get("/dolar", response_model=Optional[BCVCurrencyResponse])
+async def dolar_bcv(bcv_service: BCVService = Depends(get_bcv_service)):
     """
-    It provides the daily euro exchange rate, according to the Central Bank of Venezuela (BCV). The daily rate is set the previous day, when banks close their exchange desks and report to the BCV, which publishes the average rate at 5 pm, Venezuelan time.
+    Provide the daily historical dollar exchange rate synchronized inside the active ledger.
     """
-    scraper = BCVScraper()
-    return scraper.get_exchange_rate(Currency.EURO)
+    return await bcv_service.get_exchange_rate(currency=Currency.DOLAR)
 
-@router.get("/all", response_model=BCVResponse)
-def all_bcv():
+@router.get("/euro", response_model=Optional[BCVCurrencyResponse])
+async def euro_bcv(bcv_service: BCVService = Depends(get_bcv_service)):
     """
-    Returns the average exchange rate for the day for the five currencies registered by the BCV in the banking system: dolar, euro, yuan, lira and rublo.
+    Provide the daily historical euro exchange rate synchronized inside the active ledger.
     """
-    scraper = BCVScraper()
-    return scraper.get_all_exchange_rates()
+    return await bcv_service.get_exchange_rate(currency=Currency.EURO)
 
-@router.get("/query", response_model=BCVResponse)
-def query_bcv(
-    currency: str = Query(..., description="Currency to query", enum=["dolar", "euro", "yuan", "lira", "rublo"])
-    ):
+@router.get("/query", response_model=Optional[BCVCurrencyResponse])
+async def query_bcv(
+    currency: Currency = Query(..., description="Target currency asset supported by the tracking matrix."),
+    bcv_service: BCVService = Depends(get_bcv_service),
+):
     """
-    Returns the average echange rate for the day for the selected currency.
+    Query database state blocks matching any specific official asset rate recorded on the system.
     """
-    scraper = BCVScraper()
-    currencies = {
-        "dolar": Currency.DOLAR,
-        "euro": Currency.EURO,
-        "yuan": Currency.YUAN,
-        "lira": Currency.LIRA,
-        "rublo": Currency.RUBLE
-    }
-    currency = currencies.get(currency.lower())
-    if not currency:
-        return {
-            "error": "Invalid currency",
-            "message": "Currency must be one of the following: dolar, euro, yuan, lira, rublo"
-            }
-    return scraper.get_exchange_rate(currency)
+    return await bcv_service.get_exchange_rate(currency)
+
+@router.get("/all", response_model=Optional[BCVResponse])
+async def get_all(
+    bcv_service: BCVService = Depends(get_bcv_service)
+):
+    return await bcv_service.get_all_exchange_rates()

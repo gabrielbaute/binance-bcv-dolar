@@ -38,6 +38,9 @@ dependencies = [
     "beautifulsoup4>=4.14.0",
     "APScheduler>=3.11.0",
     "python-dotenv>=1.2.0",
+    "aiosqlite>=0.22.1",
+    "sqlmodel>=0.0.39",
+    "pytz>=2026.2",
 ]
 
 [project.optional-dependencies]
@@ -56,26 +59,6 @@ Issues = "https://github.com/gabrielbaute/binance-bcv-dolar/issues"
 
 [tool.setuptools]
 packages = ["app"]
-
-[tool.bumpver]
-current_version = "0.1.5"
-version_pattern = "MAJOR.MINOR.PATCH"
-commit_message = "bump version {old_version} -> {new_version}"
-commit = true
-tag = true
-push = false
-
-[tool.bumpver.file_patterns]
-"pyproject.toml" = [
-    'current_version = "{version}"',
-    'version = "{version}"',
-]
-"app/__init__.py" = [
-    '__version__ = "{version}"',
-]
-"README.md" = [
-    "Version: {version}",
-]
 
 [tool.black]
 line-length = 100
@@ -110,4 +93,29 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-addopts = "-v --cov=app --cov-report=term-missing"
+asyncio_mode = "auto"
+addopts = "-v --tb=short --cov=app --cov-report=term-missing"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+disallow_untyped_defs = false
+check_untyped_defs = false
+exclude = [
+    "tests/",
+    ".venv/",
+]
+
+[dependency-groups]
+dev = [
+    "bumpver>=2026.1132",
+    "mypy>=2.1.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=0.26.0",
+    "pytest-cov>=6.1.0",
+    "httpx==0.28.0",
+    "black>=24.0.0",
+    "ruff>=0.11.0",
+]
