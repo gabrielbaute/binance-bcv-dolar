@@ -34,7 +34,7 @@ class BCVService:
         self.db_session = databasesession
         self.controller = BCVController(session=self.db_session) if self.db_session else None
         self.logger = logging.getLogger(self.__class__.__name__)
-        self._soup = self._get_soup()
+        self._soup: Optional[BeautifulSoup] = None
 
     def _get_soup(self) -> Optional[BeautifulSoup]:
         """
@@ -80,6 +80,7 @@ class BCVService:
         Returns:
             Optional[str]: The raw content for the currency, or None if not found.
         """
+        self._soup = self._get_soup()
         if not self._soup:
             return None
 
