@@ -21,8 +21,8 @@ services:
 
     volumes:
       - .:/app
-      - ./instance:/instance
-      - ./logs:/logs
+      - ./instance:/app/instance
+      - ./logs:/app/logs
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${API_PORT:-8000}/health"]

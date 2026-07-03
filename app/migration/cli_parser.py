@@ -37,7 +37,7 @@ EJEMPLOS:
 
     # Comando: inspect
     inspect_parser = subparsers.add_parser("inspect", help="Inspecciona la base de datos antigua", description="Muestra un resumen de los datos en la base de datos antigua.",)
-    inspect_parser.add_argument("--old-db", default="instance/dolar_vzla_old.db", help="Ruta a la base de datos antigua (SQLite).",
+    inspect_parser.add_argument("--old-db", default="instance/exchange_rates.db", help="Ruta a la base de datos antigua (SQLite).",
     )
 
     # Comando: migrate
