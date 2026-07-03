@@ -15,8 +15,8 @@ services:
       - BINANCE_VES_CRON=${BINANCE_VES_CRON:-}
       - BCV_CRON=${BCV_CRON:-}
     volumes:
-      - ./instance:/instance
-      - ./logs:/logs
+      - ./instance:/app/instance
+      - ./logs:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${API_PORT:-8000}/health"]
       interval: 30s
