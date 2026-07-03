@@ -25,6 +25,6 @@ class BinanceRateSQLModel(SQLModel, table=True):
     fiat: FiatCurrency = Field(default=FiatCurrency.VES, nullable=False, index=True)
     asset: BinanceAsset = Field(default=BinanceAsset.USDT, nullable=False, index=True)
     trade_type: TradeType = Field(default=TradeType.BUY, nullable=False, index=True)
-    average_price: float
-    median_price: float
-    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    average_price: float = Field(nullable=False)
+    median_price: float = Field(nullable=True)
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)

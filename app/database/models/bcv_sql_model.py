@@ -21,6 +21,6 @@ class BCVRateSQLModel(SQLModel, table=True):
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     currency: Currency = Field(default=Currency.DOLAR, nullable=False, index=True)
-    trade_type: TradeType = Field(default=TradeType.SELL, index=True)
+    trade_type: TradeType = Field(default=TradeType.SELL, nullable=False, index=True)
     rate: float = Field(nullable=False)
-    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False,)
