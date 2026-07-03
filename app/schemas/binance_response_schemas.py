@@ -111,8 +111,8 @@ class BinanceCurrencyResponse(BaseModel):
     fiat: FiatCurrency = Field(..., description="The fiat currency of the trading pair used in the P2P market query.")
     asset: BinanceAsset = Field(..., description="The digital asset or stablecoin cryptocurrency being quoted.")
     trade_type: TradeType = Field(..., description="The P2P operation perspective, representing either BUY or SELL order books.")
-    average_price: float = Field(..., gt=0, description="The calculated average price of the top active orders at execution time.")
-    median_price: float = Field(..., gt=0, description="The calculated median price of the top active orders at execution time.")
+    average_price: Optional[float] = Field(..., gt=0, description="The calculated average price of the top active orders at execution time.")
+    median_price: Optional[float] = Field(..., gt=0, description="The calculated median price of the top active orders at execution time.")
     date: datetime = Field(..., description="The UTC timestamp when the query metrics were written to the database.")
 
     model_config = ConfigDict(from_attributes=True)
