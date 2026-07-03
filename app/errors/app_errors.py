@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Dict
 from app.errors.base_error import DolarVzlaError
 
 class BCVConnectionError(DolarVzlaError):
@@ -35,3 +35,10 @@ class BinanceRequestError(DolarVzlaError):
     """Error raised when there is an issue with the request to the Binance P2P API."""
     def __init__(self, message: str = "Error with the request to the Binance P2P API.", details=None):
         super().__init__(message, details)
+
+class MigrationError:
+    """Representa un error de migración para un registro específico."""
+    def __init__(self, record_index: int, original_record: Dict[str, Any], error: str):
+        self.record_index = record_index
+        self.original_record = original_record
+        self.error = error
