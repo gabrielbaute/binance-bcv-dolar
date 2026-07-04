@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from app.errors import (
@@ -39,7 +40,7 @@ def register_error_handlers(app: FastAPI):
                 "status": "error",
                 "code": exc.__class__.__name__,
                 "message": exc.message,
-                "details": exc.details or {}
+                "details": jsonable_encoder(exc.details or {})
             },
         )
     

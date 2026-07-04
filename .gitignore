@@ -26,3 +26,10 @@ instance/
 # Repomix
 *.egg-info
 repomix-output.xml
+
+# Frontend build
+node_modules/
+npm-debug.log*
+package-lock.json
+
+architecture.xml

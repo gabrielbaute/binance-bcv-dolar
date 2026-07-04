@@ -84,3 +84,8 @@ The frontend is automatically served when you run the FastAPI application. Navig
 - Update `app.js` to add new features or modify API calls
 - Add images and icons to the `assets/` folder
 - Customize the PWA manifest in `manifest.json`
+
+## Siguientes pasos:
+
+- Integrar `npm run build:ui` en tu flujo de Docker/CI para que el bundle siempre se regenere antes del despliegue.
+- Hacer una segunda pasada de UX con microinteracciones adicionales y mejoras de accesibilidad (focus states, contrastes, navegación por teclado).
