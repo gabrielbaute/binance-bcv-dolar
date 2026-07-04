@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "binance-bcv-dolar"
-version = "1.0.0"
+version = "1.0.1"
 description = "API Abierta para Tasas de Cambio en Venezuela - Binance P2P y BCV"
 readme = "README.md"
 license = {text = "GPL-3.0"}
