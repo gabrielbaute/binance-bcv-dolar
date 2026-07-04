@@ -5,6 +5,7 @@ from datetime import date
 from pathlib import Path
 from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, Response
+from app.config.app_version import __version__
 
 TEMPLATES_DIR = Path("app/ui/templates")
 
@@ -20,7 +21,7 @@ async def read_index(request: Request):
     with open(template_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    content = content.format(base_url=base_url)
+    content = content.format(base_url=base_url, app_version=__version__)
     return Response(content=content, media_type="text/html")
 
 

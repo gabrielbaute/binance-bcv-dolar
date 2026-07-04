@@ -5,10 +5,14 @@ FROM node:20-alpine AS ui-builder
 
 WORKDIR /app
 
+ARG VCS_REF=local
+ARG BUILD_DATE=unknown
+
 COPY package.json tsconfig.json ./
 RUN npm install
 COPY app/ui/src ./app/ui/src
 COPY app/ui/static ./app/ui/static
+RUN echo "ui-build-ref=${VCS_REF} ui-build-date=${BUILD_DATE}" > /tmp/ui-build-info.txt
 RUN npm run build:ui
 
 # ==========================================
