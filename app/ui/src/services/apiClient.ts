@@ -95,44 +95,46 @@ export class ApiClient {
 
   private async getBcvRealtimeWithFallback(): Promise<BcvRealtimeResponse> {
     try {
-      const lastSaved = await this.fetchJson<BcvRealtimeResponse | null>("/bcv/dolar");
-      if (lastSaved?.rate != null) {
-        return lastSaved;
+      const realtimeList = await this.fetchJson<BcvHistoryItem[]>("/bcv/realtime");
+      const dolar = realtimeList.find(
+        (item) => String(item.currency).toLowerCase() === "dolar" && item.rate != null,
+      );
+
+      if (dolar) {
+        return {
+          rate: Number(dolar.rate),
+          date: dolar.date,
+        };
       }
     } catch {
-      // Fallback to realtime endpoint when last saved register is unavailable.
+      // Fallback to persisted endpoint when realtime endpoint is unavailable.
     }
 
-    const realtimeList = await this.fetchJson<BcvHistoryItem[]>("/bcv/realtime");
-    const dolar = realtimeList.find(
-      (item) => String(item.currency).toLowerCase() === "dolar" && item.rate != null,
-    );
-
-    if (!dolar) {
-      throw new Error("BCV realtime payload does not contain dolar rate");
+    const lastSaved = await this.fetchJson<BcvRealtimeResponse | null>("/bcv/dolar");
+    if (!lastSaved || lastSaved.rate == null) {
+      throw new Error("BCV payload does not contain dolar rate");
     }
 
-    return {
-      rate: Number(dolar.rate),
-      date: dolar.date,
-    };
+    return lastSaved;
   }
 
   private async getAverageRealtimeWithFallback(): Promise<AverageRealtimeResponse> {
     try {
-      const lastSaved = await this.fetchJson<AverageRealtimeResponse | null>("/dolar/dolar_promedio");
-      if (lastSaved?.average_usdt_ves != null) {
-        return lastSaved;
+      const realtime = await this.fetchJson<AverageRealtimeResponse | null>(
+        "/dolar/realtime_dolar_promedio",
+      );
+      if (realtime?.average_usdt_ves != null) {
+        return realtime;
       }
     } catch {
-      // Fallback to realtime endpoint when average from stored records is unavailable.
+      // Fallback to persisted endpoint when realtime endpoint is unavailable.
     }
 
-    const realtime = await this.fetchJson<AverageRealtimeResponse | null>("/dolar/realtime_dolar_promedio");
-    if (!realtime || realtime.average_usdt_ves == null) {
-      throw new Error("Average realtime payload does not contain average_usdt_ves");
+    const lastSaved = await this.fetchJson<AverageRealtimeResponse | null>("/dolar/dolar_promedio");
+    if (!lastSaved || lastSaved.average_usdt_ves == null) {
+      throw new Error("Average payload does not contain average_usdt_ves");
     }
 
-    return realtime;
+    return lastSaved;
   }
 }

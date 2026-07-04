@@ -70,7 +70,7 @@ export class ExchangeRateApp {
     }
   }
 
-  private async loadBinanceRate(): Promise<void> {
+  private async loadBinanceRate(): Promise<boolean> {
     try {
       this.setCardLoading("binance", true);
       updateStatus("binance-status", "loading");
@@ -87,18 +87,20 @@ export class ExchangeRateApp {
       this.updateFreshnessFromTimestamp("binance-freshness", observedAt);
       updateStatus("binance-status", "online");
       this.calculator.setRates(this.rates);
+      return true;
     } catch (error) {
       console.error("Error loading Binance", error);
       setText("binance-rate", "Error");
       setText("binance-time", "--");
       updateFreshness("binance-freshness", "stale");
       updateStatus("binance-status", "error");
+      return false;
     } finally {
       this.setCardLoading("binance", false);
     }
   }
 
-  private async loadBcvRate(): Promise<void> {
+  private async loadBcvRate(): Promise<boolean> {
     try {
       this.setCardLoading("bcv", true);
       updateStatus("bcv-status", "loading");
@@ -115,18 +117,20 @@ export class ExchangeRateApp {
       this.updateFreshnessFromTimestamp("bcv-freshness", observedAt);
       updateStatus("bcv-status", "online");
       this.calculator.setRates(this.rates);
+      return true;
     } catch (error) {
       console.error("Error loading BCV", error);
       setText("bcv-rate", "Error");
       setText("bcv-time", "--");
       updateFreshness("bcv-freshness", "stale");
       updateStatus("bcv-status", "error");
+      return false;
     } finally {
       this.setCardLoading("bcv", false);
     }
   }
 
-  private async loadAverageRate(): Promise<void> {
+  private async loadAverageRate(): Promise<boolean> {
     try {
       this.setCardLoading("average", true);
       updateStatus("average-status", "loading");
@@ -143,12 +147,14 @@ export class ExchangeRateApp {
       this.updateFreshnessFromTimestamp("average-freshness", observedAt);
       updateStatus("average-status", "online");
       this.calculator.setRates(this.rates);
+      return true;
     } catch (error) {
       console.error("Error loading average", error);
       setText("average-rate", "Error");
       setText("average-time", "--");
       updateFreshness("average-freshness", "stale");
       updateStatus("average-status", "error");
+      return false;
     } finally {
       this.setCardLoading("average", false);
     }
@@ -283,8 +289,22 @@ export class ExchangeRateApp {
 
   private async refreshData(): Promise<void> {
     showNotification("Actualizando datos...", "info");
-    await this.loadInitialData();
-    showNotification("Datos actualizados", "success");
+    const [binanceUpdated, bcvUpdated] = await Promise.all([
+      this.loadBinanceRate(),
+      this.loadBcvRate(),
+    ]);
+
+    await Promise.all([
+      this.loadAverageRate(),
+      this.updateChart(this.activeRange),
+    ]);
+
+    if (binanceUpdated && bcvUpdated) {
+      showNotification("Binance y BCV actualizados", "success");
+      return;
+    }
+
+    showNotification("No se pudo actualizar Binance y BCV al mismo tiempo", "error");
   }
 
   private async exportData(): Promise<void> {
