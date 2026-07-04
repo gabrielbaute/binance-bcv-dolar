@@ -4,7 +4,7 @@ Este archivo contiene las instrucciones para personalizar las URLs y configuraci
 
 ## 🔧 Archivos a Modificar
 
-### 1. `app/ui/index.html`
+### 1. `app/ui/templates/index.html`
 
 Reemplaza todas las ocurrencias de `https://tudominio.com/` con tu URL real:
 
