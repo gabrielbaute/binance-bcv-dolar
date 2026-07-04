@@ -2,6 +2,8 @@ export type TimeRange = "24h" | "7d" | "30d";
 
 export type CurrencyMode = "USD" | "VES";
 
+export type FreshnessStatus = "live" | "recent" | "stale";
+
 export interface CurrentRates {
   binance: number;
   bcv: number;

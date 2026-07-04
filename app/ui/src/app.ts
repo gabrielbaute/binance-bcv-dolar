@@ -4,9 +4,9 @@ import { ChartManager } from "./chartManager";
 import { getById, setText } from "./dom";
 import { formatChartDate, formatRate, formatTime } from "./formatters";
 import { showNotification } from "./notification";
-import { updateStatus } from "./status";
+import { updateFreshness, updateStatus } from "./status";
 import { Tabs } from "./tabs";
-import { CurrentRates, TimeRange } from "./types";
+import { CurrentRates, FreshnessStatus, TimeRange } from "./types";
 
 export class ExchangeRateApp {
   private readonly api = new ApiClient("/api/v1");
@@ -23,6 +23,8 @@ export class ExchangeRateApp {
     bcv: 0,
     average: 0,
   };
+
+  private readonly observedAt: Partial<Record<"binance" | "bcv" | "average", string>> = {};
 
   async init(): Promise<void> {
     this.bindEvents();
@@ -61,63 +63,135 @@ export class ExchangeRateApp {
 
   private async loadBinanceRate(): Promise<void> {
     try {
+      this.setCardLoading("binance", true);
       updateStatus("binance-status", "loading");
       const data = await this.api.getBinanceRealtime();
       if (data.average_price == null) {
         throw new Error("Invalid Binance payload");
       }
 
+      const observedAt = data.date ?? new Date().toISOString();
+      this.observedAt.binance = observedAt;
       this.rates.binance = Number(data.average_price);
       setText("binance-rate", formatRate(this.rates.binance));
-      setText("binance-time", formatTime(data.date ?? new Date().toISOString()));
+      setText("binance-time", formatTime(observedAt));
+      this.updateFreshnessFromTimestamp("binance-freshness", observedAt);
       updateStatus("binance-status", "online");
       this.calculator.setRates(this.rates);
     } catch (error) {
       console.error("Error loading Binance", error);
       setText("binance-rate", "Error");
       setText("binance-time", "--");
+      updateFreshness("binance-freshness", "stale");
       updateStatus("binance-status", "error");
+    } finally {
+      this.setCardLoading("binance", false);
     }
   }
 
   private async loadBcvRate(): Promise<void> {
     try {
+      this.setCardLoading("bcv", true);
       updateStatus("bcv-status", "loading");
       const data = await this.api.getBcvRealtime();
       if (data.rate == null) {
         throw new Error("Invalid BCV payload");
       }
 
+      const observedAt = data.date ?? new Date().toISOString();
+      this.observedAt.bcv = observedAt;
       this.rates.bcv = Number(data.rate);
       setText("bcv-rate", formatRate(this.rates.bcv));
-      setText("bcv-time", formatTime(data.date));
+      setText("bcv-time", formatTime(observedAt));
+      this.updateFreshnessFromTimestamp("bcv-freshness", observedAt);
       updateStatus("bcv-status", "online");
       this.calculator.setRates(this.rates);
     } catch (error) {
       console.error("Error loading BCV", error);
       setText("bcv-rate", "Error");
       setText("bcv-time", "--");
+      updateFreshness("bcv-freshness", "stale");
       updateStatus("bcv-status", "error");
+    } finally {
+      this.setCardLoading("bcv", false);
     }
   }
 
   private async loadAverageRate(): Promise<void> {
     try {
+      this.setCardLoading("average", true);
       updateStatus("average-status", "loading");
       const data = await this.api.getAverageRealtime();
       if (data.average_usdt_ves == null) {
         throw new Error("Invalid average payload");
       }
 
+      const observedAt = this.getAverageObservedAt();
+      this.observedAt.average = observedAt;
       this.rates.average = Number(data.average_usdt_ves);
       setText("average-rate", formatRate(this.rates.average));
+      setText("average-time", formatTime(observedAt));
+      this.updateFreshnessFromTimestamp("average-freshness", observedAt);
       updateStatus("average-status", "online");
       this.calculator.setRates(this.rates);
     } catch (error) {
       console.error("Error loading average", error);
       setText("average-rate", "Error");
+      setText("average-time", "--");
+      updateFreshness("average-freshness", "stale");
       updateStatus("average-status", "error");
+    } finally {
+      this.setCardLoading("average", false);
     }
+  }
+
+  private setCardLoading(card: "binance" | "bcv" | "average", loading: boolean): void {
+    const cardElement = getById<HTMLElement>(`${card}-card`);
+    cardElement.classList.toggle("is-loading", loading);
+  }
+
+  private updateFreshnessFromTimestamp(elementId: string, timestamp?: string): void {
+    updateFreshness(elementId, this.resolveFreshnessStatus(timestamp));
+  }
+
+  private resolveFreshnessStatus(timestamp?: string): FreshnessStatus {
+    if (!timestamp) {
+      return "stale";
+    }
+
+    const parsed = new Date(timestamp);
+    if (Number.isNaN(parsed.getTime())) {
+      return "stale";
+    }
+
+    const elapsedMinutes = Math.max(0, (Date.now() - parsed.getTime()) / 60000);
+
+    if (elapsedMinutes <= 10) {
+      return "live";
+    }
+
+    if (elapsedMinutes <= 60) {
+      return "recent";
+    }
+
+    return "stale";
+  }
+
+  private getAverageObservedAt(): string {
+    const candidates = [this.observedAt.binance, this.observedAt.bcv]
+      .filter((value): value is string => Boolean(value))
+      .map((value) => new Date(value))
+      .filter((date) => !Number.isNaN(date.getTime()));
+
+    if (candidates.length === 0) {
+      return new Date().toISOString();
+    }
+
+    const oldestDate = candidates.reduce((oldest, current) =>
+      current.getTime() < oldest.getTime() ? current : oldest,
+    );
+
+    return oldestDate.toISOString();
   }
 
   private async updateChart(range: TimeRange): Promise<void> {
