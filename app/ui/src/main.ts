@@ -14,7 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    void navigator.serviceWorker.register("/static/js/sw.js").catch((error) => {
+    void navigator.serviceWorker
+      .register("/static/js/sw.js", { updateViaCache: "none" })
+      .catch((error) => {
       console.error("Service worker registration failed", error);
     });
   });
