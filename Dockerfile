@@ -6,10 +6,10 @@ FROM node:20-alpine AS ui-builder
 WORKDIR /app
 
 COPY package.json tsconfig.json ./
+RUN npm install
 COPY app/ui/src ./app/ui/src
 COPY app/ui/static ./app/ui/static
-
-RUN npm install && npm run build:ui
+RUN npm run build:ui
 
 # ==========================================
 # Etapa 1: Constructor (Builder Nativo con uv)
