@@ -19,9 +19,16 @@ function toDateRange(timeRange: TimeRange): { start: string; end: string } {
     startDate.setDate(startDate.getDate() - 30);
   }
 
+  const toLocalYyyyMmDd = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   return {
-    start: startDate.toISOString().split("T")[0],
-    end: endDate.toISOString().split("T")[0],
+    start: toLocalYyyyMmDd(startDate),
+    end: toLocalYyyyMmDd(endDate),
   };
 }
 
