@@ -1,7 +1,7 @@
 import { ApiClient } from "./services/apiClient";
 import { Calculator } from "./calculator";
 import { ChartManager } from "./chartManager";
-import { getById, setText } from "./dom";
+import { getById, queryAll, setText } from "./dom";
 import { formatChartDate, formatRate, formatTime } from "./formatters";
 import { showNotification } from "./notification";
 import { updateFreshness, updateStatus } from "./status";
@@ -23,6 +23,7 @@ export class ExchangeRateApp {
     bcv: 0,
     average: 0,
   };
+  private activeRange: TimeRange = "24h";
 
   private readonly observedAt: Partial<Record<"binance" | "bcv" | "average", string>> = {};
 
@@ -38,12 +39,20 @@ export class ExchangeRateApp {
 
     getById<HTMLSelectElement>("time-range").addEventListener("change", (event) => {
       const range = (event.target as HTMLSelectElement).value as TimeRange;
+      this.setActiveRange(range);
       void this.updateChart(range);
     });
 
+    queryAll<HTMLButtonElement>(".chart-preset").forEach((button) => {
+      button.addEventListener("click", () => {
+        const range = (button.dataset.range as TimeRange | undefined) ?? "24h";
+        this.setActiveRange(range);
+        void this.updateChart(range);
+      });
+    });
+
     getById("refresh-chart").addEventListener("click", () => {
-      const range = getById<HTMLSelectElement>("time-range").value as TimeRange;
-      void this.updateChart(range);
+      void this.updateChart(this.activeRange);
     });
   }
 
@@ -53,7 +62,7 @@ export class ExchangeRateApp {
         this.loadBinanceRate(),
         this.loadBcvRate(),
         this.loadAverageRate(),
-        this.updateChart("24h"),
+        this.updateChart(this.activeRange),
       ]);
     } catch (error) {
       console.error("Error loading initial data", error);
@@ -148,6 +157,17 @@ export class ExchangeRateApp {
   private setCardLoading(card: "binance" | "bcv" | "average", loading: boolean): void {
     const cardElement = getById<HTMLElement>(`${card}-card`);
     cardElement.classList.toggle("is-loading", loading);
+  }
+
+  private setActiveRange(range: TimeRange): void {
+    this.activeRange = range;
+    getById<HTMLSelectElement>("time-range").value = range;
+
+    queryAll<HTMLButtonElement>(".chart-preset").forEach((button) => {
+      const isActive = button.dataset.range === range;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
   }
 
   private updateFreshnessFromTimestamp(elementId: string, timestamp?: string): void {

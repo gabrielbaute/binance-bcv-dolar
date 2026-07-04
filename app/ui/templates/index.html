@@ -158,9 +158,9 @@
                     </div>
                 </div>
 
-                <div class="card rate-card is-loading" id="average-card">
+                <div class="card rate-card rate-card-primary is-loading" id="average-card">
                     <div class="card-header">
-                        <h3><i class="fas fa-calculator"></i> Average Rate</h3>
+                        <h3><i class="fas fa-star"></i> Tasa Referencia</h3>
                         <span class="status-indicator" id="average-status">Loading...</span>
                     </div>
                     <div class="card-body">
@@ -173,6 +173,7 @@
                             <div class="rate-display">
                             <span class="currency">USD/VES</span>
                             <span class="rate" id="average-rate">--</span>
+                            <span class="rate-context">Promedio instantáneo entre Binance y BCV</span>
                             </div>
                             <div class="rate-info">
                                 <div class="rate-info-row">
@@ -205,10 +206,19 @@
                             <div class="card-header">
                                 <h3><i class="fas fa-chart-area"></i> Rate History</h3>
                                 <div class="chart-controls">
+                                    <div class="chart-range-presets" role="group" aria-label="Rango rápido del gráfico">
+                                        <button type="button" class="chart-preset active" data-range="24h" aria-pressed="true">24h</button>
+                                        <button type="button" class="chart-preset" data-range="7d" aria-pressed="false">7d</button>
+                                        <button type="button" class="chart-preset" data-range="30d" aria-pressed="false">30d</button>
+                                        <button type="button" class="chart-preset" data-range="90d" aria-pressed="false">90d</button>
+                                        <button type="button" class="chart-preset" data-range="ytd" aria-pressed="false">YTD</button>
+                                    </div>
                                     <select id="time-range">
                                         <option value="24h">Últimas 24 horas</option>
                                         <option value="7d">Ultimos 7 dias</option>
                                         <option value="30d">Últimos 30 días</option>
+                                        <option value="90d">Últimos 90 días</option>
+                                        <option value="ytd">Año en curso (YTD)</option>
                                     </select>
                                     <button id="refresh-chart" class="btn btn-secondary">
                                         <i class="fas fa-sync-alt"></i> Actualizar

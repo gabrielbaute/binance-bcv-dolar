@@ -15,8 +15,13 @@ function toDateRange(timeRange: TimeRange): { start: string; end: string } {
     startDate.setHours(startDate.getHours() - 24);
   } else if (timeRange === "7d") {
     startDate.setDate(startDate.getDate() - 7);
-  } else {
+  } else if (timeRange === "30d") {
     startDate.setDate(startDate.getDate() - 30);
+  } else if (timeRange === "90d") {
+    startDate.setDate(startDate.getDate() - 90);
+  } else {
+    startDate.setMonth(0, 1);
+    startDate.setHours(0, 0, 0, 0);
   }
 
   const toLocalYyyyMmDd = (date: Date): string => {
