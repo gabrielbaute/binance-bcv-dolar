@@ -12,6 +12,27 @@ def test_ntfy_webhook_service_compatibility_alias():
     assert NtfyWebhookService is NtfysService
 
 
+@pytest.mark.asyncio
+async def test_ntfy_service_reuses_injected_client_without_is_closed():
+    class DummyConfig:
+        NTFY_URL = "https://ntfy.example.com"
+        NTFY_TOPIC = "test-topic"
+        APP_NAME = "test-app"
+        APP_VERSION = "1.0.0"
+
+    class DummyClient:
+        async def aclose(self):
+            return None
+
+    client = DummyClient()
+    service = NtfysService(config=DummyConfig(), client=client)
+
+    resolved_client = await service._get_client()
+
+    assert resolved_client is client
+    await service.close()
+
+
 def test_bcv_service_uses_default_tls_verification(monkeypatch):
     captured_kwargs = {}
 

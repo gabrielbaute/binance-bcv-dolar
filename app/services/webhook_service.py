@@ -28,7 +28,7 @@ class NtfysService:
         Returns:
             httpx.AsyncClient: Cliente de red asíncrono.
         """
-        if self._client is None or self._client.is_closed:
+        if self._client is None or getattr(self._client, "is_closed", False):
             self._client = httpx.AsyncClient(timeout=10.0)
         return self._client
 
@@ -108,7 +108,7 @@ class NtfysService:
 
     async def close(self) -> None:
         """Cierra el cliente HTTPX asíncrono si está activo."""
-        if self._client and not self._client.is_closed:
+        if self._client and not getattr(self._client, "is_closed", False):
             await self._client.aclose()
 
 
