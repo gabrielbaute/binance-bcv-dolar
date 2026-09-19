@@ -1,7 +1,6 @@
 from enum import IntEnum
 from typing import Union
 
-
 class NTFYPriority(IntEnum):
     """Representa los niveles de prioridad de notificación para ntfy.
 
