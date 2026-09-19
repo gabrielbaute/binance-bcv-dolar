@@ -84,6 +84,6 @@ class NTFYPriority(IntEnum):
 
         raise ValueError(
             f"'{value}' no es un valor de prioridad válido para ntfy. "
-            f"Valores enteros permitidos: {cls.to_list()}. "
-            f"O cadenas ('max', 'urgent', 'high', 'default', 'low', 'min')."
+            f"Valores permitidos: enteros {cls.to_list()}, cadenas numéricas equivalentes "
+            f"como '5', o alias ('max', 'urgent', 'high', 'default', 'low', 'min')."
         )

@@ -25,14 +25,16 @@ async def lifespan(app: FastAPI):
     await db_manager.init_db()
 
     session = db_manager.async_session_maker()
-    scheduler = DolarScheduler(databasesession=session, config=config)
+    scheduler = None
     try:
+        scheduler = DolarScheduler(databasesession=session, config=config)
         scheduler.start()
 
         yield
 
     finally:
-        await scheduler.shutdown()
+        if scheduler is not None:
+            await scheduler.shutdown()
         await session.aclose()
 
 app = create_app(config=config)
