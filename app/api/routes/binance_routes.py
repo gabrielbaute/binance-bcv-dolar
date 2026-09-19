@@ -12,20 +12,20 @@ from app.schemas import (
 router = APIRouter(prefix="/binance", tags=["Binance"])
 
 @router.get("/realtime_ves", response_model=Optional[BinanceRealTimeResponse])
-def realtime_binance_ves(
+async def realtime_binance_ves(
     binance_service: BinanceService = Depends(get_binance_service)
 ):
     """
     Returns the averge exchange rate in the P2P Binance market at the moment of the request.
     """
-    return binance_service.get_real_time_usdt_ves_pair()
+    return await binance_service.get_real_time_usdt_ves_pair()
 
 @router.get(
     "/real_time_pair",
     response_model=Optional[BinanceRealTimeResponse],
     summary="Request for a specific pair in Binance P2P market"
 )
-def get_binance_pair(
+async def get_binance_pair(
     fiat: FiatCurrency = Query(..., description="Target local fiat currency (e.g., VES, PEN)."),
     asset: BinanceAsset = Query(BinanceAsset.USDT, description="Crypto token backing transaction pairs."),
     trade_type: TradeType = Query(TradeType.BUY, description="Order book tracking target perspective."),
@@ -35,7 +35,7 @@ def get_binance_pair(
     Returns the P2P average exchange rate for the selected pair,
     and a list of the first 20 prices in the market.
     """
-    return binance_service.get_real_time_pair(fiat=fiat, asset=asset, trade_type=trade_type, rows=20)
+    return await binance_service.get_real_time_pair(fiat=fiat, asset=asset, trade_type=trade_type, rows=20)
 
 @router.get("/ves_usdt_pair", response_model=Optional[List[BinanceCurrencyResponse]])
 async def get_ves_usdt_pair(
