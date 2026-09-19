@@ -33,7 +33,7 @@ class DolarVenezuelaService:
             Optional[RealTimeDolarResponse]: Composite summary enclosing validated realtime data matrices, or None if upstream provider blocks fail to resolve pricing.
         """
         self.logger.info("Getting average dolar exchange rate")
-        
+
         binance_usdt_ves = self.binance.get_real_time_pair(
             fiat=FiatCurrency.VES, asset=BinanceAsset.USDT, trade_type=TradeType.BUY
         )
@@ -66,7 +66,7 @@ class DolarVenezuelaService:
             Optional[DolarResponse]: Consolidated aggregate of historical baseline indices, or None if any source track resolves to an unrecoverable exception.
         """
         self.logger.info("Getting last registered average dolar exchange rate")
-        
+
         try:
             binance_usdt_ves = await self.binance.get_last_saved_binance_fiat(
                 fiat=FiatCurrency.VES, asset=BinanceAsset.USDT, trade_type=TradeType.BUY
@@ -87,7 +87,7 @@ class DolarVenezuelaService:
                 average_usdt_ves=average_price,
                 date=datetime.now()
             )
-            
+
         except RegisterNotFoundError as e:
             self.logger.warning(f"Aborting average aggregation. A baseline ledger track was missing: {e.message}")
             return None

@@ -53,13 +53,13 @@ class FiatExchangeService():
         return pair
 
     def _calculate_exchange_rate(
-            self, 
-            fiat_1: Union[BinanceCurrencyResponse, BinanceRealTimeResponse], 
+            self,
+            fiat_1: Union[BinanceCurrencyResponse, BinanceRealTimeResponse],
             fiat_2: Union[BinanceCurrencyResponse, BinanceRealTimeResponse]
     ) -> Optional[float]:
         """
         Calculate the cross exchange rate from Fiat 1 to Fiat 2 utilizing standard bridge pricing.
-        
+
         Args:
             fiat_1 (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Source fiat platform asset payload.
             fiat_2 (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Target fiat platform asset payload.
@@ -70,12 +70,12 @@ class FiatExchangeService():
         if not fiat_1 or not fiat_2:
             self.logger.error("Error calculating exchange rate: One or both parameters are missing.")
             return None
-            
+
         # Protegemos contra valores nulos o divisiones por cero en operaciones P2P en tiempo real
         if fiat_1.average_price is None or fiat_2.average_price is None or fiat_1.average_price == 0:
             self.logger.warning(f"Incomplete pricing data matrices to process ratio cross between {fiat_1.fiat} and {fiat_2.fiat}")
             return None
-            
+
         return fiat_2.average_price / fiat_1.average_price
 
     async def get_pair(self, fiat_1: FiatCurrency, fiat_2: FiatCurrency) -> FiatPairResponse:
@@ -96,7 +96,7 @@ class FiatExchangeService():
         fiat_1_p2p_sell = await self._get_usdt_pair_from_database(fiat=fiat_1, trade_type=TradeType.SELL)
         fiat_2_p2p_buy = await self._get_usdt_pair_from_database(fiat=fiat_2, trade_type=TradeType.BUY)
         fiat_2_p2p_sell = await self._get_usdt_pair_from_database(fiat=fiat_2, trade_type=TradeType.SELL)
-        
+
         exchange_rate_f1_f2 = self._calculate_exchange_rate(fiat_1_p2p_buy, fiat_2_p2p_sell)
         exchange_rate_f2_f1 = self._calculate_exchange_rate(fiat_2_p2p_buy, fiat_1_p2p_sell)
 
@@ -109,11 +109,13 @@ class FiatExchangeService():
             average_exchange_rate_f2_f1=exchange_rate_f2_f1,
             date=datetime.now()
         )
-    
-    #TODO: This method requiere a refactor and detailed review, as it is complex and has multiple responsibilities. Consider breaking it down into smaller methods for clarity and maintainability.
+
+    #TODO: This method requiere a refactor and detailed review, as it is complex
+    # and has multiple responsibilities. Consider breaking it down into smaller
+    # methods for clarity and maintainability.
     async def get_historical_pair(
-            self, 
-            fiat_1: FiatCurrency, 
+            self,
+            fiat_1: FiatCurrency,
             fiat_2: FiatCurrency,
             start_date: datetime,
             end_date: datetime,
@@ -137,19 +139,19 @@ class FiatExchangeService():
         self.logger.info(f"Getting historical data for pair: {fiat_1.value} - {fiat_2.value} from {start_date} to {end_date}")
 
         f1_buy_res = await self.binance.get_binance_pair_by_time_range(
-            fiat=fiat_1, asset=BinanceAsset.USDT, trade_type=TradeType.BUY, 
+            fiat=fiat_1, asset=BinanceAsset.USDT, trade_type=TradeType.BUY,
             start_time=start_date, end_time=end_date, skip=skip, limit=limit
         )
         f1_sell_res = await self.binance.get_binance_pair_by_time_range(
-            fiat=fiat_1, asset=BinanceAsset.USDT, trade_type=TradeType.SELL, 
+            fiat=fiat_1, asset=BinanceAsset.USDT, trade_type=TradeType.SELL,
             start_time=start_date, end_time=end_date, skip=skip, limit=limit
         )
         f2_buy_res = await self.binance.get_binance_pair_by_time_range(
-            fiat=fiat_2, asset=BinanceAsset.USDT, trade_type=TradeType.BUY, 
+            fiat=fiat_2, asset=BinanceAsset.USDT, trade_type=TradeType.BUY,
             start_time=start_date, end_time=end_date, skip=skip, limit=limit
         )
         f2_sell_res = await self.binance.get_binance_pair_by_time_range(
-            fiat=fiat_2, asset=BinanceAsset.USDT, trade_type=TradeType.SELL, 
+            fiat=fiat_2, asset=BinanceAsset.USDT, trade_type=TradeType.SELL,
             start_time=start_date, end_time=end_date, skip=skip, limit=limit
         )
 

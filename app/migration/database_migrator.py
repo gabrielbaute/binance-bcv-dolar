@@ -22,7 +22,7 @@ class DatabaseMigrator:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.verbose = verbose
         self._errors: List[MigrationError] = []
-    
+
     # ============== PROPIEDADES Y MÉTODOS AUXILIARES ==============
     @property
     def has_errors(self) -> bool:
@@ -91,27 +91,27 @@ class DatabaseMigrator:
     def read_old_database(self, old_db: DatabaseConnection) -> Dict[str, List[Dict[str, Any]]]:
         """
         Lee todos los datos de la base de datos antigua.
-        
+
         Args:
             old_db: Conexión a la base de datos antigua.
-            
+
         Returns:
             Dict con los datos de BCV y Binance.
         """
         self.logger.info(f"Leyendo base de datos antigua: {old_db.db_path}")
-        
+
         bcv_records = old_db.execute_sync("""
             SELECT id, currency, rate, date
             FROM bcv_rates
             ORDER BY date ASC
         """)
-        
+
         binance_records = old_db.execute_sync("""
             SELECT id, fiat, asset, trade_type, average_price, date
             FROM binance_rates
             ORDER BY date ASC
         """)
-        
+
         # Parsear fechas
         for record in bcv_records:
             if isinstance(record["date"], str):
@@ -119,14 +119,14 @@ class DatabaseMigrator:
                     record["date"] = datetime.fromisoformat(record["date"])
                 except ValueError:
                     record["date"] = datetime.strptime(record["date"], "%Y-%m-%d %H:%M:%S")
-        
+
         for record in binance_records:
             if isinstance(record["date"], str):
                 try:
                     record["date"] = datetime.fromisoformat(record["date"])
                 except ValueError:
                     record["date"] = datetime.strptime(record["date"], "%Y-%m-%d %H:%M:%S")
-        
+
         return {
             "bcv": bcv_records,
             "binance": binance_records,
@@ -155,7 +155,7 @@ class DatabaseMigrator:
             "date": old_record["date"],
         }
 
-    # ============== MÉTODOS DE VALIDACIÓN ==============    
+    # ============== MÉTODOS DE VALIDACIÓN ==============
     def validate_bcv_record(self, record: Dict[str, Any], index: int) -> bool:
         """Valida un registro transformado de BCV contra el modelo SQLAlchemy."""
         try:
@@ -185,25 +185,25 @@ class DatabaseMigrator:
     async def validate_new_database(self, new_db: DatabaseConnection) -> bool:
         """
         Valida que la nueva base de datos tenga la estructura correcta.
-        
+
         Args:
             new_db: Conexión a la base de datos nueva.
-            
+
         Returns:
             bool: True si la estructura es correcta.
         """
         self.logger.info(f"Validando estructura de la base de datos: {new_db.db_path}")
-        
+
         try:
             # Verificar tablas
             if not new_db.table_exists("rates"):
                 self.logger.error("Tabla 'rates' no encontrada")
                 return False
-            
+
             if not new_db.table_exists("binance_rates"):
                 self.logger.error("Tabla 'binance_rates' no encontrada")
                 return False
-            
+
             # Verificar columnas de rates
             bcv_columns = new_db.get_table_columns("rates")
             required_bcv = ['id', 'currency', 'trade_type', 'rate', 'date']
@@ -211,7 +211,7 @@ class DatabaseMigrator:
             if missing_bcv:
                 self.logger.error(f"Columnas faltantes en 'rates': {missing_bcv}")
                 return False
-            
+
             # Verificar columnas de binance_rates
             binance_columns = new_db.get_table_columns("binance_rates")
             required_binance = ['id', 'fiat', 'asset', 'trade_type', 'average_price', 'median_price', 'date']
@@ -219,10 +219,10 @@ class DatabaseMigrator:
             if missing_binance:
                 self.logger.error(f"Columnas faltantes en 'binance_rates': {missing_binance}")
                 return False
-            
+
             self.logger.info("✓ Estructura de la base de datos validada correctamente")
             return True
-                
+
         except Exception as e:
             self.logger.error(f"Error validando la base de datos: {e}")
             return False
@@ -237,20 +237,20 @@ class DatabaseMigrator:
     ) -> Tuple[int, int, int]:
         """
         Migra los registros de BCV a la nueva base de datos.
-        
+
         Returns:
             Tuple[int, int, int]: (total, insertados, errores)
         """
         total_records = len(old_records)
         self.logger.info(f"Iniciando migración de BCV: {total_records} registros")
-        
+
         if total_records == 0:
             self.logger.info("No hay registros de BCV para migrar.")
             return 0, 0, 0
-        
+
         transformed = []
         self._log_verbose("\n📋 Transformando registros de BCV:")
-        
+
         for idx, record in enumerate(old_records):
             try:
                 transformed_record = self.transform_bcv_record(record)
@@ -266,31 +266,31 @@ class DatabaseMigrator:
                     error=f"Error en transformación: {str(e)}"
                 ))
                 self._log_verbose(f"  ❌ Registro {idx + 1}: ERROR en transformación: {e}")
-        
+
         if self.has_errors and not dry_run:
             self.logger.warning(f"Se encontraron {self.error_count} errores en los datos")
             self.logger.warning("Los registros con error serán omitidos. Continuando con los válidos...")
-        
+
         if dry_run:
             self.logger.info(f"DRY RUN: {len(transformed)}/{total_records} registros serían migrados")
             if self.has_errors:
                 self.logger.warning(f"  ⚠️  {self.error_count} registros con errores")
             return total_records, len(transformed), self.error_count
-        
+
         inserted = 0
         for i in range(0, len(transformed), batch_size):
             batch = transformed[i:i + batch_size]
-            
+
             async with new_db.session_maker() as session:
                 async with session.begin():
                     for record in batch:
                         new_record = BCVRateSQLModel(**record)
                         session.add(new_record)
                     await session.commit()
-            
+
             inserted += len(batch)
             self.logger.info(f"Progreso BCV: {inserted}/{len(transformed)} registros insertados")
-        
+
         self.logger.info(f"Migración de BCV completada: {inserted} registros insertados")
         return total_records, inserted, self.error_count
 
@@ -303,20 +303,20 @@ class DatabaseMigrator:
     ) -> Tuple[int, int, int]:
         """
         Migra los registros de Binance a la nueva base de datos.
-        
+
         Returns:
             Tuple[int, int, int]: (total, insertados, errores)
         """
         total_records = len(old_records)
         self.logger.info(f"Iniciando migración de Binance: {total_records} registros")
-        
+
         if total_records == 0:
             self.logger.info("No hay registros de Binance para migrar.")
             return 0, 0, 0
-        
+
         transformed = []
         self._log_verbose("\n📋 Transformando registros de Binance:")
-        
+
         for idx, record in enumerate(old_records):
             try:
                 transformed_record = self.transform_binance_record(record)
@@ -332,31 +332,31 @@ class DatabaseMigrator:
                     error=f"Error en transformación: {str(e)}"
                 ))
                 self._log_verbose(f"  ❌ Registro {idx + 1}: ERROR en transformación: {e}")
-        
+
         if self.has_errors and not dry_run:
             self.logger.warning(f"Se encontraron {self.error_count} errores en los datos")
             self.logger.warning("Los registros con error serán omitidos. Continuando con los válidos...")
-        
+
         if dry_run:
             self.logger.info(f"DRY RUN: {len(transformed)}/{total_records} registros serían migrados")
             if self.has_errors:
                 self.logger.warning(f"  ⚠️  {self.error_count} registros con errores")
             return total_records, len(transformed), self.error_count
-        
+
         inserted = 0
         for i in range(0, len(transformed), batch_size):
             batch = transformed[i:i + batch_size]
-            
+
             async with new_db.session_maker() as session:
                 async with session.begin():
                     for record in batch:
                         new_record = BinanceRateSQLModel(**record)
                         session.add(new_record)
                     await session.commit()
-            
+
             inserted += len(batch)
             self.logger.info(f"Progreso Binance: {inserted}/{len(transformed)} registros insertados")
-        
+
         self.logger.info(f"Migración de Binance completada: {inserted} registros insertados")
         return total_records, inserted, self.error_count
 
@@ -376,32 +376,32 @@ class DatabaseMigrator:
         """
         self.verbose = verbose
         self._errors = []
-        
+
         results = {
             "bcv": {"total": 0, "inserted": 0, "errors": 0},
             "binance": {"total": 0, "inserted": 0, "errors": 0},
             "total_errors": 0,
         }
-        
+
         # Validar existencia de archivos
         if not old_db_path.exists():
             raise FileNotFoundError(f"Base de datos antigua no encontrada: {old_db_path}")
-        
+
         if not new_db_path.exists():
             raise FileNotFoundError(f"Base de datos nueva no encontrada: {new_db_path}")
-        
+
         # Crear conexiones
         old_db = DatabaseConnection(old_db_path)
         new_db = DatabaseConnection(new_db_path)
-        
+
         try:
             # Validar estructura de la nueva base de datos
             if not await self.validate_new_database(new_db):
                 raise ValueError("La estructura de la base de datos nueva no es válida")
-            
+
             # Leer datos antiguos
             old_data = self.read_old_database(old_db)
-            
+
             # Migrar BCV
             if not skip_bcv:
                 total, inserted, errors = await self.migrate_bcv_rates(
@@ -411,7 +411,7 @@ class DatabaseMigrator:
                     dry_run=dry_run,
                 )
                 results["bcv"] = {"total": total, "inserted": inserted, "errors": errors}
-            
+
             # Migrar Binance
             if not skip_binance:
                 total, inserted, errors = await self.migrate_binance_rates(
@@ -421,9 +421,9 @@ class DatabaseMigrator:
                     dry_run=dry_run,
                 )
                 results["binance"] = {"total": total, "inserted": inserted, "errors": errors}
-            
+
             results["total_errors"] = self.error_count
-            
+
             # Mostrar detalles de errores si hay y verbose está activado
             if self.has_errors and verbose:
                 print("\n" + "=" * 60)
@@ -434,9 +434,9 @@ class DatabaseMigrator:
                     print(f"  Error: {err.error}")
                     print(f"  Datos: {err.original_record}")
                 print("=" * 60)
-            
+
             return results
-            
+
         finally:
             await old_db.dispose()
             await new_db.dispose()

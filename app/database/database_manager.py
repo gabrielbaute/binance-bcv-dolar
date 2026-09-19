@@ -49,14 +49,14 @@ class DatabaseManager:
         )
 
         event.listen(
-            self.engine.sync_engine, 
-            "connect", 
+            self.engine.sync_engine,
+            "connect",
             self._set_sqlite_pragma
         )
 
         self.async_session_maker = async_sessionmaker(
-            self.engine, 
-            class_=AsyncSession, 
+            self.engine,
+            class_=AsyncSession,
             expire_on_commit=False
         )
         self._initialized = True

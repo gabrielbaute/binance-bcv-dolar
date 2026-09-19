@@ -21,14 +21,14 @@ async def main():
     """
     parser = create_parser()
     args = parser.parse_args()
-    
+
     DolarVzlaLogger.setup_logging(
         logs_dir=config.LOGS_DIR,
         level=args.log_level
     )
-    
+
     logger = logging.getLogger("cli_migrator")
-    
+
     try:
         # Ejecutar comando
         if args.command == "inspect":
@@ -41,7 +41,7 @@ async def main():
             logger.error(f"Comando desconocido: {args.command}")
             parser.print_help()
             return 1
-            
+
     except KeyboardInterrupt:
         logger.info("Migración interrumpida por el usuario")
         return 130

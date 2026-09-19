@@ -16,7 +16,7 @@ from app.services import (
     BinanceService,
     DolarVenezuelaService,
     FiatExchangeService,
-    NtfyWebhookService,
+    NtfysService,
 )
 
 
@@ -40,7 +40,7 @@ def get_db_manager() -> DatabaseManager:
     return db_manager
 
 
-def get_ntfy_service(config_inst: Config = Depends(get_config_instance)) -> NtfyWebhookService:
+def get_ntfy_service(config_inst: Config = Depends(get_config_instance)) -> NtfysService:
     """
     Instantiate the notifications webhook communication channel.
 
@@ -48,9 +48,9 @@ def get_ntfy_service(config_inst: Config = Depends(get_config_instance)) -> Ntfy
         config_inst (Config): Shared validated infrastructure environment metrics.
 
     Returns:
-        NtfyWebhookService: Operational real-time alert messaging component.
+        NtfysService: Operational real-time alert messaging component.
     """
-    return NtfyWebhookService(config=config_inst)
+    return NtfysService(config=config_inst)
 
 
 async def get_db_session(

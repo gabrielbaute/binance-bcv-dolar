@@ -10,18 +10,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.enums import Currency, TradeType
 from app.controllers import BCVController
 from app.errors import (
-    BCVConnectionError, 
+    BCVConnectionError,
     DatabaseSessionError,
-    DatabaseOperationError, 
+    DatabaseOperationError,
     BCVReadingRateError,
     RegisterNotFoundError
 )
 from app.schemas import (
     BCVCurrencyRealTimeResponse,
     BCVCurrencyListResponse,
-    BCVCurrencyResponse, 
-    BCVCurrencyCreate, 
-    BCVCurrencyUpdate, 
+    BCVCurrencyResponse,
+    BCVCurrencyCreate,
+    BCVCurrencyUpdate,
     BCVResponse)
 
 class BCVService:
@@ -39,10 +39,10 @@ class BCVService:
     def _get_soup(self) -> Optional[BeautifulSoup]:
         """
         Get and parse the HTML content from the BCV website.
-        
+
         Returns:
             Optional[BeautifulSoup]: The parsed HTML content, or None if there was an error.
-        
+
         Raises:
             BCVConnectionError: If there was an error connecting to the BCV website.
         """
@@ -144,7 +144,7 @@ class BCVService:
 
         Returns:
             Optional[BCVCurrencyResponse]: The saved exchange rate response, or None if there was an error.
-        
+
         Raises:
             DatabaseSessionError: If the database session is not provided.
         """
@@ -154,7 +154,7 @@ class BCVService:
                 message="Database session is required to save rates.",
                 details={"error": "No database session provided."}
             )
-        
+
         currency_data = self.get_real_time_exchange_rate(currency=currency)
 
         new_rate = BCVCurrencyCreate(
@@ -164,7 +164,7 @@ class BCVService:
             date=currency_data.date
         )
 
-        try:  
+        try:
             saved_rate = await self.controller.register_rate(new_rate)
             return saved_rate
         except Exception as e:
@@ -180,10 +180,10 @@ class BCVService:
 
         Args:
             currency (Currency): The currency to get the exchange rate for.
-        
+
         Returns:
             Optional[BCVCurrencyResponse]: The exchange rate for the currency, or None if not found.
-        
+
         Raises:
             DatabaseSessionError: If the database session is not provided.
             RegisterNotFoundError: If no exchange rate is found for the specified currency.
@@ -212,10 +212,10 @@ class BCVService:
     async def get_all_exchange_rates(self) -> BCVResponse:
         """
         Gets the last record registered for all the currencies tracked by BCV.
-        
+
         Returns:
             BCVResponse: The exchange rates for all the currencies.
-        
+
         Raises:
             DatabaseSessionError: If the database session is not provided.
         """
@@ -225,7 +225,7 @@ class BCVService:
                 message="Database session is required to retrieve rates.",
                 details={"error": "No database session provided."}
             )
-        
+
         dolar = await self.get_exchange_rate(Currency.DOLAR)
         euro = await self.get_exchange_rate(Currency.EURO)
         yuan = await self.get_exchange_rate(Currency.YUAN)
@@ -239,10 +239,10 @@ class BCVService:
             lira=lira,
             rublo=rublo
         )
-    
+
     async def get_currency_exchange_rates_by_range(
             self,
-            start_date: datetime, 
+            start_date: datetime,
             end_date: datetime,
             currency: Currency = Currency.DOLAR,
             trade_type: TradeType = TradeType.SELL,
@@ -262,7 +262,7 @@ class BCVService:
 
         Returns:
             BCVCurrencyListResponse: A list of exchange rates and the total count.
-        
+
         Raises:
             DatabaseSessionError: If the database session is not provided.
             RegisterNotFoundError: If no records are found for the specified criteria.
@@ -273,7 +273,7 @@ class BCVService:
                 message="Database session is required to retrieve rates.",
                 details={"error": "No database session provided."}
             )
-        
+
         data = await self.controller.get_registers_currency_by_date_range(
             currency=currency,
             trade_type=trade_type,
@@ -291,8 +291,8 @@ class BCVService:
         return data
 
     async def get_all_currency_registers(
-            self, 
-            currency: Currency, 
+            self,
+            currency: Currency,
             trade_type: TradeType = TradeType.SELL,
             skip: int = 0,
             limit: int = 100
@@ -305,10 +305,10 @@ class BCVService:
             trade_type (TradeType): The trade type to filter by. Defaults to TradeType.SELL.
             skip (int): The number of records to skip for pagination. Defaults to 0.
             limit (int): The maximum number of records to return. Defaults to 100.
-        
+
         Returns:
             BCVCurrencyListResponse: A list of all registers for the specified currency.
-        
+
         Raises:
             DatabaseSessionError: If the database session is not provided.
             RegisterNotFoundError: If no records are found for the specified currency.
@@ -319,7 +319,7 @@ class BCVService:
                 message="Database session is required to retrieve rates.",
                 details={"error": "No database session provided."}
             )
-        
+
         data = await self.controller.get_registers_by_currency(
             currency=currency,
             trade_type=trade_type,

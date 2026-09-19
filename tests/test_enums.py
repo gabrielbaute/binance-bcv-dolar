@@ -1,5 +1,5 @@
 """
-Tests for enum modules: FiatCurrency, Currency, TradeType, BinanceAsset, WebhookPriority.
+Tests for enum modules: FiatCurrency, Currency, TradeType, BinanceAsset, NTFYPriority.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from app.enums import (
     Currency,
     TradeType,
     BinanceAsset,
-    WebhookPriority,
+    NTFYPriority,
 )
 
 
@@ -145,26 +145,29 @@ class TestBinanceAsset:
 
 
 # ===================================================================
-# WebhookPriority
+# NTFYPriority
 # ===================================================================
 
-class TestWebhookPriority:
+class TestNTFYPriority:
     def test_members(self):
-        assert WebhookPriority.max.value == "max"
-        assert WebhookPriority.high.value == "high"
-        assert WebhookPriority.default.value == "default"
-        assert WebhookPriority.low.value == "low"
-        assert WebhookPriority.min.value == "min"
+        assert NTFYPriority.MAX.value == 5
+        assert NTFYPriority.HIGH.value == 4
+        assert NTFYPriority.DEFAULT.value == 3
+        assert NTFYPriority.LOW.value == 2
+        assert NTFYPriority.MIN.value == 1
 
-    def test_str(self):
-        assert str(WebhookPriority.high) == "high"
+    def test_from_value(self):
+        assert NTFYPriority.from_value(5) == NTFYPriority.MAX
+        assert NTFYPriority.from_value("urgent") == NTFYPriority.MAX
+        assert NTFYPriority.from_value("2") == NTFYPriority.LOW
 
     def test_has_value(self):
-        assert WebhookPriority.has_value("high") is True
-        assert WebhookPriority.has_value("urgent") is False
+        assert NTFYPriority.has_value("high") is True
+        assert NTFYPriority.has_value("urgent") is True
+        assert NTFYPriority.has_value("critical") is False
 
-    def test_list(self):
-        lst = WebhookPriority.list()
-        assert "max" in lst
-        assert "min" in lst
+    def test_to_list(self):
+        lst = NTFYPriority.to_list()
+        assert 5 in lst
+        assert 1 in lst
         assert len(lst) == 5

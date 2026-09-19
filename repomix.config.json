@@ -1,0 +1,57 @@
+{
+  "output": {
+    "filePath": "repomix-output.xml",
+    "style": "xml",
+    "fileSummary": true,
+    "directoryStructure": true,
+    "files": true,
+    "removeComments": false,
+    "removeEmptyLines": false,
+    "showLineNumbers": false,
+    "copyToClipboard": false,
+    "includeEmptyDirectories": false,
+    "parsableStyle": true,
+    "git": {
+      "includeDiffs": true,
+      "includeLogs": true,
+      "includeLogsCount": 50
+    }
+  },
+  "include": [],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "uv.lock",
+      "*.lock",
+      ".venv/**",
+      "venv/**",
+      "__pycache__/**",
+      "*.pyc",
+      "*.pyo",
+      "*.egg-info/**",
+      ".pytest_cache/**",
+      ".ruff_cache/**",
+      ".mypy_cache/**",
+      "htmlcov/**",
+      ".coverage",
+      "*.log",
+      "logs/**",
+      "instance/**",
+      "*.db",
+      "*.db-shm",
+      "*.db-wal",
+      ".env",
+      ".env.*",
+      "!.env.example",
+      ".bumpver.toml",
+      ".python-version"
+    ]
+  },
+  "security": {
+    "enableSecurityCheck": true
+  },
+  "tokenCount": {
+    "encoding": "o200k_base"
+  }
+}
