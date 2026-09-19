@@ -25,8 +25,8 @@ class NtfysService:
         self._owns_client = client is None
         self._client_lock = asyncio.Lock()
 
-    async def _get_client(self) -> httpx.AsyncClient:
-        """Obtiene o crea un cliente HTTPX asíncrono.
+    async def _get_client_locked(self) -> httpx.AsyncClient:
+        """Obtiene o crea un cliente HTTPX asíncrono con ``_client_lock`` adquirido.
 
         Returns:
             httpx.AsyncClient: Cliente de red asíncrono.
@@ -98,7 +98,7 @@ class NtfysService:
 
         try:
             async with self._client_lock:
-                client = await self._get_client()
+                client = await self._get_client_locked()
                 response = await client.post(
                     self.webhook_url,
                     content=message.encode("utf-8"),
