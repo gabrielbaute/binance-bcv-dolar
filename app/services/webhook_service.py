@@ -65,8 +65,10 @@ class NtfysService:
         # El título en la cabecera es independiente del cuerpo
         if payload.title:
             headers["Title"] = payload.title
-        else:
+        elif payload.event:
             headers["Title"] = f"{self.app_name} - {payload.event}"
+        else:
+            headers["Title"] = self.app_name
 
         if payload.click:
             headers["Click"] = payload.click

@@ -4,7 +4,7 @@ import pytest
 
 from app.enums import BinanceAsset, FiatCurrency, TradeType
 from app.errors import BinanceRequestError
-from app.schemas import BinanceRealTimeResponse, BinanceRequest
+from app.schemas import BinanceRealTimeResponse, BinanceRequest, NTFYPayload
 from app.services import BCVService, BinanceService, NtfyWebhookService, NtfysService
 
 
@@ -31,6 +31,19 @@ async def test_ntfy_service_reuses_injected_client_without_is_closed():
 
     assert resolved_client is client
     await service.close()
+
+
+def test_ntfy_service_omits_missing_event_in_fallback_title():
+    class DummyConfig:
+        NTFY_URL = "https://ntfy.example.com"
+        NTFY_TOPIC = "test-topic"
+        APP_NAME = "test-app"
+        APP_VERSION = "1.0.0"
+
+    service = NtfysService(config=DummyConfig())
+    headers = service._format_headers(NTFYPayload(description="desc"))
+
+    assert headers["Title"] == "test-app"
 
 
 def test_bcv_service_uses_default_tls_verification(monkeypatch):
@@ -83,6 +96,23 @@ async def test_binance_service_reuses_async_client(monkeypatch):
 
     await service.close()
     assert service._client.is_closed is True
+
+
+@pytest.mark.parametrize("rows", [0, -1, 21])
+def test_binance_service_rejects_invalid_row_counts(rows):
+    service = BinanceService()
+
+    with pytest.raises(
+        BinanceRequestError,
+        match="Rows parameter must be greater than 0 and no greater than 20.",
+    ):
+        service._build_request(
+            fiat=FiatCurrency.VES,
+            page=1,
+            rows=rows,
+            trade_type=TradeType.BUY,
+            asset=BinanceAsset.USDT,
+        )
 
 
 @pytest.mark.asyncio

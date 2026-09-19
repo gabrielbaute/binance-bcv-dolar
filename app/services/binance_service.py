@@ -76,9 +76,9 @@ class BinanceService:
         Raises:
             BinanceRequestError: If rows parameter exceeds maximum limit of 20.
         """
-        if rows and rows > 20:
+        if rows is not None and (rows <= 0 or rows > 20):
             raise BinanceRequestError(
-                message="Rows parameter exceeds maximum limit of 20.",
+                message="Rows parameter must be greater than 0 and no greater than 20.",
                 details={"rows": rows}
             )
 
