@@ -31,6 +31,7 @@ async def test_ntfy_service_reuses_injected_client_without_is_closed():
 
     assert resolved_client is client
     await service.close()
+    assert service._client is None
 
 
 def test_ntfy_service_omits_missing_event_in_fallback_title():
@@ -95,7 +96,7 @@ async def test_binance_service_reuses_async_client(monkeypatch):
     assert DummyClient.instances == 1
 
     await service.close()
-    assert service._client.is_closed is True
+    assert service._client is None
 
 
 @pytest.mark.parametrize("rows", [0, -1, 21])

@@ -138,6 +138,7 @@ class BinanceService:
         """Close the reusable Binance HTTP client if it is active."""
         if self._client and not self._client.is_closed:
             await self._client.aclose()
+        self._client = None
 
     def _colect_prices(self, data: dict, fiat: FiatCurrency) -> Optional[List[float]]:
         """
