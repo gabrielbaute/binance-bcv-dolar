@@ -37,9 +37,26 @@ class BCVService:
         """
         self.url = "https://www.bcv.org.ve"
         self.db_session = databasesession
-        self.controller = BCVController(session=self.db_session) if self.db_session else None
         self.logger = logging.getLogger(self.__class__.__name__)
         self._soup: Optional[BeautifulSoup] = None
+
+    @property
+    def controller(self) -> BCVController:
+        """
+        Get the BCVController instance.
+
+        Returns:
+            BCVController: The initialized controller instance.
+
+        Raises:
+            DatabaseSessionError: If the database session is not set.
+        """
+        if not self.db_session:
+            raise DatabaseSessionError(
+                message="Database session is required to initialize the controller.",
+                details={"error": "No database session provided."}
+            )
+        return BCVController(session=self.db_session)
 
     def _get_client(self) -> AsyncClient:
         """
@@ -179,13 +196,6 @@ class BCVService:
             DatabaseSessionError: If the database session is not provided.
             DatabaseOperationError: If there is an issue during database write.
         """
-        if not self.db_session:
-            self.logger.error("Database session is not provided.")
-            raise DatabaseSessionError(
-                message="Database session is required to save rates.",
-                details={"error": "No database session provided."}
-            )
-
         currency_data = await self.get_real_time_exchange_rate(currency=currency)
 
         new_rate = BCVCurrencyCreate(
@@ -219,12 +229,6 @@ class BCVService:
             DatabaseSessionError: If the database session is not provided.
             RegisterNotFoundError: If no exchange rate is found for the specified currency.
         """
-        if not self.db_session:
-            self.logger.error("Database session is not provided.")
-            raise DatabaseSessionError(
-                message="Database session is required to retrieve rates.",
-                details={"error": "No database session provided."}
-            )
         try:
             last_register = await self.controller.get_last_register_by_currency(
                 currency=currency,
@@ -253,13 +257,6 @@ class BCVService:
         Raises:
             DatabaseSessionError: If the database session is not provided.
         """
-        if not self.db_session:
-            self.logger.error("Database session is not provided.")
-            raise DatabaseSessionError(
-                message="Database session is required to retrieve rates.",
-                details={"error": "No database session provided."}
-            )
-
         dolar = await self.get_exchange_rate(Currency.DOLAR)
         euro = await self.get_exchange_rate(Currency.EURO)
         yuan = await self.get_exchange_rate(Currency.YUAN)
@@ -301,13 +298,6 @@ class BCVService:
             DatabaseSessionError: If the database session is not provided.
             RegisterNotFoundError: If no records are found for the specified criteria.
         """
-        if not self.db_session:
-            self.logger.error("Database session is not provided.")
-            raise DatabaseSessionError(
-                message="Database session is required to retrieve rates.",
-                details={"error": "No database session provided."}
-            )
-
         data = await self.controller.get_registers_currency_by_date_range(
             currency=currency,
             trade_type=trade_type,
@@ -349,13 +339,6 @@ class BCVService:
             DatabaseSessionError: If the database session is not provided.
             RegisterNotFoundError: If no records are found for the specified currency.
         """
-        if not self.db_session:
-            self.logger.error("Database session is not provided.")
-            raise DatabaseSessionError(
-                message="Database session is required to retrieve rates.",
-                details={"error": "No database session provided."}
-            )
-
         data = await self.controller.get_registers_by_currency(
             currency=currency,
             trade_type=trade_type,
