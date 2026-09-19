@@ -1,6 +1,6 @@
 """Lista de divisas soportadas por el BCV."""
-from typing import List
 from enum import StrEnum
+from typing import List, Optional
 
 class Currency(StrEnum):
     """
@@ -21,10 +21,10 @@ class Currency(StrEnum):
 
     def __str__(self):
         return self.value
-    
+
     def __repr__(self):
         return f"Currency.{self.name}"
-    
+
     @property
     def description(self) -> str:
         """
@@ -41,15 +41,15 @@ class Currency(StrEnum):
             Currency.RUBLE: "Rublo ruso"
         }.get(self, "Divisa desconocida")
 
-    
+
     def currency_id(self) -> str:
         """Returns the currency ID in lowercase."""
         return self.name.lower()
-    
+
     def currency(self) -> str:
         """Returns the currency name in lowercase."""
         return self.value.lower()
-    
+
     @staticmethod
     def to_list() -> List['Currency']:
         """
@@ -64,15 +64,15 @@ class Currency(StrEnum):
         ]
 
         return currencies_list
-    
+
     @staticmethod
-    def map_currency(str_currency: str) -> 'Currency':
+    def map_currency(str_currency: str) -> 'Optional[Currency]':
         """
         Maps a strings expresion to a enum expresion.
 
         Args:
             str_currency(str): Currency in string.
-        
+
         Returns:
             Currency: Currency in enum form.
         """
@@ -84,6 +84,6 @@ class Currency(StrEnum):
             "rublo": Currency.RUBLE
         }
         try:
-            return currencies_map.get(str_currency)
+            return currencies_map.get(str_currency, None)
         except Exception:
             raise ValueError("Currency not suported.")
