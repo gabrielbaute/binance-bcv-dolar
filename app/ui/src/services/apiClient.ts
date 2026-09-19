@@ -9,31 +9,24 @@ import {
 
 function toDateRange(timeRange: TimeRange): { start: string; end: string } {
   const endDate = new Date();
-  const startDate = new Date();
+  const startDate = new Date(endDate);
 
   if (timeRange === "24h") {
-    startDate.setHours(startDate.getHours() - 24);
+    startDate.setUTCHours(startDate.getUTCHours() - 24);
   } else if (timeRange === "7d") {
-    startDate.setDate(startDate.getDate() - 7);
+    startDate.setUTCDate(startDate.getUTCDate() - 7);
   } else if (timeRange === "30d") {
-    startDate.setDate(startDate.getDate() - 30);
+    startDate.setUTCDate(startDate.getUTCDate() - 30);
   } else if (timeRange === "90d") {
-    startDate.setDate(startDate.getDate() - 90);
+    startDate.setUTCDate(startDate.getUTCDate() - 90);
   } else {
-    startDate.setMonth(0, 1);
-    startDate.setHours(0, 0, 0, 0);
+    startDate.setUTCMonth(0, 1);
+    startDate.setUTCHours(0, 0, 0, 0);
   }
 
-  const toLocalYyyyMmDd = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
   return {
-    start: toLocalYyyyMmDd(startDate),
-    end: toLocalYyyyMmDd(endDate),
+    start: startDate.toISOString(),
+    end: endDate.toISOString(),
   };
 }
 
