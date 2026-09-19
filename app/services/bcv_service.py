@@ -116,7 +116,10 @@ class BCVService:
 
         strong_tag = div_container.find("strong", {"class": "strong-tb"})
         if not strong_tag:
-            valor_div = div_container.find("div", class_=lambda c: c and "centrado" in c)
+            valor_div = div_container.find(
+                "div",
+                class_=lambda c: "centrado" in c if c else False
+            )
             if not valor_div:
                 self.logger.error(f"Exchange rate not found for {currency}")
                 return None
