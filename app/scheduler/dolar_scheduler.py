@@ -233,3 +233,9 @@ class DolarScheduler():
         self.logger.info("Starting automated asynchronous scheduler engine...")
         self.scheduler_jobs()
         self.scheduler.start()
+
+    async def shutdown(self) -> None:
+        """Stop scheduler jobs and release owned resources."""
+        if self.scheduler.running:
+            self.scheduler.shutdown(wait=False)
+        await self.notifier.close()

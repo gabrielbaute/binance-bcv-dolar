@@ -39,5 +39,5 @@ __all__ = [
     "FiatPairResponse",
     "BCVHistoryItem",
     "BinanceHistoryItem",
-    "WebhookPayload"
+    "NTFYPayload"
 ]

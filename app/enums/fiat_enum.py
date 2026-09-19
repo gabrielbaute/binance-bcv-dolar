@@ -45,6 +45,6 @@ class FiatCurrency(StrEnum):
             return FiatCurrency(currency_str)
         except ValueError:
             raise ValueError(
-                f"Invalid currency: {currency_str}."
+                f"Invalid currency: {currency_str}. "
                 f"Valid options are: {', '.join(FiatCurrency.list_currencies())}"
             )

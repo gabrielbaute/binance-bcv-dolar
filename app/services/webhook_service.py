@@ -21,6 +21,7 @@ class NtfysService:
         self.app_version = config.APP_VERSION
         self.logger = logging.getLogger(self.__class__.__name__)
         self._client = client
+        self._owns_client = client is None
 
     async def _get_client(self) -> httpx.AsyncClient:
         """Obtiene o crea un cliente HTTPX asíncrono.
@@ -30,6 +31,7 @@ class NtfysService:
         """
         if self._client is None or self._client.is_closed:
             self._client = httpx.AsyncClient(timeout=10.0)
+            self._owns_client = True
         return self._client
 
     def _format_message(self, payload: NTFYPayload) -> str:
@@ -65,8 +67,10 @@ class NtfysService:
         # El título en la cabecera es independiente del cuerpo
         if payload.title:
             headers["Title"] = payload.title
-        else:
+        elif payload.event:
             headers["Title"] = f"{self.app_name} - {payload.event}"
+        else:
+            headers["Title"] = self.app_name
 
         if payload.click:
             headers["Click"] = payload.click
@@ -108,5 +112,5 @@ class NtfysService:
 
     async def close(self) -> None:
         """Cierra el cliente HTTPX asíncrono si está activo."""
-        if self._client and not self._client.is_closed:
+        if self._owns_client and self._client and not self._client.is_closed:
             await self._client.aclose()
