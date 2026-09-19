@@ -74,7 +74,7 @@ class BinanceController(
         if obj is None:
             raise RegisterNotFoundError(
                 message="Binance rate record not found on database",
-                details=f"ID object rate: {rate_id}",
+                details={"Error detail:": f"ID object rate: {rate_id}"},
             )
         return obj
 
@@ -101,11 +101,11 @@ class BinanceController(
         """
         register = await self._get_or_raise(register_id)
         return BinanceCurrencyResponse.model_validate(register.model_dump())
-    
+
     async def get_last_register_by_pair(
-        self, 
-        asset: BinanceAsset, 
-        fiat: FiatCurrency, 
+        self,
+        asset: BinanceAsset,
+        fiat: FiatCurrency,
         trade_type: TradeType = TradeType.BUY
     ) -> Optional[BinanceCurrencyResponse]:
         """

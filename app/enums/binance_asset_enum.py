@@ -16,28 +16,31 @@ class BinanceAsset(StrEnum):
 
     def __str__(self) -> str:
         return self.value
-    
+
     def __repr__(self) -> str:
         return self.value
 
     def asset(self) -> str:
         """Returns the asset name in lowercase."""
         return self.value.lower()
-    
+
     @staticmethod
     def list_currencies() -> List[str]:
         """Returns the list of avaiable assets."""
         return [asset.value for asset in BinanceAsset]
-    
+
     @staticmethod
     def is_valid_currency(asset: str) -> bool:
         """Validate if the crypto asset is avaiable."""
         return asset in BinanceAsset._value2member_map_
-    
+
     @staticmethod
     def from_string(asset_str: str) -> 'BinanceAsset':
         """Validate the strings and returns an BinanceAsset object."""
         try:
             return BinanceAsset(asset_str)
         except ValueError:
-            raise ValueError(f"Invalid asset: {asset_str}. Valid options are: {', '.join(BinanceAsset.list_currencies())}")
+            raise ValueError(
+                f"Invalid asset: {asset_str}."
+                f"Valid options are: {', '.join(BinanceAsset.list_currencies())}"
+            )

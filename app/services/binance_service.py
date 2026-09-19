@@ -23,7 +23,7 @@ from app.schemas import (
     BinanceCurrencyResponse,
     BinanceCurrencyListResponse,
 )
-   
+
 class BinanceService:
     """
     Binance P2P Client.
@@ -36,11 +36,11 @@ class BinanceService:
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def _build_request(
-            self, 
-            fiat: FiatCurrency, 
-            page: Optional[int], 
-            rows: Optional[int], 
-            trade_type: Optional[TradeType], 
+            self,
+            fiat: FiatCurrency,
+            page: Optional[int],
+            rows: Optional[int],
+            trade_type: Optional[TradeType],
             asset: Optional[BinanceAsset]
         ) -> BinanceRequest:
         """
@@ -79,7 +79,7 @@ class BinanceService:
 
         Returns:
             dict: Response data.
-        
+
         Raises:
             BinanceConnectionError: If there was an error connecting to Binance P2P.
         """
@@ -147,8 +147,8 @@ class BinanceService:
             return {"median_price": None, "average_price": None}
 
     def get_real_time_pair(
-            self, 
-            fiat: FiatCurrency = FiatCurrency.VES, 
+            self,
+            fiat: FiatCurrency = FiatCurrency.VES,
             asset: BinanceAsset = BinanceAsset.USDT,
             trade_type: TradeType = TradeType.BUY,
             rows: int = 20
@@ -172,7 +172,7 @@ class BinanceService:
             return None
         precios = self._colect_prices(data, fiat=fiat)
         medians = self._calculate_med(precios)
-    
+
         pair = BinanceRealTimeResponse(
             fiat=fiat,
             asset=asset,
@@ -191,12 +191,12 @@ class BinanceService:
             Optional[BinanceRealTimeResponse]: USDT/VES pair data for BUY trade type.
         """
         return self.get_real_time_pair(fiat=FiatCurrency.VES, asset=BinanceAsset.USDT, trade_type=TradeType.BUY, rows=20)
-    
+
     # Additional methods for database operations
     async def save_binance_currency(
-            self, 
-            currency: FiatCurrency, 
-            asset: BinanceAsset, 
+            self,
+            currency: FiatCurrency,
+            asset: BinanceAsset,
             trade_type: TradeType
     ) -> BinanceCurrencyResponse:
         """
@@ -221,16 +221,16 @@ class BinanceService:
                 message="Database session is required to save rates.",
                 details={"error": "No database session provided."}
             )
-        
+
         pair = self.get_real_time_pair(fiat=currency, asset=asset, trade_type=trade_type, rows=20)
-        
+
         if not pair:
             self.logger.error("No data received from Binance for saving.")
             raise BinanceRequestError(
                 message="No data received from Binance for saving.",
                 details={"currency": currency.value, "asset": asset.value, "trade_type": trade_type.value}
             )
-        
+
         data_pair = BinanceCurrencyCreate(
             fiat=pair.fiat,
             asset=pair.asset,
@@ -247,11 +247,11 @@ class BinanceService:
                 message="Error occurred while saving currency rate.",
                 details={"currency": currency.value, "asset": asset.value, "trade_type": trade_type.value}
             )
-    
+
     async def get_last_saved_binance_fiat(
-            self, 
-            fiat: FiatCurrency, 
-            asset: BinanceAsset, 
+            self,
+            fiat: FiatCurrency,
+            asset: BinanceAsset,
             trade_type: TradeType
     ) -> BinanceCurrencyResponse:
         """
@@ -276,7 +276,7 @@ class BinanceService:
                 message="Database session is required to retrieve rates.",
                 details={"error": "No database session provided."}
             )
-        
+
         try:
             last_saved_pair = await self.controller.get_last_register_by_pair(fiat=fiat, asset=asset, trade_type=trade_type)
 
@@ -298,9 +298,9 @@ class BinanceService:
             )
 
     async def get_all_saved_binance_pair(
-            self, 
-            fiat: FiatCurrency, 
-            asset: BinanceAsset, 
+            self,
+            fiat: FiatCurrency,
+            asset: BinanceAsset,
             trade_type: TradeType,
             skip: int = 0,
             limit: int = 100
@@ -329,7 +329,7 @@ class BinanceService:
                 message="Database session is required to retrieve rates.",
                 details={"error": "No database session provided."}
             )
-        
+
         try:
             all_saved_pairs = await self.controller.get_registers_by_pair(
                 asset=asset,
@@ -355,13 +355,13 @@ class BinanceService:
                 message="Unexpected error occurred while retrieving all saved currency rates.",
                 details={"fiat": fiat.value, "asset": asset.value, "trade_type": trade_type.value, "error": str(e)}
             )
-    
+
     async def get_binance_pair_by_time_range(
-            self, 
-            fiat: FiatCurrency, 
-            asset: BinanceAsset, 
-            trade_type: TradeType, 
-            start_time: datetime, 
+            self,
+            fiat: FiatCurrency,
+            asset: BinanceAsset,
+            trade_type: TradeType,
+            start_time: datetime,
             end_time: datetime,
             skip: int = 0,
             limit: int = 100
@@ -392,7 +392,7 @@ class BinanceService:
                 message="Database session is required to retrieve rates.",
                 details={"error": "No database session provided."}
             )
-        
+
         try:
             rates = await self.controller.get_registers_by_date_range(
                 asset=asset,
@@ -409,8 +409,8 @@ class BinanceService:
                 raise RegisterNotFoundError(
                     message="No saved currency rates found in the specified time range.",
                     details={
-                        "fiat": fiat.value, 
-                        "asset": asset.value, 
+                        "fiat": fiat.value,
+                        "asset": asset.value,
                         "trade_type": trade_type.value,
                         "start_time": start_time.isoformat(),
                         "end_time": end_time.isoformat()
@@ -424,8 +424,8 @@ class BinanceService:
             raise DatabaseOperationError(
                 message="Unexpected error occurred while retrieving currency rates by time range.",
                 details={
-                    "fiat": fiat.value, 
-                    "asset": asset.value, 
+                    "fiat": fiat.value,
+                    "asset": asset.value,
                     "trade_type": trade_type.value,
                     "start_time": start_time.isoformat(),
                     "end_time": end_time.isoformat(),

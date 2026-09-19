@@ -11,7 +11,6 @@ from app.schemas.fiats_pair_response import FiatPairResponse
 
 router = APIRouter(prefix="/arbitrage", tags=["Remesas/Arbitraje"])
 
-
 @router.get("/pair", response_model=Optional[FiatPairResponse], summary="Get fiat/fiat pair from last database record.")
 async def get_fiat_pair(
     fiat_1: FiatCurrency = Query(..., description="First local fiat currency tracking asset."),
@@ -19,9 +18,9 @@ async def get_fiat_pair(
     exchange_service: FiatExchangeService = Depends(get_fiat_exchange_service),
 ):
     """
-    Returns the average exchange rate for the selected pair based on stored operational database blocks.
-    
-    This route evaluates metrics used to estimate remittance conversions across both directions.
+    Returns the average exchange rate for the selected pair
+    based on stored operational database blocks. This route evaluates metrics
+    used to estimate remittance conversions across both directions.
     """
     return await exchange_service.get_pair(fiat_1, fiat_2)
 
@@ -33,6 +32,7 @@ async def get_real_time_pair(
     exchange_service: FiatExchangeService = Depends(get_fiat_exchange_service),
 ):
     """
-    Returns the dynamic live pricing metrics for the selected fiat assets mapping order books directly.
+    Returns the dynamic live pricing metrics for the selected fiat assets
+    mapping order books directly.
     """
     return exchange_service.get_real_time_pair(fiat_1, fiat_2)

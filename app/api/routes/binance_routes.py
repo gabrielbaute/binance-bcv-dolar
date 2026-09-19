@@ -20,7 +20,11 @@ def realtime_binance_ves(
     """
     return binance_service.get_real_time_usdt_ves_pair()
 
-@router.get("/real_time_pair", response_model=Optional[BinanceRealTimeResponse], summary="Request for a specific pair in Binance P2P market")
+@router.get(
+    "/real_time_pair",
+    response_model=Optional[BinanceRealTimeResponse],
+    summary="Request for a specific pair in Binance P2P market"
+)
 def get_binance_pair(
     fiat: FiatCurrency = Query(..., description="Target local fiat currency (e.g., VES, PEN)."),
     asset: BinanceAsset = Query(BinanceAsset.USDT, description="Crypto token backing transaction pairs."),
@@ -28,7 +32,8 @@ def get_binance_pair(
     binance_service: BinanceService = Depends(get_binance_service)
 ):
     """
-    Returns the P2P average exchange rate for the selected pair, and a list of the first 20 prices in the market.
+    Returns the P2P average exchange rate for the selected pair,
+    and a list of the first 20 prices in the market.
     """
     return binance_service.get_real_time_pair(fiat=fiat, asset=asset, trade_type=trade_type, rows=20)
 

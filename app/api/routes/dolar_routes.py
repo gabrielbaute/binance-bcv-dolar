@@ -15,7 +15,6 @@ async def dolar_promedio(
     Returns the USD and EUR values ​​at the BCV, the USDT value on Binance P2P at the time of the query, and the average price between USD_BCV and USDT.
     """
     return await dolar_service.get_average_dolar_last_register()
-    
 
 @router.get("/realtime_dolar_promedio", response_model=RealTimeDolarResponse)
 def realtime_dolar_promedio(

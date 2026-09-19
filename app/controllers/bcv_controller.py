@@ -66,7 +66,7 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
         if obj is None:
             raise RegisterNotFoundError(
                 message="Rate record not found on database",
-                details=f"ID object rate: {rate_id}"
+                details={"Error detail:": f"ID object rate: {rate_id}"}
             )
         return obj
 
@@ -93,8 +93,12 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
         """
         register = await self._get_or_raise(register_id)
         return BCVCurrencyResponse.model_validate(register.model_dump())
-    
-    async def get_last_register_by_currency(self, currency: Currency, trade_type: TradeType = TradeType.SELL) -> Optional[BCVCurrencyResponse]:
+
+    async def get_last_register_by_currency(
+        self,
+        currency: Currency,
+        trade_type: TradeType = TradeType.SELL
+    ) -> Optional[BCVCurrencyResponse]:
         """
         Fetch the most recent rate for a specific currency and trade type.
 
@@ -114,7 +118,11 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
             return None
         return BCVCurrencyResponse.model_validate(last_register.model_dump())
 
-    async def update_register_rate(self, register_id: UUID, rate: BCVCurrencyUpdate) -> BCVCurrencyResponse:
+    async def update_register_rate(
+        self,
+        register_id: UUID,
+        rate: BCVCurrencyUpdate
+    ) -> BCVCurrencyResponse:
         """Modify fields on an existing record.
 
         Args:
@@ -142,10 +150,10 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
         return BCVCurrencyResponse.model_validate(db_obj.model_dump())
 
     async def get_registers_by_currency(
-        self, 
-        currency: Currency, 
-        trade_type: TradeType = TradeType.SELL, 
-        skip: int = 0, 
+        self,
+        currency: Currency,
+        trade_type: TradeType = TradeType.SELL,
+        skip: int = 0,
         limit: int = 100
     ) -> BCVCurrencyListResponse:
         """Retrieve rates matching specific currency criteria with absolute total count.
@@ -163,7 +171,7 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
             BCVRateSQLModel.currency == currency,
             BCVRateSQLModel.trade_type == trade_type
         ]
-        
+
         count_statement = select(func.count()).select_from(BCVRateSQLModel).where(*where_clause)
         count_result = await self.session.execute(count_statement)
         total_count = count_result.scalar_one()
@@ -177,12 +185,12 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
         return self._build_list_response(rates=rates, total=total_count)
 
     async def get_registers_currency_by_date_range(
-        self, 
-        currency: Currency, 
-        trade_type: TradeType = TradeType.SELL, 
-        start_date: Optional[datetime] = None, 
-        end_date: Optional[datetime] = None, 
-        skip: int = 0, 
+        self,
+        currency: Currency,
+        trade_type: TradeType = TradeType.SELL,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        skip: int = 0,
         limit: int = 100
     ) -> BCVCurrencyListResponse:
         """Query rate metrics inside contextual timestamp periods.
