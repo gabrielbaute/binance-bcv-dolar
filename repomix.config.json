@@ -45,7 +45,8 @@
       ".env.*",
       "!.env.example",
       ".bumpver.toml",
-      ".python-version"
+      ".python-version",
+      "app/ui/static/**"
     ]
   },
   "security": {
