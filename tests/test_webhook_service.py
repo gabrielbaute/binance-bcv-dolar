@@ -1,5 +1,6 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
+import httpx
 import pytest
 
 from app.config import Config
@@ -38,3 +39,33 @@ class TestNtfysService:
         await service.close()
 
         client.aclose.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_emit_returns_status_code_on_success(self):
+        response = MagicMock()
+        response.status_code = 200
+        response.raise_for_status.return_value = None
+        client = AsyncMock()
+        client.post.return_value = response
+        client.is_closed = False
+        service = NtfysService(config=Config(), client=client)
+
+        result = await service.emit(
+            NTFYPayload(description="desc", priority=NTFYPriority.DEFAULT)
+        )
+
+        assert result == 200
+        client.post.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_emit_returns_none_on_http_error(self):
+        client = AsyncMock()
+        client.post.side_effect = httpx.HTTPError("boom")
+        client.is_closed = False
+        service = NtfysService(config=Config(), client=client)
+
+        result = await service.emit(
+            NTFYPayload(description="desc", priority=NTFYPriority.DEFAULT)
+        )
+
+        assert result is None

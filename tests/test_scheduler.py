@@ -24,3 +24,15 @@ class TestDolarScheduler:
 
         assert result is False
         scheduler._send_alert.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_shutdown_stops_scheduler_and_closes_notifier(self):
+        scheduler = DolarScheduler(databasesession=MagicMock(), config=Config())
+        scheduler.scheduler = MagicMock()
+        scheduler.scheduler.running = True
+        scheduler.notifier.close = AsyncMock()
+
+        await scheduler.shutdown()
+
+        scheduler.scheduler.shutdown.assert_called_once_with(wait=False)
+        scheduler.notifier.close.assert_awaited_once()
