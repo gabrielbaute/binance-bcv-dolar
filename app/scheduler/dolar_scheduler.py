@@ -143,6 +143,9 @@ class DolarScheduler():
             )
             if not asset_fiat_sell:
                 self.logger.error(f"Error saving {currency.value} at {TradeType.SELL.value} type operation on Database.")
+            if not asset_fiat_buy or not asset_fiat_sell:
+                self.logger.error(f"Some pairs can't be saved.")
+                return False
 
             msg = f"Binance USDT/VES Updated: **{asset_fiat_buy.average_price:.3f} {currency.value}/{asset.value}** at Buy, **{asset_fiat_sell.average_price:.3f} {currency.value}/{asset.value}** at Sell"
             self.logger.info(msg)
@@ -153,9 +156,6 @@ class DolarScheduler():
                 priority=NTFYPriority.LOW,
                 tags="rocket,chart_with_upwards_trend"
             )
-            if not asset_fiat_buy or not asset_fiat_sell:
-                self.logger.error(f"Some pairs can't be saved.")
-                return False
             return True
 
         except DatabaseOperationError as e:

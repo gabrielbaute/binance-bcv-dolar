@@ -74,7 +74,7 @@ class Currency(StrEnum):
             str_currency(str): Currency in string.
 
         Returns:
-            Currency: Currency in enum form.
+            Optional[Currency]: Currency in enum form or None when unsupported.
         """
         currencies_map = {
             "dolar": Currency.DOLAR,

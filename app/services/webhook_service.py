@@ -12,7 +12,7 @@ class NtfysService:
         """Inicializa el servicio NTFY con la configuración y un cliente HTTP asíncrono.
 
         Args:
-            settings (Settings): Instancia con la configuración general de la aplicación.
+            config (Config): Instancia con la configuración general de la aplicación.
             client (Optional[httpx.AsyncClient]): Cliente asíncrono de HTTPX reutilizable.
         """
         self.config = config
