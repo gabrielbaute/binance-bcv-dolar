@@ -10,7 +10,7 @@ router = APIRouter(prefix="/dolar", tags=["Dolar Promedio"])
 @router.get("/dolar_promedio", response_model=Optional[DolarResponse])
 async def dolar_promedio(
     dolar_service: DolarVenezuelaService = Depends(get_dolar_vzla_service)
-):
+) -> Optional[DolarResponse]:
     """
     Returns the USD and EUR values ​​at the BCV, the USDT value on Binance P2P at the time
     of the query, and the average price between USD_BCV and USDT.
@@ -20,7 +20,7 @@ async def dolar_promedio(
 @router.get("/realtime_dolar_promedio", response_model=RealTimeDolarResponse)
 async def realtime_dolar_promedio(
     dolar_service: DolarVenezuelaService = Depends(get_dolar_vzla_service)
-):
+) -> Optional[RealTimeDolarResponse]:
     """
     Returns the USD and EUR values ​​at the BCV, the USDT value on Binance P2P at the time
     of the query, and the average price between USD_BCV and USDT.
