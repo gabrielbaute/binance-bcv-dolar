@@ -31,6 +31,7 @@ class BinanceService:
         self.url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
         self.database_session = databasesession
         self.logger = logging.getLogger(self.__class__.__name__)
+        self._client: Optional[AsyncClient] = None
 
     @property
     def controller(self) -> BinanceController:
@@ -106,15 +107,11 @@ class BinanceService:
         body = req.model_dump()
         try:
             self.logger.debug("Request Binance P2P")
-            async with AsyncClient(timeout=15.0) as client:
-                res = await client.post(
-                    self.url,
-                    json=body,
-                    headers={"Content-Type": "application/json"}
-                )
-                res.raise_for_status()
-                self.logger.debug("Response Binance P2P")
-                return res.json()
+            client = await self._get_client()
+            res = await client.post(self.url, json=body)
+            res.raise_for_status()
+            self.logger.debug("Response Binance P2P")
+            return res.json()
         except HTTPError as e:
             self.logger.error(f"Error at Binance P2P request: {e}")
             raise BinanceConnectionError(
@@ -127,6 +124,20 @@ class BinanceService:
                 message="Error parsing Binance P2P response.",
                 details={"error": str(e)}
             )
+
+    async def _get_client(self) -> AsyncClient:
+        """Return a reusable HTTPX AsyncClient for Binance requests."""
+        if self._client is None or self._client.is_closed:
+            self._client = AsyncClient(
+                timeout=15.0,
+                headers={"Content-Type": "application/json"},
+            )
+        return self._client
+
+    async def close(self) -> None:
+        """Close the reusable Binance HTTP client if it is active."""
+        if self._client and not self._client.is_closed:
+            await self._client.aclose()
 
     def _colect_prices(self, data: dict, fiat: FiatCurrency) -> Optional[List[float]]:
         """
@@ -254,6 +265,17 @@ class BinanceService:
             self.logger.error("No data received from Binance for saving.")
             raise BinanceRequestError(
                 message="No data received from Binance for saving.",
+                details={
+                    "currency": currency.value,
+                    "asset": asset.value,
+                    "trade_type": trade_type.value
+                }
+            )
+
+        if pair.average_price is None or pair.median_price is None:
+            self.logger.error("Incomplete Binance pricing data received for saving.")
+            raise BinanceRequestError(
+                message="Incomplete Binance pricing data received for saving.",
                 details={
                     "currency": currency.value,
                     "asset": asset.value,

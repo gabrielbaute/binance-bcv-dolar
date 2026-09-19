@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 from pydantic import BaseModel, ConfigDict, HttpUrl
 
-from app.enums import NTFYPriority
+from app.enums import NTFYPriority, WebhookPriority
 
 class NTFYPayload(BaseModel):
     """Esquema para el payload de notificaciones a través de NTFY.
@@ -20,7 +20,7 @@ class NTFYPayload(BaseModel):
 
     title: Optional[str] = None
     event: Optional[str] = None
-    priority: NTFYPriority = NTFYPriority.DEFAULT
+    priority: NTFYPriority | WebhookPriority = NTFYPriority.DEFAULT
     description: str
     tags: Optional[str] = None
     click: Optional[str] = None
@@ -41,3 +41,6 @@ class NTFYPayload(BaseModel):
             ]
         }
     )
+
+
+WebhookPayload = NTFYPayload

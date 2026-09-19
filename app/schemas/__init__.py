@@ -2,7 +2,7 @@ from app.schemas.binance_request_schema import BinanceRequest
 from app.schemas.fiats_pair_response import FiatPairResponse
 from app.schemas.dolar_response import DolarResponse, RealTimeDolarResponse
 from app.schemas.history_response_schemas import BCVHistoryItem, BinanceHistoryItem
-from app.schemas.webhook_payload_schemas import NTFYPayload
+from app.schemas.webhook_payload_schemas import NTFYPayload, WebhookPayload
 
 from app.schemas.binance_response_schemas import (
     BinanceRealTimeResponse,
@@ -39,5 +39,6 @@ __all__ = [
     "FiatPairResponse",
     "BCVHistoryItem",
     "BinanceHistoryItem",
+    "NTFYPayload",
     "WebhookPayload"
 ]

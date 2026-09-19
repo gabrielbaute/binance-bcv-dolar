@@ -66,7 +66,6 @@ class BCVService:
             AsyncClient: Configured HTTPX async client.
         """
         return AsyncClient(
-            verify=False,
             timeout=15.0,
             headers={
                 "User-Agent": (

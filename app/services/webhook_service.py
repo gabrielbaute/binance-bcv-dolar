@@ -110,3 +110,6 @@ class NtfysService:
         """Cierra el cliente HTTPX asíncrono si está activo."""
         if self._client and not self._client.is_closed:
             await self._client.aclose()
+
+
+NtfyWebhookService = NtfysService
