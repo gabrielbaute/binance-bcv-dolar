@@ -41,6 +41,6 @@ class BinanceAsset(StrEnum):
             return BinanceAsset(asset_str)
         except ValueError:
             raise ValueError(
-                f"Invalid asset: {asset_str}."
+                f"Invalid asset: {asset_str}. "
                 f"Valid options are: {', '.join(BinanceAsset.list_currencies())}"
             )

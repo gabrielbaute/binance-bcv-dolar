@@ -143,6 +143,9 @@ class DolarScheduler():
             )
             if not asset_fiat_sell:
                 self.logger.error(f"Error saving {currency.value} at {TradeType.SELL.value} type operation on Database.")
+            if not asset_fiat_buy or not asset_fiat_sell:
+                self.logger.error(f"Some pairs can't be saved.")
+                return False
 
             msg = f"Binance USDT/VES Updated: **{asset_fiat_buy.average_price:.3f} {currency.value}/{asset.value}** at Buy, **{asset_fiat_sell.average_price:.3f} {currency.value}/{asset.value}** at Sell"
             self.logger.info(msg)
@@ -233,3 +236,9 @@ class DolarScheduler():
         self.logger.info("Starting automated asynchronous scheduler engine...")
         self.scheduler_jobs()
         self.scheduler.start()
+
+    async def shutdown(self) -> None:
+        """Stop scheduler jobs and release owned resources."""
+        if self.scheduler.running:
+            self.scheduler.shutdown(wait=False)
+        await self.notifier.close()

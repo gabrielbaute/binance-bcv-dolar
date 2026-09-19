@@ -12,6 +12,7 @@ from uuid import uuid4
 
 import pytest
 
+from app.config import config
 from app.enums import (
     Currency,
     TradeType,
@@ -73,6 +74,22 @@ def _binance_rt_resp(avg=346.97) -> BinanceRealTimeResponse:
         average_price=avg,
         median_price=avg,
     )
+
+
+# ===================================================================
+#  /health
+# ===================================================================
+
+class TestHealthRoutes:
+    async def test_healthcheck_returns_app_metadata(self, client):
+        response = await client.get("/health")
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["status"] == "ok"
+        assert "timestamp" in body
+        assert body["app_name"] == config.APP_NAME
+        assert body["app_version"] == config.APP_VERSION
 
 
 # ===================================================================

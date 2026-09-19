@@ -74,7 +74,7 @@ class Currency(StrEnum):
             str_currency(str): Currency in string.
 
         Returns:
-            Currency: Currency in enum form.
+            Optional[Currency]: Currency in enum form or None when unsupported.
         """
         currencies_map = {
             "dolar": Currency.DOLAR,
@@ -83,7 +83,4 @@ class Currency(StrEnum):
             "lira": Currency.LIRA,
             "rublo": Currency.RUBLE
         }
-        try:
-            return currencies_map.get(str_currency, None)
-        except Exception:
-            raise ValueError("Currency not suported.")
+        return currencies_map.get(str_currency)

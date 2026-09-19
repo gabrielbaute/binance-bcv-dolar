@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Dict, Optional
 import httpx
@@ -21,15 +22,18 @@ class NtfysService:
         self.app_version = config.APP_VERSION
         self.logger = logging.getLogger(self.__class__.__name__)
         self._client = client
+        self._owns_client = client is None
+        self._client_lock = asyncio.Lock()
 
-    async def _get_client(self) -> httpx.AsyncClient:
-        """Obtiene o crea un cliente HTTPX asíncrono.
+    async def _get_client_locked(self) -> httpx.AsyncClient:
+        """Obtiene o crea un cliente HTTPX asíncrono con ``_client_lock`` adquirido.
 
         Returns:
             httpx.AsyncClient: Cliente de red asíncrono.
         """
         if self._client is None or getattr(self._client, "is_closed", False):
             self._client = httpx.AsyncClient(timeout=10.0)
+            self._owns_client = True
         return self._client
 
     def _format_message(self, payload: NTFYPayload) -> str:
@@ -91,15 +95,16 @@ class NtfysService:
         """
         message = self._format_message(payload)
         headers = self._format_headers(payload)
-        client = await self._get_client()
 
         try:
-            response = await client.post(
-                self.webhook_url,
-                content=message.encode("utf-8"),
-                headers=headers,
-            )
-            response.raise_for_status()
+            async with self._client_lock:
+                client = await self._get_client_locked()
+                response = await client.post(
+                    self.webhook_url,
+                    content=message.encode("utf-8"),
+                    headers=headers,
+                )
+                response.raise_for_status()
             self.logger.debug(
                 f"Notificación NTFY enviada exitosamente. Status code: {response.status_code}"
             )
@@ -110,9 +115,6 @@ class NtfysService:
 
     async def close(self) -> None:
         """Cierra el cliente HTTPX asíncrono si está activo."""
-        if self._client and not getattr(self._client, "is_closed", False):
-            await self._client.aclose()
-        self._client = None
-
-
-NtfyWebhookService = NtfysService
+        async with self._client_lock:
+            if self._owns_client and self._client and not self._client.is_closed:
+                await self._client.aclose()

@@ -37,6 +37,6 @@ class TradeType(StrEnum):
             return TradeType(trade_type_str)
         except ValueError:
             raise ValueError(
-                f"Invalid trade type value: {trade_type_str}."
+                f"Invalid trade type value: {trade_type_str}. "
                 f"Valid options are: {', '.join(TradeType.list_trades())}"
             )
