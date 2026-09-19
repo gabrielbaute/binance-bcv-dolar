@@ -154,7 +154,7 @@ class DolarScheduler():
                 tags="rocket,chart_with_upwards_trend"
             )
             if not asset_fiat_buy or not asset_fiat_sell:
-                self.logger.error(f"Some pairs can't be saved.")
+                self.logger.error("Some pairs can't be saved.")
                 return False
             return True
 
