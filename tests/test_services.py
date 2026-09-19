@@ -5,7 +5,13 @@ import pytest
 from app.enums import BinanceAsset, FiatCurrency, TradeType
 from app.errors import BinanceRequestError
 from app.schemas import BinanceRealTimeResponse, BinanceRequest, NTFYPayload
-from app.services import BCVService, BinanceService, NtfyWebhookService, NtfysService
+from app.services import (
+    BCVService,
+    BinanceService,
+    FiatExchangeService,
+    NtfyWebhookService,
+    NtfysService,
+)
 
 
 def test_ntfy_webhook_service_compatibility_alias():
@@ -136,3 +142,44 @@ async def test_save_binance_currency_rejects_incomplete_pair():
             asset=BinanceAsset.USDT,
             trade_type=TradeType.BUY,
         )
+
+
+@pytest.mark.asyncio
+async def test_fiat_exchange_service_gets_real_time_pair():
+    service = FiatExchangeService(database_session=None)
+    service.binance.get_real_time_pair = AsyncMock(
+        side_effect=[
+            BinanceRealTimeResponse(
+                fiat=FiatCurrency.VES,
+                asset=BinanceAsset.USDT,
+                trade_type=TradeType.BUY,
+                average_price=100.0,
+            ),
+            BinanceRealTimeResponse(
+                fiat=FiatCurrency.VES,
+                asset=BinanceAsset.USDT,
+                trade_type=TradeType.SELL,
+                average_price=101.0,
+            ),
+            BinanceRealTimeResponse(
+                fiat=FiatCurrency.PEN,
+                asset=BinanceAsset.USDT,
+                trade_type=TradeType.BUY,
+                average_price=4.0,
+            ),
+            BinanceRealTimeResponse(
+                fiat=FiatCurrency.PEN,
+                asset=BinanceAsset.USDT,
+                trade_type=TradeType.SELL,
+                average_price=4.1,
+            ),
+        ]
+    )
+
+    pair = await service.get_real_time_pair(FiatCurrency.VES, FiatCurrency.PEN)
+
+    assert pair.fiat_1_p2p_buy.average_price == 100.0
+    assert pair.fiat_2_p2p_sell.average_price == 4.1
+    assert pair.average_exchange_rate_f1_f2 == pytest.approx(0.041)
+    assert pair.average_exchange_rate_f2_f1 == pytest.approx(25.25)
+    assert service.binance.get_real_time_pair.await_count == 4

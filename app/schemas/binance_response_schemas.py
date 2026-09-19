@@ -67,8 +67,8 @@ class BinanceCurrencyCreate(BaseModel):
     fiat: FiatCurrency = Field(default=FiatCurrency.VES, description="The fiat currency of the trading pair used in the P2P market query.")
     asset: BinanceAsset = Field(default=BinanceAsset.USDT, description="The digital asset or stablecoin cryptocurrency being quoted.")
     trade_type: TradeType = Field(default=TradeType.BUY, description="The P2P operation perspective, representing either BUY or SELL order books.")
-    average_price: Optional[float] = Field(..., gt=0, description="The calculated average price of the top active orders at execution time.")
-    median_price: Optional[float] = Field(..., gt=0, description="The calculated median price of the top active orders at execution time.")
+    average_price: Optional[float] = Field(None, gt=0, description="The calculated average price of the top active orders at execution time.")
+    median_price: Optional[float] = Field(None, gt=0, description="The calculated median price of the top active orders at execution time.")
 
 
 class BinanceCurrencyUpdate(BaseModel):
