@@ -34,7 +34,7 @@ async def history_bcv(
     skip: int = Query(0, ge=0, description="Records to skip (pagination)."),
     limit: int = Query(100, ge=1, le=1000, description="Maximum records to return."),
     bcv_service: BCVService = Depends(get_bcv_service),
-) -> None:
+) -> BCVCurrencyListResponse:
     """Return historical official BCV rates for a specific currency, with optional date range filter."""
     if start_date and end_date:
         return await bcv_service.get_currency_exchange_rates_by_range(
@@ -71,7 +71,7 @@ async def history_binance(
     skip: int = Query(0, ge=0, description="Records to skip (pagination)."),
     limit: int = Query(100, ge=1, le=1000, description="Maximum records to return."),
     binance_service: BinanceService = Depends(get_binance_service),
-) -> None:
+) -> BinanceCurrencyListResponse:
     """Return historical Binance P2P rates for a specific pair (fiat/asset), with optional date range filter."""
     if start_date and end_date:
         return await binance_service.get_binance_pair_by_time_range(
@@ -109,7 +109,7 @@ async def history_fiat_pair(
     skip: int = Query(0, ge=0, description="Records to skip (pagination)."),
     limit: int = Query(100, ge=1, le=1000, description="Maximum records to return."),
     exchange_service: FiatExchangeService = Depends(get_fiat_exchange_service),
-) -> None:
+) -> list[FiatPairResponse]:
     """
     [Experimental] Return historical cross-exchange rates between two fiat currencies calculated from Binance P2P records.
 
