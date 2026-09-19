@@ -118,3 +118,6 @@ class NtfysService:
         async with self._client_lock:
             if self._owns_client and self._client and not self._client.is_closed:
                 await self._client.aclose()
+
+
+NtfyWebhookService = NtfysService

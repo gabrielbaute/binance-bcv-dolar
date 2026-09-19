@@ -15,9 +15,9 @@ services:
       - NTFY_URL=${NTFY_URL:-}
       - NTFY_TOPIC=${NTFY_TOPIC:-}
       - BINANCE_EXTRA_FIATS=${BINANCE_EXTRA_FIATS:-}
-      - BINANCE_EXTRA_CRON=${BINANCE_EXTRA_CRON:-}
-      - BINANCE_VES_CRON=${BINANCE_VES_CRON:-}
-      - BCV_CRON=${BCV_CRON:-}
+      - BINANCE_EXTRA_CRON=${BINANCE_EXTRA_CRON:-0 */3 * * *}
+      - BINANCE_VES_CRON=${BINANCE_VES_CRON:-*/30 * * * *}
+      - BCV_CRON=${BCV_CRON:-0 0 * * *}
 
     volumes:
       - .:/app
@@ -30,4 +30,3 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s 
-
