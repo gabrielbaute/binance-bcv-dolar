@@ -1,10 +1,16 @@
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock
 
 import pytest
 
-from app.enums import BinanceAsset, FiatCurrency, TradeType
-from app.errors import BinanceRequestError
-from app.schemas import BinanceRealTimeResponse, BinanceRequest, NTFYPayload
+from app.enums import BinanceAsset, Currency, FiatCurrency, TradeType
+from app.errors import BinanceRequestError, DatabaseSessionError
+from app.schemas import (
+    BCVCurrencyRealTimeResponse,
+    BinanceRealTimeResponse,
+    BinanceRequest,
+    NTFYPayload,
+)
 from app.services import (
     BCVService,
     BinanceService,
@@ -67,6 +73,22 @@ def test_bcv_service_uses_default_tls_verification(monkeypatch):
 
     assert "verify" not in captured_kwargs
     assert captured_kwargs["timeout"] == 15.0
+
+
+@pytest.mark.asyncio
+async def test_bcv_service_preserves_database_session_error():
+    service = BCVService()
+    service.get_real_time_exchange_rate = AsyncMock(
+        return_value=BCVCurrencyRealTimeResponse(
+            currency=Currency.DOLAR,
+            trade_type=TradeType.SELL,
+            rate=1.0,
+            date=datetime.now(timezone.utc),
+        )
+    )
+
+    with pytest.raises(DatabaseSessionError):
+        await service.save_rate_to_db(Currency.DOLAR)
 
 
 @pytest.mark.asyncio

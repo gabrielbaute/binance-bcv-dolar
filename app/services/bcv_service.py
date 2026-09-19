@@ -207,6 +207,8 @@ class BCVService:
         try:
             saved_rate = await self.controller.register_rate(new_rate)
             return saved_rate
+        except DatabaseSessionError:
+            raise
         except Exception as e:
             self.logger.error(f"Error saving rate to database: {e}")
             raise DatabaseOperationError(
