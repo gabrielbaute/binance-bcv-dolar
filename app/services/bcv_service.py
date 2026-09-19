@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 from datetime import datetime
 from bs4 import BeautifulSoup
-from requests import Session, RequestException, ConnectTimeout
+from httpx import AsyncClient, HTTPError, TimeoutException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import Currency, TradeType
@@ -21,24 +21,48 @@ from app.schemas import (
     BCVCurrencyListResponse,
     BCVCurrencyResponse,
     BCVCurrencyCreate,
-    BCVCurrencyUpdate,
-    BCVResponse)
+    BCVResponse
+)
 
 class BCVService:
     """
     Scraper for the BCV website that gets the exchange rates of different currencies.
     """
     def __init__(self, databasesession: Optional[AsyncSession] = None):
+        """
+        Initialize the BCVService with optional database session.
+
+        Args:
+            databasesession (Optional[AsyncSession]): SQLAlchemy async database session.
+        """
         self.url = "https://www.bcv.org.ve"
-        self.request_session = Session()
         self.db_session = databasesession
         self.controller = BCVController(session=self.db_session) if self.db_session else None
         self.logger = logging.getLogger(self.__class__.__name__)
         self._soup: Optional[BeautifulSoup] = None
 
-    def _get_soup(self) -> Optional[BeautifulSoup]:
+    def _get_client(self) -> AsyncClient:
         """
-        Get and parse the HTML content from the BCV website.
+        Create and configure an HTTPX AsyncClient instance.
+
+        Returns:
+            AsyncClient: Configured HTTPX async client.
+        """
+        return AsyncClient(
+            verify=False,
+            timeout=15.0,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/120.0.0.0 Safari/537.36"
+                )
+            }
+        )
+
+    async def _get_soup(self) -> Optional[BeautifulSoup]:
+        """
+        Get and parse the HTML content from the BCV website asynchronously.
 
         Returns:
             Optional[BeautifulSoup]: The parsed HTML content, or None if there was an error.
@@ -46,41 +70,42 @@ class BCVService:
         Raises:
             BCVConnectionError: If there was an error connecting to the BCV website.
         """
-        try:
-            response = self.request_session.get(self.url, verify=False, timeout=15)
-            response.raise_for_status()
-            self.logger.info(f"Connected to {self.url}")
-            return BeautifulSoup(response.text, "html.parser")
-        except RequestException as e:
-            self.logger.error(f"Error connecting to {self.url}: {e}")
-            raise BCVConnectionError(
-                message="Error connecting to the BCV website.",
-                details={"url": self.url, "error": str(e)}
-            )
-        except ConnectTimeout as e:
-            self.logger.error(f"Request time expired: {e}")
-            raise BCVConnectionError(
-                message="The request time out while attemp to connect.",
-                details={"url": self.url, "error": str(e)}
-            )
-        except Exception as e:
-            self.logger.error(f"Unexpected error while connecting to {self.url}: {e}")
-            raise BCVConnectionError(
-                message="Unexpected error while connecting to the BCV website.",
-                details={"url": self.url, "error": str(e)}
-            )
+        async with self._get_client() as client:
+            try:
+                response = await client.get(self.url)
+                response.raise_for_status()
+                self.logger.info(f"Connected to {self.url}")
+                return BeautifulSoup(response.text, "html.parser")
+            except TimeoutException as e:
+                self.logger.error(f"Request time expired: {e}")
+                raise BCVConnectionError(
+                    message="The request timed out while attempting to connect.",
+                    details={"url": self.url, "error": str(e)}
+                )
+            except HTTPError as e:
+                self.logger.error(f"Error connecting to {self.url}: {e}")
+                raise BCVConnectionError(
+                    message="Error connecting to the BCV website.",
+                    details={"url": self.url, "error": str(e)}
+                )
+            except Exception as e:
+                self.logger.error(f"Unexpected error while connecting to {self.url}: {e}")
+                raise BCVConnectionError(
+                    message="Unexpected error while connecting to the BCV website.",
+                    details={"url": self.url, "error": str(e)}
+                )
 
-    def _get_currency_raw(self, currency: Currency) -> Optional[str]:
+    async def _get_currency_raw(self, currency: Currency) -> Optional[str]:
         """
-        Get raw content for currency from the BCV page.
+        Get raw content for currency from the BCV page asynchronously.
 
         Args:
-            divisa (Currency): The currency to get the raw content for.
+            currency (Currency): The currency to get the raw content for.
 
         Returns:
             Optional[str]: The raw content for the currency, or None if not found.
         """
-        self._soup = self._get_soup()
+        self._soup = await self._get_soup()
         if not self._soup:
             return None
 
@@ -99,7 +124,7 @@ class BCVService:
 
         return strong_tag.get_text(strip=True)
 
-    def get_real_time_exchange_rate(self, currency: Currency) -> BCVCurrencyRealTimeResponse:
+    async def get_real_time_exchange_rate(self, currency: Currency) -> BCVCurrencyRealTimeResponse:
         """
         Returns the exchange rate for the given currency in real-time.
 
@@ -110,14 +135,15 @@ class BCVService:
             BCVCurrencyRealTimeResponse: The exchange rate for the currency.
 
         Raises:
-            BCVReadingRateError: If the raw value cannot be converted to a float or if the currency is not found on the BCV website.
+            BCVReadingRateError: If the raw value cannot be converted to a float or
+                if the currency is not found on the BCV website.
         """
-        raw_value = self._get_currency_raw(currency)
+        raw_value = await self._get_currency_raw(currency)
         if not raw_value:
             raise BCVReadingRateError(
                 message="Error reading the rate from the BCV website.",
                 details={"currency": currency, "value": raw_value}
-        )
+            )
 
         try:
             self.logger.info(f"Getting exchange rate for: {currency}")
@@ -143,10 +169,12 @@ class BCVService:
             currency (Currency): The currency for which to save the rate.
 
         Returns:
-            Optional[BCVCurrencyResponse]: The saved exchange rate response, or None if there was an error.
+            Optional[BCVCurrencyResponse]: The saved exchange rate response,
+                or None if there was an error.
 
         Raises:
             DatabaseSessionError: If the database session is not provided.
+            DatabaseOperationError: If there is an issue during database write.
         """
         if not self.db_session:
             self.logger.error("Database session is not provided.")
@@ -155,7 +183,7 @@ class BCVService:
                 details={"error": "No database session provided."}
             )
 
-        currency_data = self.get_real_time_exchange_rate(currency=currency)
+        currency_data = await self.get_real_time_exchange_rate(currency=currency)
 
         new_rate = BCVCurrencyCreate(
             currency=currency_data.currency,
@@ -171,7 +199,7 @@ class BCVService:
             self.logger.error(f"Error saving rate to database: {e}")
             raise DatabaseOperationError(
                 message="Error while saving currency record",
-                details={"currency": currency, "error:": e}
+                details={"currency": currency, "error": str(e)}
             )
 
     async def get_exchange_rate(self, currency: Currency) -> Optional[BCVCurrencyResponse]:
@@ -195,7 +223,10 @@ class BCVService:
                 details={"error": "No database session provided."}
             )
         try:
-            last_register = await self.controller.get_last_register_by_currency(currency=currency, trade_type=TradeType.SELL)
+            last_register = await self.controller.get_last_register_by_currency(
+                currency=currency,
+                trade_type=TradeType.SELL
+            )
             if last_register is None:
                 self.logger.warning(f"No exchange rate found for {currency}")
                 raise RegisterNotFoundError(
@@ -241,13 +272,13 @@ class BCVService:
         )
 
     async def get_currency_exchange_rates_by_range(
-            self,
-            start_date: datetime,
-            end_date: datetime,
-            currency: Currency = Currency.DOLAR,
-            trade_type: TradeType = TradeType.SELL,
-            skip: int = 0,
-            limit: int = 100
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        currency: Currency = Currency.DOLAR,
+        trade_type: TradeType = TradeType.SELL,
+        skip: int = 0,
+        limit: int = 100
     ) -> BCVCurrencyListResponse:
         """
         Get all exchange rates registered between two dates.
@@ -283,7 +314,9 @@ class BCVService:
             limit=limit
         )
         if data.count == 0:
-            self.logger.warning(f"No records found for currency {currency} between {start_date} and {end_date}")
+            self.logger.warning(
+                f"No records found for currency {currency} between {start_date} and {end_date}"
+            )
             raise RegisterNotFoundError(
                 message="No records found for the specified currency and date range.",
                 details={"currency": currency, "start_date": start_date, "end_date": end_date}
@@ -291,12 +324,12 @@ class BCVService:
         return data
 
     async def get_all_currency_registers(
-            self,
-            currency: Currency,
-            trade_type: TradeType = TradeType.SELL,
-            skip: int = 0,
-            limit: int = 100
-        ) -> BCVCurrencyListResponse:
+        self,
+        currency: Currency,
+        trade_type: TradeType = TradeType.SELL,
+        skip: int = 0,
+        limit: int = 100
+    ) -> BCVCurrencyListResponse:
         """
         Get all registers for a specific currency.
 
