@@ -20,7 +20,7 @@ class BinanceRateSQLModel(SQLModel, table=True):
         date (DateTime): The UTC timestamp when the query was performed and the average price was recorded. This is the historical record's timestamp.
     """
     __tablename__ = "binance_rates"
-    
+
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     fiat: FiatCurrency = Field(default=FiatCurrency.VES, nullable=False, index=True)
     asset: BinanceAsset = Field(default=BinanceAsset.USDT, nullable=False, index=True)

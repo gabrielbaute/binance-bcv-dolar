@@ -12,7 +12,7 @@ from app.schemas import (
     BinanceRealTimeResponse
 )
 
-class FiatExchangeService():
+class FiatExchangeService:
     """
     Service for getting fiat exchange rates with USDT.
     """
@@ -21,7 +21,11 @@ class FiatExchangeService():
         self.logger = logging.getLogger(self.__class__.__name__)
         self.binance = BinanceService(databasesession=database_session)
 
-    def _get_real_time_usdt_pair(self, fiat: FiatCurrency, trade_type: TradeType) -> Optional[BinanceRealTimeResponse]:
+    async def _get_real_time_usdt_pair(
+        self,
+        fiat: FiatCurrency,
+        trade_type: TradeType
+    ) -> Optional[BinanceRealTimeResponse]:
         """
         Get the real-time USDT/FIAT pair.
 
@@ -33,10 +37,18 @@ class FiatExchangeService():
             Optional[BinanceRealTimeResponse]: Real-time USDT/FIAT pair data.
         """
         self.logger.info(f"Getting real-time USDT/{fiat} pair")
-        pair = self.binance.get_real_time_pair(fiat=fiat, asset=BinanceAsset.USDT, trade_type=trade_type)
+        pair = await self.binance.get_real_time_pair(
+            fiat=fiat,
+            asset=BinanceAsset.USDT,
+            trade_type=trade_type
+        )
         return pair
 
-    async def _get_usdt_pair_from_database(self, fiat: FiatCurrency, trade_type: TradeType) -> BinanceCurrencyResponse:
+    async def _get_usdt_pair_from_database(
+        self,
+        fiat: FiatCurrency,
+        trade_type: TradeType
+    ) -> BinanceCurrencyResponse:
         """
         Retrieve the historical benchmark record for a specific fiat/USDT pair from database tracking.
 
@@ -53,16 +65,16 @@ class FiatExchangeService():
         return pair
 
     def _calculate_exchange_rate(
-            self, 
-            fiat_1: Union[BinanceCurrencyResponse, BinanceRealTimeResponse], 
-            fiat_2: Union[BinanceCurrencyResponse, BinanceRealTimeResponse]
+            self,
+            fiat_1: Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None,
+            fiat_2: Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None
     ) -> Optional[float]:
         """
         Calculate the cross exchange rate from Fiat 1 to Fiat 2 utilizing standard bridge pricing.
-        
+
         Args:
-            fiat_1 (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Source fiat platform asset payload.
-            fiat_2 (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Target fiat platform asset payload.
+            fiat_1 (Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None): Source fiat platform asset payload.
+            fiat_2 (Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None): Target fiat platform asset payload.
 
         Returns:
             Optional[float]: Calculated cross rate ratio value, or None if evaluation matrices lack pricing.
@@ -70,33 +82,43 @@ class FiatExchangeService():
         if not fiat_1 or not fiat_2:
             self.logger.error("Error calculating exchange rate: One or both parameters are missing.")
             return None
-            
+
         # Protegemos contra valores nulos o divisiones por cero en operaciones P2P en tiempo real
         if fiat_1.average_price is None or fiat_2.average_price is None or fiat_1.average_price == 0:
             self.logger.warning(f"Incomplete pricing data matrices to process ratio cross between {fiat_1.fiat} and {fiat_2.fiat}")
             return None
-            
+
         return fiat_2.average_price / fiat_1.average_price
 
     async def get_pair(self, fiat_1: FiatCurrency, fiat_2: FiatCurrency) -> FiatPairResponse:
         """
-        Fetch from persistent layer and assemble cross-pricing metrics between two specific fiat currencies.
+        Fetch from persistent layer and assemble cross-pricing
+        metrics between two specific fiat currencies.
 
         Args:
             fiat_1 (FiatCurrency): Source operational currency token context.
             fiat_2 (FiatCurrency): Destination target currency token context.
 
         Returns:
-            FiatPairResponse: Validated structured summary encompassing baseline metrics and cross rates.
+            FiatPairResponse: Validated structured summary encompassing
+            baseline metrics and cross rates.
         """
         self.logger.info(f"Getting all data for pair: {fiat_1.value} - {fiat_2.value}")
 
         # Pasamos el trade_type correcto a cada llamada de base de datos
-        fiat_1_p2p_buy = await self._get_usdt_pair_from_database(fiat=fiat_1, trade_type=TradeType.BUY)
-        fiat_1_p2p_sell = await self._get_usdt_pair_from_database(fiat=fiat_1, trade_type=TradeType.SELL)
-        fiat_2_p2p_buy = await self._get_usdt_pair_from_database(fiat=fiat_2, trade_type=TradeType.BUY)
-        fiat_2_p2p_sell = await self._get_usdt_pair_from_database(fiat=fiat_2, trade_type=TradeType.SELL)
-        
+        fiat_1_p2p_buy = await self._get_usdt_pair_from_database(
+            fiat=fiat_1, trade_type=TradeType.BUY
+        )
+        fiat_1_p2p_sell = await self._get_usdt_pair_from_database(
+            fiat=fiat_1, trade_type=TradeType.SELL
+        )
+        fiat_2_p2p_buy = await self._get_usdt_pair_from_database(
+            fiat=fiat_2, trade_type=TradeType.BUY
+        )
+        fiat_2_p2p_sell = await self._get_usdt_pair_from_database(
+            fiat=fiat_2, trade_type=TradeType.SELL
+        )
+
         exchange_rate_f1_f2 = self._calculate_exchange_rate(fiat_1_p2p_buy, fiat_2_p2p_sell)
         exchange_rate_f2_f1 = self._calculate_exchange_rate(fiat_2_p2p_buy, fiat_1_p2p_sell)
 
@@ -109,11 +131,13 @@ class FiatExchangeService():
             average_exchange_rate_f2_f1=exchange_rate_f2_f1,
             date=datetime.now()
         )
-    
-    #TODO: This method requiere a refactor and detailed review, as it is complex and has multiple responsibilities. Consider breaking it down into smaller methods for clarity and maintainability.
+
+    #TODO: This method requiere a refactor and detailed review, as it is complex
+    # and has multiple responsibilities. Consider breaking it down into smaller
+    # methods for clarity and maintainability.
     async def get_historical_pair(
-            self, 
-            fiat_1: FiatCurrency, 
+            self,
+            fiat_1: FiatCurrency,
             fiat_2: FiatCurrency,
             start_date: datetime,
             end_date: datetime,
@@ -137,19 +161,19 @@ class FiatExchangeService():
         self.logger.info(f"Getting historical data for pair: {fiat_1.value} - {fiat_2.value} from {start_date} to {end_date}")
 
         f1_buy_res = await self.binance.get_binance_pair_by_time_range(
-            fiat=fiat_1, asset=BinanceAsset.USDT, trade_type=TradeType.BUY, 
+            fiat=fiat_1, asset=BinanceAsset.USDT, trade_type=TradeType.BUY,
             start_time=start_date, end_time=end_date, skip=skip, limit=limit
         )
         f1_sell_res = await self.binance.get_binance_pair_by_time_range(
-            fiat=fiat_1, asset=BinanceAsset.USDT, trade_type=TradeType.SELL, 
+            fiat=fiat_1, asset=BinanceAsset.USDT, trade_type=TradeType.SELL,
             start_time=start_date, end_time=end_date, skip=skip, limit=limit
         )
         f2_buy_res = await self.binance.get_binance_pair_by_time_range(
-            fiat=fiat_2, asset=BinanceAsset.USDT, trade_type=TradeType.BUY, 
+            fiat=fiat_2, asset=BinanceAsset.USDT, trade_type=TradeType.BUY,
             start_time=start_date, end_time=end_date, skip=skip, limit=limit
         )
         f2_sell_res = await self.binance.get_binance_pair_by_time_range(
-            fiat=fiat_2, asset=BinanceAsset.USDT, trade_type=TradeType.SELL, 
+            fiat=fiat_2, asset=BinanceAsset.USDT, trade_type=TradeType.SELL,
             start_time=start_date, end_time=end_date, skip=skip, limit=limit
         )
 
@@ -187,7 +211,7 @@ class FiatExchangeService():
 
         return historic
 
-    def get_real_time_pair(self, fiat_1: FiatCurrency, fiat_2: FiatCurrency) -> FiatPairResponse:
+    async def get_real_time_pair(self, fiat_1: FiatCurrency, fiat_2: FiatCurrency) -> FiatPairResponse:
         """
         Fetch real-time cross-pricing metrics between two specific fiat currencies from Binance P2P.
 
@@ -200,10 +224,10 @@ class FiatExchangeService():
         """
         self.logger.info(f"Getting real-time {fiat_1.value}/{fiat_2.value} pair")
 
-        fiat_1_p2p_buy = self._get_real_time_usdt_pair(fiat=fiat_1, trade_type=TradeType.BUY)
-        fiat_1_p2p_sell = self._get_real_time_usdt_pair(fiat=fiat_1, trade_type=TradeType.SELL)
-        fiat_2_p2p_buy = self._get_real_time_usdt_pair(fiat=fiat_2, trade_type=TradeType.BUY)
-        fiat_2_p2p_sell = self._get_real_time_usdt_pair(fiat=fiat_2, trade_type=TradeType.SELL)
+        fiat_1_p2p_buy = await self._get_real_time_usdt_pair(fiat=fiat_1, trade_type=TradeType.BUY)
+        fiat_1_p2p_sell = await self._get_real_time_usdt_pair(fiat=fiat_1, trade_type=TradeType.SELL)
+        fiat_2_p2p_buy = await self._get_real_time_usdt_pair(fiat=fiat_2, trade_type=TradeType.BUY)
+        fiat_2_p2p_sell = await self._get_real_time_usdt_pair(fiat=fiat_2, trade_type=TradeType.SELL)
         exchange_rate_f1_f2 = self._calculate_exchange_rate(fiat_1_p2p_buy, fiat_2_p2p_sell)
         exchange_rate_f2_f1 = self._calculate_exchange_rate(fiat_2_p2p_buy, fiat_1_p2p_sell)
 

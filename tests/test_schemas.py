@@ -17,7 +17,7 @@ from app.enums import (
     TradeType,
     FiatCurrency,
     BinanceAsset,
-    WebhookPriority,
+    NTFYPriority,
 )
 from app.schemas import (
     BinanceRequest,
@@ -34,7 +34,7 @@ from app.schemas import (
     DolarResponse,
     RealTimeDolarResponse,
     FiatPairResponse,
-    WebhookPayload,
+    NTFYPayload,
 )
 
 
@@ -47,6 +47,14 @@ class TestBinanceRequest:
         req = BinanceRequest(fiat="VES", tradeType="BUY", asset="USDT")
         assert req.fiat == "VES"
         assert req.page == 1
+
+    def test_list_defaults_are_not_shared(self):
+        first = BinanceRequest()
+        second = BinanceRequest()
+
+        first.payTypes.append("PagoMovil")
+
+        assert second.payTypes == []
 
     def test_defaults(self):
         req = BinanceRequest(fiat="PEN", tradeType="SELL", asset="USDT")
@@ -271,15 +279,15 @@ class TestRealTimeDolarResponse:
 
 
 # ===================================================================
-# WebhookPayload
+# NTFYPayload
 # ===================================================================
 
-class TestWebhookPayload:
+class TestNTFYPayload:
     def test_minimal(self):
-        p = WebhookPayload(event="test_event", priority=WebhookPriority.default, description="desc")
+        p = NTFYPayload(event="test_event", priority=NTFYPriority.DEFAULT, description="desc")
         assert p.event == "test_event"
         assert p.description == "desc"
 
     def test_optional_title(self):
-        p = WebhookPayload(event="e", priority=WebhookPriority.high, description="d", title="My Title")
+        p = NTFYPayload(event="e", priority=NTFYPriority.HIGH, description="d", title="My Title")
         assert p.title == "My Title"

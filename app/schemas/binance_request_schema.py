@@ -1,5 +1,6 @@
-from typing import List, Optional, Any
-from pydantic import BaseModel, ConfigDict
+from typing import Any, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 class BinanceRequest(BaseModel):
     """
@@ -22,20 +23,22 @@ class BinanceRequest(BaseModel):
         classifies (List[str]): List of classifies.
         tradedWith (bool): Traded with.
     """
-    fiat: str
-    page: int = 1
-    rows: int = 20
-    tradeType: str
-    asset: str
-    countries: List[str] = []
+    fiat: Optional[str] = None
+    page: Optional[int] = 1
+    rows: Optional[int] = 20
+    tradeType: Optional[str] = None
+    asset: Optional[str] = None
+    countries: List[str] = Field(default_factory=list)
     proMerchantAds: bool = False
     shieldMerchantAds: bool = False
     filterType: str = "tradable"
-    periods: List[Any] = []
+    periods: List[Any] = Field(default_factory=list)
     additionalKycVerifyFilter: int = 0
     publisherType: Optional[str] = None
-    payTypes: List[str] = []
-    classifies: List[str] = ["mass", "profession", "fiat_trade"]
+    payTypes: List[str] = Field(default_factory=list)
+    classifies: List[str] = Field(
+        default_factory=lambda: ["mass", "profession", "fiat_trade"]
+    )
     tradedWith: bool = False
     followed: bool = False
 

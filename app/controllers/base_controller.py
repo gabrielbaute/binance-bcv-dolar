@@ -54,7 +54,7 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
         return result.scalar_one_or_none()
 
     async def get_last_register_with_conditions(
-        self, 
+        self,
         where_clause: List[Any],
         sort_by_attribute: str = "date"
     ) -> Optional[ModelType]:
@@ -90,9 +90,9 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
         return result.scalars().all()
 
     async def get_multi_with_conditions(
-        self, 
-        where_clause: List[Any], 
-        skip: int = 0, 
+        self,
+        where_clause: List[Any],
+        skip: int = 0,
         limit: int = 100,
         sort_by_attribute: str = "date"
     ) -> List[ModelType]:
@@ -138,8 +138,8 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
         return db_obj
 
     async def update(
-        self, 
-        db_obj: ModelType, 
+        self,
+        db_obj: ModelType,
         obj_in: UpdateSchemaType | dict[str, Any]
     ) -> ModelType:
         """

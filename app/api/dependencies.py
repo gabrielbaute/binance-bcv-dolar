@@ -48,7 +48,7 @@ def get_ntfy_service(config_inst: Config = Depends(get_config_instance)) -> Ntfy
         config_inst (Config): Shared validated infrastructure environment metrics.
 
     Returns:
-        NtfyWebhookService: Operational real-time alert messaging component.
+        NtfysService: Operational real-time alert messaging component.
     """
     return NtfyWebhookService(config=config_inst)
 

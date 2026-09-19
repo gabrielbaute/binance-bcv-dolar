@@ -4,12 +4,12 @@ from fastapi.responses import JSONResponse
 
 from app.errors import (
     DolarVzlaError,
-    BCVConnectionError, 
+    BCVConnectionError,
     BCVReadingRateError,
     RegisterNotFoundError,
     DatabaseSessionError,
     DatabaseOperationError,
-    BinanceConnectionError, 
+    BinanceConnectionError,
     BinanceRequestError
 )
 
@@ -43,7 +43,7 @@ def register_error_handlers(app: FastAPI):
                 "details": jsonable_encoder(exc.details or {})
             },
         )
-    
+
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
         """

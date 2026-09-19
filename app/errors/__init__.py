@@ -1,11 +1,11 @@
 from app.errors.base_error import DolarVzlaError
 from app.errors.app_errors import (
-    BCVConnectionError, 
+    BCVConnectionError,
     RegisterNotFoundError,
     DatabaseSessionError,
     DatabaseOperationError,
     BCVReadingRateError,
-    BinanceConnectionError, 
+    BinanceConnectionError,
     BinanceRequestError,
     MigrationError
 )
