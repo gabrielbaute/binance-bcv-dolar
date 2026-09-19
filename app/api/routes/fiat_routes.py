@@ -1,5 +1,6 @@
 """
-Module defining API endpoints for cross-currency fiat exchange and remittance arbitrage calculations.
+Module defining API endpoints for cross-currency fiat exchange
+and remittance arbitrage calculations.
 """
 from typing import Optional
 from fastapi import APIRouter, Depends, Query
@@ -35,4 +36,4 @@ async def get_real_time_pair(
     Returns the dynamic live pricing metrics for the selected fiat assets
     mapping order books directly.
     """
-    return exchange_service.get_real_time_pair(fiat_1, fiat_2)
+    return await exchange_service.get_real_time_pair(fiat_1, fiat_2)

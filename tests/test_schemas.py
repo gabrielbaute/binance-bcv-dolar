@@ -48,6 +48,14 @@ class TestBinanceRequest:
         assert req.fiat == "VES"
         assert req.page == 1
 
+    def test_list_defaults_are_not_shared(self):
+        first = BinanceRequest()
+        second = BinanceRequest()
+
+        first.payTypes.append("PagoMovil")
+
+        assert second.payTypes == []
+
     def test_defaults(self):
         req = BinanceRequest(fiat="PEN", tradeType="SELL", asset="USDT")
         assert req.rows == 20

@@ -25,7 +25,7 @@ class DolarVenezuelaService:
         self.bcv = BCVService(databasesession=database_session)
         self.binance = BinanceService(databasesession=database_session)
 
-    def get_real_time_average_dolar(self) -> Optional[RealTimeDolarResponse]:
+    async def get_real_time_average_dolar(self) -> Optional[RealTimeDolarResponse]:
         """
         Synthesize immediate real-time average metrics bridging central bank rates and P2P order books.
 
@@ -34,11 +34,11 @@ class DolarVenezuelaService:
         """
         self.logger.info("Getting average dolar exchange rate")
 
-        binance_usdt_ves = self.binance.get_real_time_pair(
+        binance_usdt_ves = await self.binance.get_real_time_pair(
             fiat=FiatCurrency.VES, asset=BinanceAsset.USDT, trade_type=TradeType.BUY
         )
-        bcv_dolar = self.bcv.get_real_time_exchange_rate(Currency.DOLAR)
-        bcv_euro = self.bcv.get_real_time_exchange_rate(Currency.EURO)
+        bcv_dolar = await self.bcv.get_real_time_exchange_rate(Currency.DOLAR)
+        bcv_euro = await self.bcv.get_real_time_exchange_rate(Currency.EURO)
 
         if not binance_usdt_ves or not bcv_dolar:
             self.logger.error("Error getting data for average dolar exchange rate: Missing provider baseline data.")
@@ -60,10 +60,12 @@ class DolarVenezuelaService:
 
     async def get_average_dolar_last_register(self) -> Optional[DolarResponse]:
         """
-        Retrieve and compute the mean exchange values based on the last locally synchronized tracking benchmarks.
+        Retrieve and compute the mean exchange values based
+        on the last locally synchronized tracking benchmarks.
 
         Returns:
-            Optional[DolarResponse]: Consolidated aggregate of historical baseline indices, or None if any source track resolves to an unrecoverable exception.
+            Optional[DolarResponse]: Consolidated aggregate of historical baseline indices,
+            or None if any source track resolves to an unrecoverable exception.
         """
         self.logger.info("Getting last registered average dolar exchange rate")
 

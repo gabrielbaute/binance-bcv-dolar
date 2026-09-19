@@ -1,20 +1,40 @@
+"""Logger setup module for Dolar Vzla application."""
 import logging
 from pathlib import Path
 from typing import Dict, Optional
 from logging.handlers import RotatingFileHandler
+
 
 class FixedWidthFormatter(logging.Formatter):
     """
     Formatter that ensures a fixed width for the levelname.
     """
     def __init__(self, fmt=None, datefmt=None, level_width=8):
+        """
+        Initialize the FixedWidthFormatter.
+
+        Args:
+            fmt (str, optional): Logging format string. Defaults to None.
+            datefmt (str, optional): Date format string. Defaults to None.
+            level_width (int, optional): Width for the levelname column. Defaults to 8.
+        """
         super().__init__(fmt, datefmt)
         self.level_width = level_width
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
+        """
+        Format the specified record with fixed width levelname.
+
+        Args:
+            record (logging.LogRecord): The log record to format.
+
+        Returns:
+            str: The formatted log record string.
+        """
         # We format the levelname with fixed width and left justification
         record.levelname = record.levelname.ljust(self.level_width)
         return super().format(record)
+
 
 class DolarVzlaLogger:
     """
@@ -30,6 +50,21 @@ class DolarVzlaLogger:
         "ERROR": logging.ERROR,
         "CRITICAL": logging.CRITICAL
     }
+
+    @staticmethod
+    def _configure_third_party_loggers(level_name: str) -> None:
+        """
+        Adjust verbosity for third-party loggers such as httpx and httpcore.
+
+        Args:
+            level_name (str): Log level string name (e.g., "DEBUG", "INFO").
+
+        Returns:
+            None
+        """
+        httpx_level = logging.DEBUG if level_name.upper() == "DEBUG" else logging.WARNING
+        logging.getLogger("httpx").setLevel(httpx_level)
+        logging.getLogger("httpcore").setLevel(httpx_level)
 
     @staticmethod
     def setup_logging(logs_dir: Path, level: Optional[str] = "INFO") -> None:
@@ -48,6 +83,7 @@ class DolarVzlaLogger:
             logs_dir.mkdir(parents=True, exist_ok=True)
 
         log_file: Path = logs_dir / "dolar_vzla.log"
+        selected_level_str = (level or "INFO").upper()
 
         # Definimos el formato base
         log_format = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
@@ -77,7 +113,7 @@ class DolarVzlaLogger:
 
         # Configuramos el logger root
         root_logger = logging.getLogger()
-        root_logger.setLevel(DolarVzlaLogger.LEVEL_MAP.get(str(level), logging.INFO))
+        root_logger.setLevel(DolarVzlaLogger.LEVEL_MAP.get(selected_level_str, logging.INFO))
 
         # Limpiamos handlers existentes para evitar duplicados
         root_logger.handlers.clear()
@@ -85,3 +121,6 @@ class DolarVzlaLogger:
         # Agregamos handlers personalizados
         root_logger.addHandler(rotate_handler)
         root_logger.addHandler(stream_handler)
+
+        # Ajustamos los loggers de terceros (httpx y httpcore)
+        DolarVzlaLogger._configure_third_party_loggers(selected_level_str)

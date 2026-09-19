@@ -12,13 +12,13 @@ from app.schemas import BCVCurrencyResponse, BCVCurrencyRealTimeResponse, BCVRes
 router = APIRouter(prefix="/bcv", tags=["BCV"])
 
 @router.get("/realtime", response_model=List[BCVCurrencyRealTimeResponse])
-def realtime_bcv(bcv_service: BCVService = Depends(get_bcv_service)):
+async def realtime_bcv(bcv_service: BCVService = Depends(get_bcv_service)):
     """
     Retrieve live exchange rates matching structural parser elements for dominant assets (USD/EUR)
     directly from the BCV portal.
     """
-    dolar = bcv_service.get_real_time_exchange_rate(Currency.DOLAR)
-    euro = bcv_service.get_real_time_exchange_rate(Currency.EURO)
+    dolar = await bcv_service.get_real_time_exchange_rate(Currency.DOLAR)
+    euro = await bcv_service.get_real_time_exchange_rate(Currency.EURO)
     return [dolar, euro]
 
 

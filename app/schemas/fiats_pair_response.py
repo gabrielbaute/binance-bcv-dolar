@@ -8,20 +8,20 @@ class FiatPairResponse(BaseModel):
     Schema for fiat pair prices from Binance.
 
     Attributes:
-        fiat_1_p2p_buy (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Fiat 1 P2P response for buy.
-        fiat_1_p2p_sell (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Fiat 1 P2P response for sell.
-        fiat_2_p2p_buy (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Fiat 2 P2P response for buy.
-        fiat_2_p2p_sell (Union[BinanceCurrencyResponse, BinanceRealTimeResponse]): Fiat 2 P2P response for sell.
-        average_exchange_rate_f1_f2 (Optional[float]): Exchange rate from Fiat 1 to Fiat 2.
-        average_exchange_rate_f2_f1 (Optional[float]): Exchange rate from Fiat 2 to Fiat 1.
+        fiat_1_p2p_buy (Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None): Fiat 1 P2P response for buy.
+        fiat_1_p2p_sell (Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None): Fiat 1 P2P response for sell.
+        fiat_2_p2p_buy (Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None): Fiat 2 P2P response for buy.
+        fiat_2_p2p_sell (Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None): Fiat 2 P2P response for sell.
+        average_exchange_rate_f1_f2 (Optional[float] | None): Exchange rate from Fiat 1 to Fiat 2.
+        average_exchange_rate_f2_f1 (Optional[float] | None): Exchange rate from Fiat 2 to Fiat 1.
         date (datetime): Date of the response.
     """
-    fiat_1_p2p_buy: Union[BinanceCurrencyResponse, BinanceRealTimeResponse]
-    fiat_1_p2p_sell: Union[BinanceCurrencyResponse, BinanceRealTimeResponse]
-    fiat_2_p2p_buy: Union[BinanceCurrencyResponse, BinanceRealTimeResponse]
-    fiat_2_p2p_sell: Union[BinanceCurrencyResponse, BinanceRealTimeResponse]
-    average_exchange_rate_f1_f2: Optional[float]
-    average_exchange_rate_f2_f1: Optional[float]
+    fiat_1_p2p_buy: Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None
+    fiat_1_p2p_sell: Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None
+    fiat_2_p2p_buy: Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None
+    fiat_2_p2p_sell: Union[BinanceCurrencyResponse, BinanceRealTimeResponse] | None
+    average_exchange_rate_f1_f2: Optional[float] | None
+    average_exchange_rate_f2_f1: Optional[float] | None
     date: datetime
 
     model_config = ConfigDict(
