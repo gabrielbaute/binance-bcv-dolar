@@ -22,11 +22,11 @@ class BinanceRequest(BaseModel):
         classifies (List[str]): List of classifies.
         tradedWith (bool): Traded with.
     """
-    fiat: str
-    page: int = 1
-    rows: int = 20
-    tradeType: str
-    asset: str
+    fiat: Optional[str] = None
+    page: Optional[int] = 1
+    rows: Optional[int] = 20
+    tradeType: Optional[str] = None
+    asset: Optional[str] = None
     countries: List[str] = []
     proMerchantAds: bool = False
     shieldMerchantAds: bool = False
