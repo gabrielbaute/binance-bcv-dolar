@@ -34,7 +34,7 @@ class DolarVenezuelaService:
         """
         self.logger.info("Getting average dolar exchange rate")
 
-        binance_usdt_ves = self.binance.get_real_time_pair(
+        binance_usdt_ves = await self.binance.get_real_time_pair(
             fiat=FiatCurrency.VES, asset=BinanceAsset.USDT, trade_type=TradeType.BUY
         )
         bcv_dolar = await self.bcv.get_real_time_exchange_rate(Currency.DOLAR)
