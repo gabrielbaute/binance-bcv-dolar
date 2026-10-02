@@ -27,9 +27,9 @@ class BinanceService:
     """
     Binance P2P Client
     """
-    def __init__(self, databasesession: Optional[AsyncSession] = None):
+    def __init__(self, database_session: Optional[AsyncSession] = None):
         self.url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
-        self.database_session = databasesession
+        self.database_session = database_session
         self.logger = logging.getLogger(self.__class__.__name__)
         self._client: Optional[AsyncClient] = None
 
