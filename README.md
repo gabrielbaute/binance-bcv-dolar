@@ -2,7 +2,7 @@
 
 ![Estado](https://img.shields.io/badge/status-en%20desarrollo-yellow)
 ![Licencia](https://img.shields.io/badge/license-GPLv3-blue)
-![Versión](https://img.shields.io/badge/version-v1.1.1-blue)
+![Versión](https://img.shields.io/badge/version-v1.1.2-blue)
 
 ## 📌 Acerca del Proyecto
 
