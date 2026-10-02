@@ -1,6 +1,6 @@
 [bumpver]
-current_version = "1.1.1"
-version_pattern = "MAJOR.MINOR.PATCH"
+current_version = "v1.1.1"
+version_pattern = "vMAJOR.MINOR.PATCH"
 commit = true
 tag = true
 push = true
@@ -19,5 +19,5 @@ tag_scope = "global"
     '__version__ = "{version}"'
 ]
 "README.md" = [
-    "Version: {version}",
+    'https://img.shields.io/badge/version-{version}-blue',
 ]
