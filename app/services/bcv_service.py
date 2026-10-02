@@ -1,6 +1,7 @@
 """BCV Scraper module."""
-
+import certifi
 import logging
+import ssl
 from typing import Optional
 from datetime import datetime
 from bs4 import BeautifulSoup
@@ -9,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import Currency, TradeType
 from app.controllers import BCVController
+from app.config import Config
 from app.errors import (
     BCVConnectionError,
     DatabaseSessionError,
@@ -28,7 +30,11 @@ class BCVService:
     """
     Scraper for the BCV website that gets the exchange rates of different currencies.
     """
-    def __init__(self, databasesession: Optional[AsyncSession] = None):
+    def __init__(
+        self,
+        config: Config,
+        database_session: Optional[AsyncSession] = None,
+    ):
         """
         Initialize the BCVService with optional database session.
 
@@ -36,7 +42,8 @@ class BCVService:
             databasesession (Optional[AsyncSession]): SQLAlchemy async database session.
         """
         self.url = "https://www.bcv.org.ve"
-        self.db_session = databasesession
+        self.db_session = database_session
+        self.config = config
         self.logger = logging.getLogger(self.__class__.__name__)
         self._soup: Optional[BeautifulSoup] = None
 
@@ -58,6 +65,17 @@ class BCVService:
             )
         return BCVController(session=self.db_session)
 
+    def _build_ssl_context(self) -> ssl.SSLContext:
+        context = ssl.create_default_context(cafile=certifi.where())
+        if self.config.BCV_INTERMEDIATE_CERT.exists():
+            context.load_verify_locations(cafile=str(self.config.BCV_INTERMEDIATE_CERT))
+        else:
+            self.logger.warning(
+                f"BCV intermediate certificate not found at {self.config.BCV_INTERMEDIATE_CERT}. "
+                "SSL verification may fail."
+            )
+        return context
+
     def _get_client(self) -> AsyncClient:
         """
         Create and configure an HTTPX AsyncClient instance.
@@ -67,6 +85,7 @@ class BCVService:
         """
         return AsyncClient(
             timeout=15.0,
+            verify=self._build_ssl_context(),
             headers={
                 "User-Agent": (
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

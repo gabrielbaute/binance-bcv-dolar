@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     session = db_manager.async_session_maker()
     scheduler = None
     try:
-        scheduler = DolarScheduler(databasesession=session, config=config)
+        scheduler = DolarScheduler(database_session=session, config=config)
         scheduler.start()
 
         yield

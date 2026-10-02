@@ -13,16 +13,20 @@ from app.services.webhook_service import NtfysService
 from app.schemas.webhook_payload_schemas import NTFYPayload
 from app.enums import NTFYPriority, Currency, TradeType, FiatCurrency, BinanceAsset
 
-
-class DolarScheduler():
-    def __init__(self, databasesession: AsyncSession, config: Config):
+class DolarScheduler:
+    def __init__(self, database_session: AsyncSession, config: Config):
         """
-        Initialize the DolarScheduler. This scheduler is responsible for periodically fetching exchange rates from BCV and Binance, saving them to the database, and sending notifications about updates or errors.
+        Initialize the DolarScheduler. This scheduler is responsible for periodically fetching
+        exchange rates from BCV and Binance, saving them to the database, and sending notifications
+        about updates or errors.
         """
         self.config = config
         self.notifier = NtfysService(config=self.config)
-        self.binance_service = BinanceService(databasesession=databasesession)
-        self.bcv_service = BCVService(databasesession=databasesession)
+        self.binance_service = BinanceService(database_session=database_session)
+        self.bcv_service = BCVService(
+            config=config,
+            database_session=database_session
+        )
         self.scheduler = AsyncIOScheduler(timezone=timezone("America/Caracas"))
         self.logger = logging.getLogger(self.__class__.__name__)
 
