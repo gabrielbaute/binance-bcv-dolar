@@ -20,6 +20,7 @@ class Config(BaseSettings):
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
     INSTANCE_DIR: Path = BASE_DIR / "instance"
     LOGS_DIR: Path = BASE_DIR / "logs"
+    BCV_INTERMEDIATE_CERT: Path = Path(__file__).resolve().parent.parent / "certs" / "SectigoPublicServerAuthenticationCADVR36.pem"
 
 
     # ----------- LOGGING -------------
@@ -32,7 +33,7 @@ class Config(BaseSettings):
     API_LOG_LEVEL: str = "info"
 
     # ----------- DATABASE ------------
-    DATABASE_URL: str = str(f"sqlite+aiosqlite:///{INSTANCE_DIR / f'dolar_vzla.db'}")
+    DATABASE_URL: str = str(f"sqlite+aiosqlite:///{INSTANCE_DIR / 'dolar_vzla.db'}")
     DATABASE_ECHO: bool = False
     DATABASE_POOL_SIZE: int = 5
     DATABASE_POOL_RECYCLE: int = 3600
