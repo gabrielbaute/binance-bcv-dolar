@@ -72,7 +72,10 @@ async def get_db_session(
         yield session
 
 
-def get_bcv_service(database_session: AsyncSession = Depends(get_db_session)) -> BCVService:
+def get_bcv_service(
+    database_session: AsyncSession = Depends(get_db_session),
+    config_inst: Config = Depends(get_config_instance)
+) -> BCVService:
     """
     Inject the Banco Central de Venezuela data tracking and parsing service layer.
 
@@ -82,7 +85,10 @@ def get_bcv_service(database_session: AsyncSession = Depends(get_db_session)) ->
     Returns:
         BCVService: Bound functional logic matching official currency updates.
     """
-    return BCVService(databasesession=database_session)
+    return BCVService(
+        config=config_inst,
+        database_session=database_session,
+    )
 
 
 def get_binance_service(database_session: AsyncSession = Depends(get_db_session)) -> BinanceService:
@@ -95,7 +101,7 @@ def get_binance_service(database_session: AsyncSession = Depends(get_db_session)
     Returns:
         BinanceService: Configured component pointing to P2P order books.
     """
-    return BinanceService(databasesession=database_session)
+    return BinanceService(database_session=database_session)
 
 
 def get_dolar_vzla_service(
