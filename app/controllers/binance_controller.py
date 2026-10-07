@@ -58,26 +58,6 @@ class BinanceController(
             count=total,
         )
 
-    async def _get_or_raise(self, rate_id: UUID) -> BinanceRateSQLModel:
-        """Fetch a specific Binance rate record or raise an exception.
-
-        Args:
-            rate_id (UUID): Database primary key identifier.
-
-        Returns:
-            BinanceRateSQLModel: The persistent model instance.
-
-        Raises:
-            RegisterNotFoundError: If the ID does not map to any record.
-        """
-        obj = await self.get(id=rate_id)
-        if obj is None:
-            raise RegisterNotFoundError(
-                message="Binance rate record not found on database",
-                details={"Error detail:": f"ID object rate: {rate_id}"},
-            )
-        return obj
-
     async def register_rate(self, rate: BinanceCurrencyCreate) -> BinanceCurrencyResponse:
         """Persist a new calculated Binance P2P rate metric record.
 
