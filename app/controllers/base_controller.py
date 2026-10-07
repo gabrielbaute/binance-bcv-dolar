@@ -2,20 +2,23 @@
 Abstract base controller for operations common to other controllers.
 """
 from uuid import UUID
-from sqlmodel import select, SQLModel
+from pydantic import BaseModel
+from sqlmodel import func, select, SQLModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Generic, Type, TypeVar, List, Optional, Any
+from typing import Any, List, Optional, Tuple, Type, Union
 
-ModelType = TypeVar("ModelType", bound=SQLModel)
-CreateSchemaType = TypeVar("CreateSchemaType")
-UpdateSchemaType = TypeVar("UpdateSchemaType")
-ResponseSchemaType = TypeVar("ResponseSchemaType")
+from app.errors import RegisterNotFoundError, DatabaseOperationError
 
-class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType, ResponseSchemaType]):
+class AsyncBaseController[
+    ModelType: SQLModel,
+    CreateSchemaType: BaseModel,
+    UpdateSchemaType: BaseModel,
+    ResponseSchemaType: BaseModel,
+]:
     """
     It provides a basic implementation for interacting with the database.
     """
-    def __init__(self, model: Type[ModelType], session: AsyncSession):
+    def __init__(self, model: Type[ModelType], database_session: AsyncSession):
         """
         Initialize the controller with a specific SQL model.
 
@@ -24,7 +27,44 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
             session (AsyncSession): Database session.
         """
         self.model = model
-        self.session = session
+        self.database_session = database_session
+
+    def _validate_uuid(self, uuid_str: Union[str, UUID]) -> UUID:
+        """
+        Helper para validar que una ID sea en efecto de tipo UUID.
+
+        Args:
+            uuid_str (Union[str, UUID]): ID en string o UUID.
+
+        Returns:
+            UUID: ID en formato UUID.
+        """
+        if isinstance(uuid_str, str):
+            return UUID(uuid_str)
+        else:
+            return uuid_str
+
+    async def _get_or_raise(self, db_obj_id: UUID) -> ModelType:
+        """
+        Obtiene un registro del ModelType específico o genere una excepción.
+
+        Args:
+            db_obj_id (UUID): Identificador de clave primaria de la base de datos.
+
+        Returns:
+            ModelType: El modelo de datos de persistencia de evento.
+
+        Raises:
+            RegisterNotFoundError: Si el ID no se corresponde con ningún registro.
+        """
+        event_id = self._validate_uuid(db_obj_id)
+        obj = await self.get(id=db_obj_id)
+        if obj is None:
+            raise RegisterNotFoundError(
+                message="Register not found.",
+                details={"detail": f"Register ID: {event_id}",}
+            )
+        return obj
 
     async def _commit_or_rollback(self) -> None:
         """
@@ -34,9 +74,31 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
             Exception: If the commit operation fails after a rollback attempt.
         """
         try:
-            await self.session.commit()
+            await self.database_session.commit()
         except Exception:
-            await self.session.rollback()
+            await self.database_session.rollback()
+            raise
+
+    async def _update_or_rollback(self, db_obj: ModelType) -> bool:
+        """
+        Intenta realizar un commit con el objetivo explícito de actualizar un objeto de la base de datos.
+
+        Args:
+            db_obj (ModelType): El objeto actual en la base de datos.
+
+        Returns:
+            bool: True si la edición del campo fue exitosa.
+
+        Raises:
+            Exception: Si ocurre un error durante el commit, se lanza una excepción con el error correspondiente
+            y se realiza un rollback de la sesión.
+        """
+        try:
+            self.database_session.add(db_obj)
+            await self.database_session.commit()
+            return True
+        except Exception:
+            await self.database_session.rollback()
             raise
 
     async def get(self, id: UUID) -> Optional[ModelType]:
@@ -49,8 +111,8 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
         Returns:
             Optional[ModelType]: The object found or None.
         """
-        statement = select(self.model).where(self.model.id == id)
-        result = await self.session.execute(statement)
+        statement = select(self.model).where(self.model.id == id) # type: ignore
+        result = await self.database_session.execute(statement)
         return result.scalar_one_or_none()
 
     async def get_last_register_with_conditions(
@@ -69,25 +131,35 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
         """
         order_column = getattr(self.model, sort_by_attribute)
         statement = select(self.model).where(*where_clause).order_by(order_column.desc()).limit(1)
-        result = await self.session.execute(statement)
+        result = await self.database_session.execute(statement)
         return result.scalar_one_or_none()
 
     async def get_multi(
-        self, skip: int = 0, limit: int = 100
-    ) -> List[ModelType]:
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        sort_by_attribute: str = "registered_at"
+    ) -> Tuple[List[ModelType], int]:
         """
-        Retrieves multiple records with pagination.
+        Devuelve una lista de registros de la base de datos con paginación y el conteo total.
 
         Args:
-            skip (int): Records to skip.
-            limit (int): Maximum number of records to return.
+            skip (int): Registros a omitir para la paginación.
+            limit (int): Número máximo de registros a devolver.
+            sort_by_attribute (str): Nombre del atributo por el cual ordenar los registros en orden descendente.
 
         Returns:
-            List[ModelType]: List of objects.
+            Tuple[List[ModelType], int]: Tupla con la lista de objetos obtenidos y el total de registros en la tabla.
+
+        Raises:
+            DatabaseOperationError: Si ocurre un error al consultar la base de datos.
         """
-        statement = select(self.model).offset(skip).limit(limit)
-        result = await self.session.execute(statement)
-        return result.scalars().all()
+        return await self.get_multi_with_conditions(
+            where_clause=[],
+            skip=skip,
+            limit=limit,
+            sort_by_attribute=sort_by_attribute
+        )
 
     async def get_multi_with_conditions(
         self,
@@ -95,29 +167,48 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
         skip: int = 0,
         limit: int = 100,
         sort_by_attribute: str = "date"
-    ) -> List[ModelType]:
+    ) -> Tuple[List[ModelType], int]:
         """
-        Returns a list of records that meet given conditions with chronological sort.
+        Devuelve una lista de registros que cumplen con las condiciones y el conteo total de registros que coinciden.
 
         Args:
-            where_clause (List[Any]): List of SQL Alchemy conditional expressions.
-            skip (int): Records to skip for pagination.
-            limit (int): Maximum number of records to return.
-            sort_by_attribute (str): Attribute name used for descending order.
+            where_clause (List[Any]): Lista de expresiones condicionales de SQLModel para filtrar los registros.
+            skip (int): Número de registros a omitir para la paginación.
+            limit (int): Número máximo de registros a devolver.
+            sort_by_attribute (str): Nombre del atributo por el cual ordenar los registros en orden descendente.
 
         Returns:
-            List[ModelType]: List of objects meeting the criteria.
+            Tuple[List[ModelType], int]: Tupla que contiene la lista de objetos paginados y el conteo total sin paginar.
+
+        Raises:
+            DatabaseOperationError: Si ocurre un error al consultar la base de datos.
         """
-        order_column = getattr(self.model, sort_by_attribute)
-        statement = (
-            select(self.model)
-            .where(*where_clause)
-            .order_by(order_column.desc())
-            .offset(skip)
-            .limit(limit)
-        )
-        result = await self.session.execute(statement)
-        return result.scalars().all()
+        try:
+            # 1. Consulta para el conteo total sin la paginación (offset/limit)
+            count_statement = select(func.count()).select_from(self.model)
+            if where_clause:
+                count_statement = count_statement.where(*where_clause)
+
+            count_result = await self.database_session.execute(count_statement)
+            total_count: int = count_result.scalar_one()
+
+            # 2. Consulta para obtener los registros paginados y ordenados
+            order_column = getattr(self.model, sort_by_attribute)
+            statement = select(self.model)
+            if where_clause:
+                statement = statement.where(*where_clause)
+
+            statement = statement.order_by(order_column.desc()).offset(skip).limit(limit)
+
+            result = await self.database_session.execute(statement)
+            items: List[ModelType] = list(result.scalars().all())
+
+            return items, total_count
+        except Exception as e:
+            raise DatabaseOperationError(
+                message="Error al realizar la consulta con condiciones en la base de datos.",
+                details={"error": str(e)}
+            ) from e
 
     async def create(self, obj_in: CreateSchemaType) -> ModelType:
         """
@@ -132,9 +223,9 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
         obj_data = obj_in.model_dump()
         db_obj = self.model(**obj_data)
 
-        self.session.add(db_obj)
+        self.database_session.add(db_obj)
         await self._commit_or_rollback()
-        await self.session.refresh(db_obj)
+        await self.database_session.refresh(db_obj)
         return db_obj
 
     async def update(
@@ -143,14 +234,14 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
         obj_in: UpdateSchemaType | dict[str, Any]
     ) -> ModelType:
         """
-        Update an existing record.
+        Actualiza un registro existente.
 
         Args:
-            db_obj (ModelType): The current object in the DB.
-            obj_in (UpdateSchemaType | dict[str, Any]): New data wrapper.
+            db_obj (ModelType): El objeto actual en la base de datos.
+            obj_in (UpdateSchemaType | dict[str, Any]): Contenedor de los nuevos datos.
 
         Returns:
-            ModelType: The updated object.
+            ModelType: El objeto actualizado en la base de datos.
         """
         update_data = obj_in if isinstance(obj_in, dict) else obj_in.model_dump(exclude_unset=True)
 
@@ -158,9 +249,9 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
             if hasattr(db_obj, field):
                 setattr(db_obj, field, update_data[field])
 
-        self.session.add(db_obj)
+        self.database_session.add(db_obj)
         await self._commit_or_rollback()
-        await self.session.refresh(db_obj)
+        await self.database_session.refresh(db_obj)
         return db_obj
 
     async def remove(self, id: UUID) -> Optional[ModelType]:
@@ -175,6 +266,6 @@ class AsyncBaseController(Generic[ModelType, CreateSchemaType, UpdateSchemaType,
         """
         obj = await self.get(id)
         if obj:
-            await self.session.delete(obj)
+            await self.database_session.delete(obj)
             await self._commit_or_rollback()
         return obj
