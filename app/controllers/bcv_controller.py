@@ -31,7 +31,7 @@ class BCVController(
         """Initialize the BCV controller with session context.
 
         Args:
-            session (AsyncSession): Asynchronous database session.
+            database_session (AsyncSession): Asynchronous database session.
         """
         super().__init__(model=BCVRateSQLModel, database_session=session)
         self.logger = logging.getLogger(self.__class__.__name__)
