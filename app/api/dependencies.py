@@ -105,6 +105,7 @@ def get_binance_service(database_session: AsyncSession = Depends(get_db_session)
 
 
 def get_dolar_vzla_service(
+    config_inst: Config = Depends(get_config_instance),
     database_session: AsyncSession = Depends(get_db_session)
 ) -> DolarVenezuelaService:
     """
@@ -116,7 +117,10 @@ def get_dolar_vzla_service(
     Returns:
         DolarVenezuelaService: Encapsulated service computing averages between parallel and official data.
     """
-    return DolarVenezuelaService(database_session=database_session)
+    return DolarVenezuelaService(
+        config=config_inst,
+        database_session=database_session
+    )
 
 
 def get_fiat_exchange_service(
