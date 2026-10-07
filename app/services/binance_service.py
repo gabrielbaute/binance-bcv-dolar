@@ -50,7 +50,7 @@ class BinanceService:
                 message="Database session is required to initialize the controller.",
                 details={"error": "No database session provided."}
             )
-        return BinanceController(session=self.database_session)
+        return BinanceController(database_session=self.database_session)
 
     def _build_request(
         self,

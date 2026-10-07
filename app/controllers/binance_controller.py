@@ -28,13 +28,13 @@ class BinanceController(
 ):
     """Controller for managing P2P market rate statistics from Binance."""
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, database_session: AsyncSession):
         """Initialize the Binance controller with an asynchronous session.
 
         Args:
-            session (AsyncSession): Asynchronous database session context.
+            database_session (AsyncSession): Asynchronous database session context.
         """
-        super().__init__(model=BinanceRateSQLModel, session=session)
+        super().__init__(model=BinanceRateSQLModel, database_session=database_session)
         self.logger = logging.getLogger(self.__class__.__name__)
         self.create_model = BinanceCurrencyCreate
         self.update_model = BinanceCurrencyUpdate
