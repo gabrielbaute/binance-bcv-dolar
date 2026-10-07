@@ -4,6 +4,7 @@ from typing import Optional
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import Config
 from app.errors import RegisterNotFoundError
 from app.services.bcv_service import BCVService
 from app.services.binance_service import BinanceService
@@ -14,7 +15,11 @@ class DolarVenezuelaService:
     """
     Service for calculating unified composite exchange rate matrices inside the Venezuelan market.
     """
-    def __init__(self, database_session: AsyncSession):
+    def __init__(
+        self,
+        config: Config,
+        database_session: AsyncSession
+    ):
         """
         Initialize the DolarVenezuelaService with appropriate operational tracking contexts.
 
@@ -22,8 +27,8 @@ class DolarVenezuelaService:
             database_session (AsyncSession): Active transactional instance mapping to persistent storage layers.
         """
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.bcv = BCVService(databasesession=database_session)
-        self.binance = BinanceService(databasesession=database_session)
+        self.bcv = BCVService(config=config, database_session=database_session)
+        self.binance = BinanceService(database_session=database_session)
 
     async def get_real_time_average_dolar(self) -> Optional[RealTimeDolarResponse]:
         """
@@ -80,7 +85,7 @@ class DolarVenezuelaService:
                 self.logger.error("Error getting data for last registered average dolar exchange rate")
                 return None
 
-            average_price = (binance_usdt_ves.average_price + bcv_dolar.rate) / 2
+            average_price = (binance_usdt_ves.average_price + bcv_dolar.rate) / 2 #type: ignore
 
             return DolarResponse(
                 bcv_dolar=bcv_dolar,

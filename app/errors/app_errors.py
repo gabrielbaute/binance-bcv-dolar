@@ -5,7 +5,7 @@ class BCVConnectionError(DolarVzlaError):
     """Error raised when there is a connection issue with the BCV website."""
     def __init__(self, message: str = "Error connecting to the BCV website.", details=None):
         super().__init__(message, details)
-    
+
 class BCVReadingRateError(DolarVzlaError):
     """Error raised when there is an issue reading the rate from the BCV website."""
     def __init__(self, message: str = "Error reading the rate from the BCV website.", details=None):
