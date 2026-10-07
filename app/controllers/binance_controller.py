@@ -166,13 +166,7 @@ class BinanceController(
             BinanceRateSQLModel.trade_type == trade_type,
         ]
 
-        count_statement = (
-            select(func.count()).select_from(BinanceRateSQLModel).where(*where_clause)
-        )
-        count_result = await self.session.execute(count_statement)
-        total_count = count_result.scalar_one()
-
-        rates = await self.get_multi_with_conditions(
+        rates, total_count = await self.get_multi_with_conditions(
             where_clause=where_clause,
             skip=skip,
             limit=limit,
@@ -215,13 +209,7 @@ class BinanceController(
         if end_date:
             where_clause.append(BinanceRateSQLModel.date <= end_date)
 
-        count_statement = (
-            select(func.count()).select_from(BinanceRateSQLModel).where(*where_clause)
-        )
-        count_result = await self.session.execute(count_statement)
-        total_count = count_result.scalar_one()
-
-        rates = await self.get_multi_with_conditions(
+        rates, total_count = await self.get_multi_with_conditions(
             where_clause=where_clause,
             skip=skip,
             limit=limit,
