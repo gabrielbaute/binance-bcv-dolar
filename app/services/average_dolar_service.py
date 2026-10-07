@@ -32,10 +32,12 @@ class DolarVenezuelaService:
 
     async def get_real_time_average_dolar(self) -> Optional[RealTimeDolarResponse]:
         """
-        Synthesize immediate real-time average metrics bridging central bank rates and P2P order books.
+        Synthesize immediate real-time average metrics
+        bridging central bank rates and P2P order books.
 
         Returns:
-            Optional[RealTimeDolarResponse]: Composite summary enclosing validated realtime data matrices, or None if upstream provider blocks fail to resolve pricing.
+            Optional[RealTimeDolarResponse]: Composite summary enclosing validated realtime data
+            matrices, or None if upstream provider blocks fail to resolve pricing.
         """
         self.logger.info("Getting average dolar exchange rate")
 
@@ -46,11 +48,15 @@ class DolarVenezuelaService:
         bcv_euro = await self.bcv.get_real_time_exchange_rate(Currency.EURO)
 
         if not binance_usdt_ves or not bcv_dolar:
-            self.logger.error("Error getting data for average dolar exchange rate: Missing provider baseline data.")
+            self.logger.error(
+                "Error getting data for average dolar exchange rate: Missing provider baseline data."
+            )
             return None
 
         if binance_usdt_ves.average_price is None or bcv_dolar.rate is None:
-            self.logger.warning("Upstream payload evaluated contains null pricing metrics. Cannot compute average.")
+            self.logger.warning(
+                "Upstream payload evaluated contains null pricing metrics. Cannot compute average."
+            )
             return None
 
         average_price = (binance_usdt_ves.average_price + bcv_dolar.rate) / 2
@@ -82,7 +88,9 @@ class DolarVenezuelaService:
             bcv_euro = await self.bcv.get_exchange_rate(Currency.EURO)
 
             if not binance_usdt_ves or not bcv_dolar:
-                self.logger.error("Error getting data for last registered average dolar exchange rate")
+                self.logger.error(
+                    "Error getting data for last registered average dolar exchange rate"
+                )
                 return None
 
             average_price = (binance_usdt_ves.average_price + bcv_dolar.rate) / 2 #type: ignore
@@ -96,5 +104,7 @@ class DolarVenezuelaService:
             )
 
         except RegisterNotFoundError as e:
-            self.logger.warning(f"Aborting average aggregation. A baseline ledger track was missing: {e.message}")
+            self.logger.exception(
+                f"Aborting average aggregation. A baseline ledger track was missing: {e.message}"
+            )
             return None

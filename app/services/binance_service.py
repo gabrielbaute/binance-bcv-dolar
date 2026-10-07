@@ -113,17 +113,17 @@ class BinanceService:
             self.logger.debug("Response Binance P2P")
             return res.json()
         except HTTPError as e:
-            self.logger.error(f"Error at Binance P2P request: {e}")
+            self.logger.exception("Error at Binance P2P requests.")
             raise BinanceConnectionError(
                 message="Error connecting to the Binance P2P API.",
                 details={"error": str(e)}
-            )
+            ) from e
         except ValueError as e:
-            self.logger.error(f"Error parsing Binance P2P response: {e}")
+            self.logger.exception("Error parsing Binance P2P response.")
             raise BinanceConnectionError(
                 message="Error parsing Binance P2P response.",
                 details={"error": str(e)}
-            )
+            ) from e
 
     async def _get_client(self) -> AsyncClient:
         """Return a reusable HTTPX AsyncClient for Binance requests."""
@@ -178,7 +178,7 @@ class BinanceService:
                 "average_price": mean(prices)
             }
         except Exception as e:
-            self.logger.error(f"Error calculating median price: {e}")
+            self.logger.exception(f"Error calculating median price: {e}")
             return {"median_price": None, "average_price": None}
 
     async def get_real_time_pair(
@@ -298,11 +298,14 @@ class BinanceService:
         except DatabaseSessionError:
             raise
         except Exception as e:
-            self.logger.error(f"Error occurred while saving currency rate: {e}")
+            self.logger.exception(f"Error occurred while saving currency rate: {e}")
             raise DatabaseOperationError(
                 message="Error occurred while saving currency rate.",
-                details={"currency": currency.value, "asset": asset.value, "trade_type": trade_type.value}
-            )
+                details={
+                    "currency": currency.value,
+                    "asset": asset.value,
+                    "trade_type": trade_type.value}
+            ) from e
 
     async def get_last_saved_binance_fiat(
         self,
@@ -348,11 +351,16 @@ class BinanceService:
         except (RegisterNotFoundError, DatabaseSessionError):
             raise
         except Exception as e:
-            self.logger.error(f"Error occurred while retrieving last saved currency rate: {e}")
+            self.logger.exception(f"Error occurred while retrieving last saved currency rate: {e}")
             raise DatabaseOperationError(
                 message="Unexpected error occurred while retrieving the last saved currency rate.",
-                details={"fiat": fiat.value, "asset": asset.value, "trade_type": trade_type.value, "error": str(e)}
-            )
+                details={
+                    "fiat": fiat.value,
+                    "asset": asset.value,
+                    "trade_type": trade_type.value,
+                    "error": str(e)
+                }
+            ) from e
 
     async def get_all_saved_binance_pair(
         self,
@@ -404,7 +412,7 @@ class BinanceService:
         except (RegisterNotFoundError, DatabaseSessionError):
             raise
         except Exception as e:
-            self.logger.error(f"Error occurred while retrieving all saved currency rates: {e}")
+            self.logger.exception(f"Error occurred while retrieving all saved currency rates: {e}")
             raise DatabaseOperationError(
                 message="Unexpected error occurred while retrieving all saved currency rates.",
                 details={
@@ -413,7 +421,7 @@ class BinanceService:
                     "trade_type": trade_type.value,
                     "error": str(e)
                 }
-            )
+            ) from e
 
     async def get_binance_pair_by_time_range(
         self,
@@ -472,7 +480,7 @@ class BinanceService:
         except (RegisterNotFoundError, DatabaseSessionError):
             raise
         except Exception as e:
-            self.logger.error(f"Error occurred while retrieving currency rates by time range: {e}")
+            self.logger.exception(f"Error occurred while retrieving currency rates by time range: {e}")
             raise DatabaseOperationError(
                 message="Unexpected error occurred while retrieving currency rates by time range.",
                 details={
@@ -483,4 +491,4 @@ class BinanceService:
                     "end_time": end_time.isoformat(),
                     "error": str(e)
                 }
-            )
+            ) from e

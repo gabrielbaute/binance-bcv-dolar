@@ -192,12 +192,12 @@ class BCVService:
                 rate=rate,
                 date=datetime.now()
             )
-        except ValueError:
-            self.logger.error(f"Error parsing value '{raw_value}' for currency {currency}")
+        except ValueError as e:
+            self.logger.exception(f"Error parsing value '{raw_value}' for currency {currency}.")
             raise BCVReadingRateError(
                 message="Error parsing the rate from the BCV website.",
                 details={"currency": currency, "value": raw_value}
-            )
+            ) from e
 
     async def save_rate_to_db(self, currency: Currency) -> Optional[BCVCurrencyResponse]:
         """
@@ -229,11 +229,8 @@ class BCVService:
         except DatabaseSessionError:
             raise
         except Exception as e:
-            self.logger.error(f"Error saving rate to database: {e}")
-            raise DatabaseOperationError(
-                message="Error while saving currency record",
-                details={"currency": currency, "error": str(e)}
-            )
+            self.logger.exception(f"Error saving rate to database: {e}")
+            raise
 
     async def get_exchange_rate(self, currency: Currency) -> Optional[BCVCurrencyResponse]:
         """
@@ -264,7 +261,7 @@ class BCVService:
         except RegisterNotFoundError:
             raise
         except Exception as e:
-            self.logger.error(f"Unexpected error retrieving exchange rate for {currency}: {e}")
+            self.logger.exception(f"Unexpected error retrieving exchange rate for {currency}: {e}")
             return None
 
     async def get_all_exchange_rates(self) -> BCVResponse:

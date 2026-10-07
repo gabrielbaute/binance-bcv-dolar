@@ -110,7 +110,7 @@ class NtfysService:
             )
             return response.status_code
         except httpx.HTTPError as e:
-            self.logger.error(f"Error al enviar notificación NTFY: {e}")
+            self.logger.exception(f"Error al enviar notificación NTFY: {e}")
             return None
 
     async def close(self) -> None:
