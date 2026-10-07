@@ -3,13 +3,11 @@
 import logging
 from uuid import UUID
 from datetime import datetime
-from typing import List, Optional, Any
-from sqlmodel import select, func
+from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.enums import TradeType, FiatCurrency, BinanceAsset
-from app.errors import RegisterNotFoundError
 from app.database.models import BinanceRateSQLModel
+from app.enums import TradeType, FiatCurrency, BinanceAsset
 from app.controllers.base_controller import AsyncBaseController
 from app.schemas.binance_response_schemas import (
     BinanceCurrencyCreate,
@@ -54,7 +52,9 @@ class BinanceController(
             BinanceCurrencyListResponse: Validated response payload API model.
         """
         return BinanceCurrencyListResponse(
-            currencies=[BinanceCurrencyResponse.model_validate(rate.model_dump()) for rate in rates],
+            currencies=[
+                BinanceCurrencyResponse.model_validate(rate.model_dump()) for rate in rates
+            ],
             count=total,
         )
 
