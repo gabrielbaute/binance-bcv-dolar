@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 from sqlmodel import SQLModel, Field
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from app.enums import Currency, TradeType
 
@@ -23,4 +23,4 @@ class BCVRateSQLModel(SQLModel, table=True):
     currency: Currency = Field(default=Currency.DOLAR, nullable=False, index=True)
     trade_type: TradeType = Field(default=TradeType.SELL, nullable=False, index=True)
     rate: float = Field(nullable=False)
-    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False,)
+    date: datetime = Field(default_factory=lambda: datetime.now(UTC), nullable=False,)

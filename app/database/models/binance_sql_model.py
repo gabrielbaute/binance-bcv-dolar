@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 from sqlmodel import SQLModel, Field
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from app.enums import TradeType, FiatCurrency, BinanceAsset
 
@@ -27,4 +27,4 @@ class BinanceRateSQLModel(SQLModel, table=True):
     trade_type: TradeType = Field(default=TradeType.BUY, nullable=False, index=True)
     average_price: float = Field(nullable=False)
     median_price: float = Field(nullable=True)
-    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)
+    date: datetime = Field(default_factory=lambda: datetime.now(UTC), nullable=False,)
