@@ -19,7 +19,7 @@ class BinanceRateSQLModel(SQLModel, table=True):
         median_price (float): The calculated median price of active orders for the given pair and trade type at the time of the query.
         date (DateTime): The UTC timestamp when the query was performed and the average price was recorded. This is the historical record's timestamp.
     """
-    __tablename__ = "binance_rates"
+    __tablename__ = "binance_rates" #type: ignore
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     fiat: FiatCurrency = Field(default=FiatCurrency.VES, nullable=False, index=True)

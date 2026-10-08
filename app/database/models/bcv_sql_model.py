@@ -17,7 +17,7 @@ class BCVRateSQLModel(SQLModel, table=True):
         rate (float): The official exchange rate of the currency in Venezuelan Bolívars (VES) for the record's date. This is the value published by the BCV.
         date (DateTime): The date (usually without a specific time, or at 00:00) to which the published exchange rate corresponds. Marks the day of the query or the official publication.
     """
-    __tablename__ = "rates"
+    __tablename__ = "rates" #type: ignore
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     currency: Currency = Field(default=Currency.DOLAR, nullable=False, index=True)
