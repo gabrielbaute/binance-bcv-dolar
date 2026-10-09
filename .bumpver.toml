@@ -1,5 +1,5 @@
 [bumpver]
-current_version = "v1.1.2"
+current_version = "v1.2.0"
 version_pattern = "vMAJOR.MINOR.PATCH"
 commit = true
 tag = true
