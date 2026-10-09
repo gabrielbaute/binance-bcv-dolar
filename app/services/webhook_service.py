@@ -46,7 +46,7 @@ class NtfysService:
             str: Mensaje formateado en Markdown.
         """
         body_parts = [payload.description]
-        footer = f"— *{self.app_name}* `v{self.app_version}`"
+        footer = f"— *{self.app_name}* `{self.app_version}`"
         body_parts.append(footer)
 
         return "\n\n".join(body_parts)
