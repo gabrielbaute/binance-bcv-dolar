@@ -5,11 +5,9 @@ import logging
 from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
-from sqlmodel import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import Currency, TradeType
-from app.errors import RegisterNotFoundError
 from app.database.models import BCVRateSQLModel
 from app.controllers.base_controller import AsyncBaseController
 from app.schemas.bcv_response_schemas import (
@@ -19,16 +17,23 @@ from app.schemas.bcv_response_schemas import (
     BCVCurrencyListResponse
 )
 
-class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVCurrencyUpdate, BCVCurrencyResponse]):
+class BCVController(
+    AsyncBaseController[
+        BCVRateSQLModel,
+        BCVCurrencyCreate,
+        BCVCurrencyUpdate,
+        BCVCurrencyResponse
+    ]
+):
     """Controller for managing official exchange rates from Banco Central de Venezuela."""
 
     def __init__(self, session: AsyncSession):
         """Initialize the BCV controller with session context.
 
         Args:
-            session (AsyncSession): Asynchronous database session.
+            database_session (AsyncSession): Asynchronous database session.
         """
-        super().__init__(model=BCVRateSQLModel, session=session)
+        super().__init__(model=BCVRateSQLModel, database_session=session)
         self.logger = logging.getLogger(self.__class__.__name__)
         self.create_model = BCVCurrencyCreate
         self.update_model = BCVCurrencyUpdate
@@ -49,26 +54,6 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
             currencies=[BCVCurrencyResponse.model_validate(rate.model_dump()) for rate in rates],
             count=total
         )
-
-    async def _get_or_raise(self, rate_id: UUID) -> BCVRateSQLModel:
-        """Retrieve a rate or raise exception if not found.
-
-        Args:
-            rate_id (UUID): Database identifier.
-
-        Returns:
-            BCVRateSQLModel: Database instance object.
-
-        Raises:
-            RegisterNotFoundError: If no record matches the given identity.
-        """
-        obj = await self.get(id=rate_id)
-        if obj is None:
-            raise RegisterNotFoundError(
-                message="Rate record not found on database",
-                details={"Error detail:": f"ID object rate: {rate_id}"}
-            )
-        return obj
 
     async def register_rate(self, rate: BCVCurrencyCreate) -> BCVCurrencyResponse:
         """Create a new BCV rate record.
@@ -107,13 +92,17 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
             trade_type (TradeType): Trade operation type.
 
         Returns:
-            Optional[BCVCurrencyResponse]: The most recent rate for the specified currency and trade type, or None if not found.
+            Optional[BCVCurrencyResponse]: The most recent rate for the specified
+            currency and trade type, or None if not found.
         """
         where_clause = [
             BCVRateSQLModel.currency == currency,
             BCVRateSQLModel.trade_type == trade_type
         ]
-        last_register = await self.get_last_register_with_conditions(where_clause=where_clause, sort_by_attribute="date")
+        last_register = await self.get_last_register_with_conditions(
+            where_clause=where_clause,
+            sort_by_attribute="date"
+        )
         if last_register is None:
             return None
         return BCVCurrencyResponse.model_validate(last_register.model_dump())
@@ -172,11 +161,7 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
             BCVRateSQLModel.trade_type == trade_type
         ]
 
-        count_statement = select(func.count()).select_from(BCVRateSQLModel).where(*where_clause)
-        count_result = await self.session.execute(count_statement)
-        total_count = count_result.scalar_one()
-
-        rates = await self.get_multi_with_conditions(
+        rates, total_count = await self.get_multi_with_conditions(
             where_clause=where_clause,
             skip=skip,
             limit=limit,
@@ -216,11 +201,7 @@ class BCVController(AsyncBaseController[BCVRateSQLModel, BCVCurrencyCreate, BCVC
         if end_date:
             where_clause.append(BCVRateSQLModel.date <= end_date)
 
-        count_statement = select(func.count()).select_from(BCVRateSQLModel).where(*where_clause)
-        count_result = await self.session.execute(count_statement)
-        total_count = count_result.scalar_one()
-
-        rates = await self.get_multi_with_conditions(
+        rates, total_count = await self.get_multi_with_conditions(
             where_clause=where_clause,
             skip=skip,
             limit=limit,

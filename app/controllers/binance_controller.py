@@ -3,13 +3,11 @@
 import logging
 from uuid import UUID
 from datetime import datetime
-from typing import List, Optional, Any
-from sqlmodel import select, func
+from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.enums import TradeType, FiatCurrency, BinanceAsset
-from app.errors import RegisterNotFoundError
 from app.database.models import BinanceRateSQLModel
+from app.enums import TradeType, FiatCurrency, BinanceAsset
 from app.controllers.base_controller import AsyncBaseController
 from app.schemas.binance_response_schemas import (
     BinanceCurrencyCreate,
@@ -28,13 +26,13 @@ class BinanceController(
 ):
     """Controller for managing P2P market rate statistics from Binance."""
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, database_session: AsyncSession):
         """Initialize the Binance controller with an asynchronous session.
 
         Args:
-            session (AsyncSession): Asynchronous database session context.
+            database_session (AsyncSession): Asynchronous database session context.
         """
-        super().__init__(model=BinanceRateSQLModel, session=session)
+        super().__init__(model=BinanceRateSQLModel, database_session=database_session)
         self.logger = logging.getLogger(self.__class__.__name__)
         self.create_model = BinanceCurrencyCreate
         self.update_model = BinanceCurrencyUpdate
@@ -54,29 +52,11 @@ class BinanceController(
             BinanceCurrencyListResponse: Validated response payload API model.
         """
         return BinanceCurrencyListResponse(
-            currencies=[BinanceCurrencyResponse.model_validate(rate.model_dump()) for rate in rates],
+            currencies=[
+                BinanceCurrencyResponse.model_validate(rate.model_dump()) for rate in rates
+            ],
             count=total,
         )
-
-    async def _get_or_raise(self, rate_id: UUID) -> BinanceRateSQLModel:
-        """Fetch a specific Binance rate record or raise an exception.
-
-        Args:
-            rate_id (UUID): Database primary key identifier.
-
-        Returns:
-            BinanceRateSQLModel: The persistent model instance.
-
-        Raises:
-            RegisterNotFoundError: If the ID does not map to any record.
-        """
-        obj = await self.get(id=rate_id)
-        if obj is None:
-            raise RegisterNotFoundError(
-                message="Binance rate record not found on database",
-                details={"Error detail:": f"ID object rate: {rate_id}"},
-            )
-        return obj
 
     async def register_rate(self, rate: BinanceCurrencyCreate) -> BinanceCurrencyResponse:
         """Persist a new calculated Binance P2P rate metric record.
@@ -186,13 +166,7 @@ class BinanceController(
             BinanceRateSQLModel.trade_type == trade_type,
         ]
 
-        count_statement = (
-            select(func.count()).select_from(BinanceRateSQLModel).where(*where_clause)
-        )
-        count_result = await self.session.execute(count_statement)
-        total_count = count_result.scalar_one()
-
-        rates = await self.get_multi_with_conditions(
+        rates, total_count = await self.get_multi_with_conditions(
             where_clause=where_clause,
             skip=skip,
             limit=limit,
@@ -235,13 +209,7 @@ class BinanceController(
         if end_date:
             where_clause.append(BinanceRateSQLModel.date <= end_date)
 
-        count_statement = (
-            select(func.count()).select_from(BinanceRateSQLModel).where(*where_clause)
-        )
-        count_result = await self.session.execute(count_statement)
-        total_count = count_result.scalar_one()
-
-        rates = await self.get_multi_with_conditions(
+        rates, total_count = await self.get_multi_with_conditions(
             where_clause=where_clause,
             skip=skip,
             limit=limit,

@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 from sqlmodel import SQLModel, Field
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from app.enums import Currency, TradeType
 
@@ -17,10 +17,10 @@ class BCVRateSQLModel(SQLModel, table=True):
         rate (float): The official exchange rate of the currency in Venezuelan Bolívars (VES) for the record's date. This is the value published by the BCV.
         date (DateTime): The date (usually without a specific time, or at 00:00) to which the published exchange rate corresponds. Marks the day of the query or the official publication.
     """
-    __tablename__ = "rates"
+    __tablename__ = "rates" #type: ignore
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     currency: Currency = Field(default=Currency.DOLAR, nullable=False, index=True)
     trade_type: TradeType = Field(default=TradeType.SELL, nullable=False, index=True)
     rate: float = Field(nullable=False)
-    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False,)
+    date: datetime = Field(default_factory=lambda: datetime.now(UTC), nullable=False,)

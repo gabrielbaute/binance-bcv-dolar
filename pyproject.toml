@@ -27,7 +27,7 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     "Topic :: Office/Business :: Financial",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.121.0",
     "uvicorn[standard]>=0.38.0",
@@ -78,7 +78,7 @@ exclude = '''
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py313"
 select = ["E", "F", "I", "N", "W", "UP"]
 ignore = []
 exclude = [

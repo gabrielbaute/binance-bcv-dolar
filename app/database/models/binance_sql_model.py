@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 from sqlmodel import SQLModel, Field
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from app.enums import TradeType, FiatCurrency, BinanceAsset
 
@@ -19,7 +19,7 @@ class BinanceRateSQLModel(SQLModel, table=True):
         median_price (float): The calculated median price of active orders for the given pair and trade type at the time of the query.
         date (DateTime): The UTC timestamp when the query was performed and the average price was recorded. This is the historical record's timestamp.
     """
-    __tablename__ = "binance_rates"
+    __tablename__ = "binance_rates" #type: ignore
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     fiat: FiatCurrency = Field(default=FiatCurrency.VES, nullable=False, index=True)
@@ -27,4 +27,4 @@ class BinanceRateSQLModel(SQLModel, table=True):
     trade_type: TradeType = Field(default=TradeType.BUY, nullable=False, index=True)
     average_price: float = Field(nullable=False)
     median_price: float = Field(nullable=True)
-    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)
+    date: datetime = Field(default_factory=lambda: datetime.now(UTC), nullable=False,)

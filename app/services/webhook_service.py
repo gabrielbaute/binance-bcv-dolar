@@ -1,15 +1,15 @@
 import asyncio
 import logging
 from typing import Dict, Optional
-import httpx
+from httpx import AsyncClient, HTTPError
 
-from app.schemas import NTFYPayload
 from app.config import Config
+from app.schemas import NTFYPayload
 
 class NtfysService:
     """Servicio para emitir notificaciones a través de NTFY."""
 
-    def __init__(self, config: Config, client: Optional[httpx.AsyncClient] = None) -> None:
+    def __init__(self, config: Config, client: Optional[AsyncClient] = None) -> None:
         """Inicializa el servicio NTFY con la configuración y un cliente HTTP asíncrono.
 
         Args:
@@ -25,14 +25,14 @@ class NtfysService:
         self._owns_client = client is None
         self._client_lock = asyncio.Lock()
 
-    async def _get_client_locked(self) -> httpx.AsyncClient:
+    async def _get_client_locked(self) -> AsyncClient:
         """Obtiene o crea un cliente HTTPX asíncrono con ``_client_lock`` adquirido.
 
         Returns:
-            httpx.AsyncClient: Cliente de red asíncrono.
+            AsyncClient: Cliente de red asíncrono.
         """
         if self._client is None or getattr(self._client, "is_closed", False):
-            self._client = httpx.AsyncClient(timeout=10.0)
+            self._client = AsyncClient(timeout=10.0)
             self._owns_client = True
         return self._client
 
@@ -109,8 +109,8 @@ class NtfysService:
                 f"Notificación NTFY enviada exitosamente. Status code: {response.status_code}"
             )
             return response.status_code
-        except httpx.HTTPError as e:
-            self.logger.error(f"Error al enviar notificación NTFY: {e}")
+        except HTTPError as e:
+            self.logger.exception(f"Error al enviar notificación NTFY: {e}")
             return None
 
     async def close(self) -> None:
