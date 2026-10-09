@@ -18,11 +18,12 @@ RUN npm run build:ui
 # ==========================================
 # Etapa 1: Constructor (Builder Nativo con uv)
 # ==========================================
-FROM python:3.11-slim AS builder
+FROM python:3.13-slim AS builder
 
 # Evitar la generación de archivos .pyc en la etapa de compilación
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV UV_PYTHON_DOWNLOADS=never
 
 WORKDIR /app
 
@@ -40,7 +41,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # ==========================================
 # Etapa 2: Imagen Final de Producción (Runtime)
 # ==========================================
-FROM python:3.11-slim AS runtime
+FROM python:3.13-slim AS runtime
 
 # Mantener consistencia con las variables de optimización de python
 ENV PYTHONDONTWRITEBYTECODE=1 \
