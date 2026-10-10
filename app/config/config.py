@@ -41,14 +41,19 @@ class Config(BaseSettings):
     DATABASE_POOL_PRE_PING: bool = True
 
     # ----------- WEBHOOKS ------------
-    NTFY_TOPIC: str = ""
     NTFY_URL: str = ""
+    NTFY_TOPIC: str = ""
+    NTFY_MOBILE_PUSH_TOPIC: str = ""
+    NTFY_USER: str = ""
+    NTFY_PASSWORD: str = ""
 
     # ----------- CRONJOBS ------------
     BINANCE_EXTRA_FIATS: str = ""
     BINANCE_EXTRA_CRON: str = "0 */3 * * *"
     BINANCE_VES_CRON: str = "*/30 * * * *"
     BCV_CRON: str = "0 0 * * *"
+    BINANCE_NOTIFICATIONS_CRON_JOB: str = "0 */6 * * *"
+    BCV_NOTIFICATIONS_CRON_JOB: str = "5 8 * * *"
 
     model_config = SettingsConfigDict(
         env_file=".env",

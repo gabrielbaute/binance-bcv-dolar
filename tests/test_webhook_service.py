@@ -17,7 +17,7 @@ class TestNtfysService:
             NTFYPayload(description="desc", priority=NTFYPriority.DEFAULT)
         )
 
-        assert headers["Title"] == service.app_name
+        assert headers["Title"] == service.config.APP_NAME
 
     @pytest.mark.asyncio
     async def test_close_skips_injected_client(self):
@@ -51,7 +51,8 @@ class TestNtfysService:
         service = NtfysService(config=Config(), client=client)
 
         result = await service.emit(
-            NTFYPayload(description="desc", priority=NTFYPriority.DEFAULT)
+            NTFYPayload(description="desc", priority=NTFYPriority.DEFAULT),
+            topic="topic"
         )
 
         assert result == 200
@@ -65,7 +66,8 @@ class TestNtfysService:
         service = NtfysService(config=Config(), client=client)
 
         result = await service.emit(
-            NTFYPayload(description="desc", priority=NTFYPriority.DEFAULT)
+            NTFYPayload(description="desc", priority=NTFYPriority.DEFAULT),
+            topic="topic"
         )
 
         assert result is None
