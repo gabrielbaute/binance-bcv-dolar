@@ -1,7 +1,8 @@
 """Binance P2P module."""
 import logging
+from decimal import Decimal, InvalidOperation
 from datetime import datetime
-from statistics import median, mean
+from statistics import median
 from typing import List, Optional, Dict
 from httpx import AsyncClient, HTTPError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -140,7 +141,7 @@ class BinanceService:
             await self._client.aclose()
         self._client = None
 
-    def _colect_prices(self, data: dict, fiat: FiatCurrency) -> Optional[List[float]]:
+    def _colect_prices(self, data: dict, fiat: FiatCurrency) -> Optional[List[Decimal]]:
         """
         Collect prices from Binance P2P response.
 
@@ -152,14 +153,21 @@ class BinanceService:
             Optional[List[float]]: List of prices or None if failed.
         """
         if data.get("code") == "000000" and isinstance(data.get("data"), list) and len(data["data"]) > 0:
-            precios = [float(adv["adv"]["price"]) for adv in data["data"]]
+            try:
+                precios = [Decimal(str(adv["adv"]["price"])) for adv in data["data"]]
+            except (KeyError, TypeError, ValueError, InvalidOperation) as exc:
+                self.logger.warning("Invalid Binance price payload: %s", exc)
+                return None
+            if any(not price.is_finite() or price <= 0 for price in precios):
+                self.logger.warning("Binance returned a nonpositive or nonfinite price")
+                return None
             self.logger.info(f"Getting prices: {len(precios)} for {fiat.value}")
             return precios
 
         self.logger.error(f"Binance response error: {data}")
         return None
 
-    def _calculate_med(self, prices: Optional[List[float]]) -> Dict[str, Optional[float]]:
+    def _calculate_med(self, prices: Optional[List[Decimal]]) -> Dict[str, Optional[float]]:
         """
         Calculate the median and average price.
 
@@ -174,8 +182,8 @@ class BinanceService:
             return {"median_price": None, "average_price": None}
         try:
             return {
-                "median_price": median(prices),
-                "average_price": mean(prices)
+                "median_price": float(median(prices)),
+                "average_price": float(sum(prices) / len(prices))
             }
         except Exception as e:
             self.logger.exception(f"Error calculating median price: {e}")
@@ -213,7 +221,7 @@ class BinanceService:
             fiat=fiat,
             asset=asset,
             trade_type=trade_type,
-            prices=precios or [],
+            prices=[float(price) for price in precios] if precios else [],
             average_price=medians.get("average_price"),
             median_price=medians.get("median_price")
         )

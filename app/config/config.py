@@ -33,7 +33,7 @@ class Config(BaseSettings):
     API_LOG_LEVEL: str = "info"
 
     # ----------- DATABASE ------------
-    DATABASE_URL: str = str(f"sqlite+aiosqlite:///{INSTANCE_DIR / 'dolar_vzla.db'}")
+    DATABASE_URL: str = ""
     DATABASE_ECHO: bool = False
     DATABASE_POOL_SIZE: int = 5
     DATABASE_POOL_RECYCLE: int = 3600

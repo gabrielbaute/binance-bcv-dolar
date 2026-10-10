@@ -77,7 +77,7 @@ def _binance_rt_resp(avg=346.97) -> BinanceRealTimeResponse:
 
 
 # ===================================================================
-#  /health
+#  /api/v1/health
 # ===================================================================
 
 class TestHealthRoutes:
