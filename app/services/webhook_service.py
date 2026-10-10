@@ -88,6 +88,12 @@ class NtfysService:
                 {"Authorization": self._generate_auth_header(),}
             )
 
+        # Si el servidor requiere autenticaicón por token:
+        if self.config.NTFY_TOKEN:
+            headers.update(
+                {"Authorization": f"Bearer {self.config.NTFY_TOKEN}",}
+            )
+
         # El título en la cabecera es independiente del cuerpo
         if payload.title:
             headers["Title"] = payload.title
