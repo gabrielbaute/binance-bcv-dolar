@@ -49,6 +49,17 @@ test("longer history keeps one latest sample per UTC day", () => {
   assert.equal(toDateRange("24h", new Date("2026-10-09T12:00:00Z")).start, "2026-10-08T12:00:00.000Z");
 });
 
+test("previous year selects the complete prior calendar year, including leap years", () => {
+  assert.deepEqual(toDateRange("previous-year", new Date("2026-10-09T12:00:00Z")), {
+    start: "2025-01-01T00:00:00.000Z",
+    end: "2025-12-31T23:59:59.999Z",
+  });
+  assert.deepEqual(toDateRange("previous-year", new Date("2025-02-01T00:00:00Z")), {
+    start: "2024-01-01T00:00:00.000Z",
+    end: "2024-12-31T23:59:59.999Z",
+  });
+});
+
 test("history client loads all pages for both providers", async () => {
   const originalFetch = globalThis.fetch;
   const calls: string[] = [];

@@ -429,7 +429,7 @@ body {
 }
 
 #rateChart {
-    height: 385px !important;
+    height: 420px !important;
     width: 100% !important;
 }
 
@@ -794,7 +794,7 @@ a:focus-visible {
     }
 
     #rateChart {
-        height: 300px !important;
+        height: 320px !important;
     }
 
     .currency-toggle {

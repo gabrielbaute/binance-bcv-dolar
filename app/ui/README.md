@@ -78,7 +78,7 @@ ui/
 
 The frontend is automatically served when you run the FastAPI application. Navigate to the root URL (`/`) to access the dashboard.
 
-The history chart uses hourly UTC intervals for 24h and daily UTC intervals for longer ranges. It loads every API page for the selected period and leaves missing intervals empty. CSV export uses the currently selected range. After editing TypeScript, run `npm run test:ui`, `npx tsc --noEmit`, and `npm run build:ui` to refresh the committed bundle.
+The history chart uses hourly UTC intervals for 24h and daily UTC intervals for longer ranges. "Año anterior" selects the complete previous calendar year; available data may cover only part of it. The chart loads every API page for the selected period and leaves missing intervals empty. CSV export uses the currently selected range. After editing TypeScript, run `npm run test:ui`, `npx tsc --noEmit`, and `npm run build:ui` to refresh the committed bundle.
 
 ## Customization
 

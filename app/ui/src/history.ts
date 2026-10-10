@@ -18,9 +18,15 @@ export function toDateRange(timeRange: TimeRange, now = new Date()): { start: st
     start.setUTCDate(start.getUTCDate() - 30);
   } else if (timeRange === "90d") {
     start.setUTCDate(start.getUTCDate() - 90);
-  } else {
+  } else if (timeRange === "ytd") {
     start.setUTCMonth(0, 1);
     start.setUTCHours(0, 0, 0, 0);
+  } else {
+    const year = now.getUTCFullYear() - 1;
+    return {
+      start: new Date(Date.UTC(year, 0, 1)).toISOString(),
+      end: new Date(Date.UTC(year + 1, 0, 1) - 1).toISOString(),
+    };
   }
   return { start: start.toISOString(), end: now.toISOString() };
 }

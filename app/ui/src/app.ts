@@ -30,6 +30,13 @@ export class ExchangeRateApp {
   private readonly observedAt: Partial<Record<"binance" | "bcv" | "average", string>> = {};
 
   async init(): Promise<void> {
+    const previousYear = new Date().getUTCFullYear() - 1;
+    const previousYearPreset = document.getElementById("previous-year-preset");
+    if (previousYearPreset) previousYearPreset.textContent = String(previousYear);
+    const previousYearOption = getById<HTMLSelectElement>("time-range").querySelector<HTMLOptionElement>(
+      'option[value="previous-year"]',
+    );
+    if (previousYearOption) previousYearOption.textContent = `Año anterior (${previousYear})`;
     this.bindEvents();
     await this.loadInitialData();
     this.tabs.switchTo("history");
@@ -224,18 +231,29 @@ export class ExchangeRateApp {
 
   private async updateChart(range: TimeRange): Promise<void> {
     const requestId = ++this.chartRequestId;
-    this.chart.update([], [], []);
+    this.chart.update({ dates: [], labels: [], binance: [], bcv: [] }, range);
     setText("chart-feedback", "Cargando histórico...");
     try {
       const history = await this.api.getHistory(range);
       if (requestId !== this.chartRequestId) return;
       const series = buildHistorySeries(history, range);
-      this.chart.update(series.labels, series.binance, series.bcv);
+      this.chart.update(series, range);
+      const firstDate = series.dates[0]?.slice(0, 10);
+      const lastDate = series.dates[series.dates.length - 1]?.slice(0, 10);
+      const formatDate = (date: string) =>
+        new Intl.DateTimeFormat("es-VE", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC",
+        }).format(new Date(`${date}T00:00:00Z`));
       setText(
         "chart-feedback",
         series.dates.length === 0
-          ? "No hay registros históricos para este período."
-          : `${series.dates.length} intervalos en UTC. Los períodos sin registros quedan vacíos.`,
+          ? range === "previous-year"
+            ? `No hay registros históricos para ${new Date().getUTCFullYear() - 1}.`
+            : "No hay registros históricos para este período."
+          : `Datos disponibles del ${formatDate(firstDate)} al ${formatDate(lastDate)} (UTC). Los intervalos sin registros quedan vacíos.`,
       );
     } catch (error) {
       if (requestId !== this.chartRequestId) return;
