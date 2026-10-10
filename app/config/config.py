@@ -43,7 +43,10 @@ class Config(BaseSettings):
     # ----------- WEBHOOKS ------------
     NTFY_TOPIC: str = ""
     NTFY_URL: str = ""
-
+    NTFY_ADMIN_USER: str = ""
+    NTFY_ADMIN_PASSWORD: str = ""
+    NTFY_APP_USER: str = ""
+    NTFY_APP_USER_PASSWORD: str = ""
     # ----------- CRONJOBS ------------
     BINANCE_EXTRA_FIATS: str = ""
     BINANCE_EXTRA_CRON: str = "0 */3 * * *"
