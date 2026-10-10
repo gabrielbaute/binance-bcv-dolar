@@ -22,7 +22,7 @@ Debemos agradecer al usuario @DevOpsLP, quien publicó primero un script en .gs 
 - **Binance P2P:** Consulta las tasas de intercambio peer-to-peer contra USDT, reflejando el valor real de mercado.  
 - **API REST con FastAPI:** Documentada automáticamente en `/docs` con OpenAPI/Swagger.  
 - **SQLite + Docker:** Persistencia ligera y despliegue reproducible en contenedores.  
-- **Healthcheck:** Endpoint `/health` para monitoreo y despliegues en producción.  
+- **Healthcheck:** Endpoint `/api/v1/health` para monitoreo y despliegues en producción.
 
 ---
 
@@ -80,10 +80,10 @@ Puedes emplear el archivo de ejemplo de docker compose que tenemos en el repo, t
             - BINANCE_VES_CRON=${BINANCE_VES_CRON:-}
             - BCV_CRON=${BCV_CRON:-}
          volumes:
-            - ./instance:/instance
-            - ./logs:/logs
+            - ./instance:/app/instance
+            - ./logs:/app/logs
          healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:${API_PORT:-8000}/health"]
+            test: ["CMD", "curl", "-f", "http://localhost:${API_PORT:-8000}/api/v1/health"]
             interval: 30s
             timeout: 10s
             retries: 3

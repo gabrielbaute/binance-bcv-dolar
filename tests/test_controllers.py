@@ -166,7 +166,7 @@ class TestBCVController:
 class TestBinanceController:
     @pytest.mark.asyncio
     async def test_register_and_get_rate(self, db_session):
-        controller = BinanceController(session=db_session)
+        controller = BinanceController(database_session=db_session)
         created = await controller.register_rate(
             BinanceCurrencyCreate(
                 fiat=FiatCurrency.VES,
@@ -184,7 +184,7 @@ class TestBinanceController:
 
     @pytest.mark.asyncio
     async def test_get_last_register_by_pair(self, db_session):
-        controller = BinanceController(session=db_session)
+        controller = BinanceController(database_session=db_session)
 
         await controller.register_rate(
             BinanceCurrencyCreate(
@@ -203,7 +203,7 @@ class TestBinanceController:
 
     @pytest.mark.asyncio
     async def test_get_last_register_none(self, db_session):
-        controller = BinanceController(session=db_session)
+        controller = BinanceController(database_session=db_session)
         result = await controller.get_last_register_by_pair(
             asset=BinanceAsset.USDT, fiat=FiatCurrency.PEN, trade_type=TradeType.BUY
         )
@@ -211,7 +211,7 @@ class TestBinanceController:
 
     @pytest.mark.asyncio
     async def test_get_registers_by_pair(self, db_session):
-        controller = BinanceController(session=db_session)
+        controller = BinanceController(database_session=db_session)
 
         for tt in [TradeType.BUY, TradeType.SELL]:
             await controller.register_rate(
@@ -231,7 +231,7 @@ class TestBinanceController:
 
     @pytest.mark.asyncio
     async def test_update_rate(self, db_session):
-        controller = BinanceController(session=db_session)
+        controller = BinanceController(database_session=db_session)
         created = await controller.register_rate(
             BinanceCurrencyCreate(
                 fiat=FiatCurrency.VES,
@@ -251,7 +251,7 @@ class TestBinanceController:
 
     @pytest.mark.asyncio
     async def test_delete_rate(self, db_session):
-        controller = BinanceController(session=db_session)
+        controller = BinanceController(database_session=db_session)
         created = await controller.register_rate(
             BinanceCurrencyCreate(
                 fiat=FiatCurrency.VES,
