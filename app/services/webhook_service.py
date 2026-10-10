@@ -10,7 +10,11 @@ from app.schemas import NTFYPayload
 class NtfysService:
     """Servicio para emitir notificaciones a través de NTFY."""
 
-    def __init__(self, config: Config, client: Optional[AsyncClient] = None) -> None:
+    def __init__(
+        self,
+        config: Config,
+        client: Optional[AsyncClient] = None
+    ) -> None:
         """Inicializa el servicio NTFY con la configuración y un cliente HTTP asíncrono.
 
         Args:
@@ -18,13 +22,11 @@ class NtfysService:
             client (Optional[httpx.AsyncClient]): Cliente asíncrono de HTTPX reutilizable.
         """
         self.config = config
-        self.webhook_url = f"{self.config.NTFY_URL.rstrip('/')}/{self.config.NTFY_TOPIC}"
-        self.app_name = config.APP_NAME
-        self.app_version = config.APP_VERSION
         self.logger = logging.getLogger(self.__class__.__name__)
         self._client = client
         self._owns_client = client is None
         self._client_lock = asyncio.Lock()
+
 
     async def _get_client_locked(self) -> AsyncClient:
         """Obtiene o crea un cliente HTTPX asíncrono con ``_client_lock`` adquirido.
@@ -60,7 +62,7 @@ class NtfysService:
             str: Mensaje formateado en Markdown.
         """
         body_parts = [payload.description]
-        footer = f"— *{self.app_name}* `{self.app_version}`"
+        footer = f"— *{self.config.APP_NAME}* `{self.config.APP_VERSION}`"
         body_parts.append(footer)
 
         return "\n\n".join(body_parts)
@@ -90,9 +92,9 @@ class NtfysService:
         if payload.title:
             headers["Title"] = payload.title
         elif payload.event:
-            headers["Title"] = f"{self.app_name} - {payload.event}"
+            headers["Title"] = f"{self.config.APP_NAME} - {payload.event}"
         else:
-            headers["Title"] = self.app_name
+            headers["Title"] = self.config.APP_NAME
 
         if payload.click:
             headers["Click"] = payload.click
@@ -104,11 +106,12 @@ class NtfysService:
 
         return headers
 
-    async def emit(self, payload: NTFYPayload) -> Optional[int]:
+    async def emit(self, payload: NTFYPayload, topic: str) -> Optional[int]:
         """Emite una notificación a NTFY de forma asíncrona.
 
         Args:
             payload (NTFYPayload): Contenido estructurado de la notificación.
+            topic (str): Nombre del tópico de ntfy al que se enviará la notificación.
 
         Returns:
             Optional[int]: Código de estado HTTP retornado por el servidor NTFY.
@@ -120,7 +123,7 @@ class NtfysService:
             async with self._client_lock:
                 client = await self._get_client_locked()
                 response = await client.post(
-                    self.webhook_url,
+                    f"{self.config.NTFY_URL.strip("/")}/{topic}",
                     content=message.encode("utf-8"),
                     headers=headers,
                 )
