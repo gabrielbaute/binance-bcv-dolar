@@ -144,6 +144,86 @@ binance_p2p = BinanceP2P()
 pair = binance_p2p.get_pair(fiat="VES", asset="USDT", trade_type="BUY", rows=10)
 print(f"Precio promedio USDT/VES: {pair.average_price:.2f}")
 ```
+---
+### 📱 Notificaciones Push y Soporte para UnifiedPush (`ntfy`)
+
+Para que la aplicación móvil pueda recibir alertas en tiempo real sobre los cambios en las tasas del BCV y Binance, el backend se integra con **`ntfy`**, un servicio de notificaciones HTTP pub/sub de código abierto compatible con **UnifiedPush**.
+
+Esto permite que el backend despache alertas automáticas basadas en cron-jobs directamente a tus dispositivos móviles sin depender de servicios propietarios de terceros (como Firebase Cloud Messaging), manteniendo una arquitectura totalmente libre, privada y *self-hosted*.
+
+---
+
+### 🐳 Despliegue con Docker Compose (Incluyendo Servidor `ntfy`)
+
+Si deseas levantar tanto el backend como tu propio servidor de `ntfy` para gestionar las notificaciones push de forma local o en tu propio VPS, puedes utilizar el siguiente archivo `docker-compose.yml` ampliado:
+
+```yml
+services:
+  dolar_vzl:
+    container_name: dolar_vzl
+    image: ghcr.io/gabrielbaute/binance-bcv-dolar:latest
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      - API_PORT=${API_PORT:-8000}
+      - API_HOST=${API_HOST:-0.0.0.0}
+      - NTFY_URL=${NTFY_URL:-}
+      - NTFY_TOPIC=${NTFY_TOPIC:-}
+      - NTFY_MOBILE_PUSH_TOPIC=${NTFY_MOBILE_PUSH_TOPIC:-}
+      - NTFY_USER=${NTFY_USER:-}
+      - NTFY_PASSWORD=${NTFY_PASSWORD:-}
+      - BINANCE_EXTRA_FIATS=${BINANCE_EXTRA_FIATS:-}
+      - BINANCE_EXTRA_CRON=${BINANCE_EXTRA_CRON:-}
+      - BINANCE_VES_CRON=${BINANCE_VES_CRON:-}
+      - BCV_CRON=${BCV_CRON:-}
+      - BINANCE_NOTIFICATIONS_CRON_JOB=${BINANCE_NOTIFICATIONS_CRON_JOB:-}
+      - BCV_NOTIFICATIONS_CRON_JOB=${BCV_NOTIFICATIONS_CRON_JOB:-}
+    volumes:
+      - ./instance:/app/instance
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${API_PORT:-8000}/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  ntfy:
+    image: binwiederhier/ntfy
+    container_name: ntfy
+    command: serve
+    environment:
+      # Nota: El símbolo $ se duplica a $$ para docker-compose
+      NTFY_BASE_URL: "https://ntfy.example.com"
+      NTFY_AUTH_FILE: "/var/lib/ntfy/auth.db"
+      NTFY_AUTH_DEFAULT_ACCESS: "deny-all"
+      NTFY_ENABLE_LOGIN: "true"
+      NTFY_REQUIRE_LOGIN: "true"
+      NTFY_UPSTREAM_BASE_URL: "https://ntfy.sh"
+      NTFY_AUTH_USERS: "ntfyadmin:$$2b$$10$$zIyNu5G5234h1iV/yaLQq.a6w64PpBWyFjviumnM.UaVbtMxmnGES:admin,ntfyuser:$$2b$$10$$q9x1XU7eJuYjMLXuEJCM5OfpyYDj6AODPB3nSrdJg7fFFH.i7P6fC:user"
+      NTFY_AUTH_ACCESS: "*:up*:write-only"
+    volumes:
+      - /var/lib/ntfy:/var/lib/ntfy
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+```
+
+---
+
+### ⚙️ Variables de Entorno Adicionales (Notificaciones Push)
+
+Agrega las siguientes variables a tu archivo `.env` para habilitar la autenticación con el servidor `ntfy` y la programación de alertas móviles:
+
+| Variable | Tipo | Por Defecto | Descripción |
+| --- | --- | --- | --- |
+| **`NTFY_USER`** | Cadena (`str`) | *Opcional* | Nombre de usuario para autenticarse en el servidor privado de `ntfy` (si `NTFY_REQUIRE_LOGIN=true`). |
+| **`NTFY_PASSWORD`** | Cadena (`str`) | *Opcional* | Contraseña asociada al usuario de `ntfy`. |
+| **`NTFY_MOBILE_PUSH_TOPIC`** | Cadena (`str`) | *Opcional* | Tópico específico de `ntfy` destinado exclusivamente a las notificaciones push de la aplicación móvil (UnifiedPush). |
+| **`BINANCE_NOTIFICATIONS_CRON_JOB`** | Cadena (`str`) | `0 */6 * * *` | Expresión Cron que define la frecuencia para enviar notificaciones push automáticas con los valores de Binance (ej: cada 6 horas). |
+| **`BCV_NOTIFICATIONS_CRON_JOB`** | Cadena (`str`) | `5 8 * * *` | Expresión Cron que define la frecuencia para enviar notificaciones push automáticas con las tasas oficiales del BCV (ej: todos los días a las 08:05 AM). |
 
 ---
 
