@@ -50,5 +50,6 @@ export function formatChartDate(dateString: string): string {
   return new Intl.DateTimeFormat("es-VE", {
     month: "short",
     day: "numeric",
+    timeZone: "UTC",
   }).format(date);
 }

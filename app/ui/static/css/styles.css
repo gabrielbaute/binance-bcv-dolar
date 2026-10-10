@@ -433,6 +433,12 @@ body {
     width: 100% !important;
 }
 
+.chart-feedback {
+    margin: 0.75rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
 .controls-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

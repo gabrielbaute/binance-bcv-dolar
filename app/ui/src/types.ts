@@ -25,7 +25,8 @@ export interface AverageRealtimeResponse {
 }
 
 export interface HistoryResponse<T> {
-  currencies?: T[];
+  currencies: T[];
+  count: number;
 }
 
 export interface BcvHistoryItem {

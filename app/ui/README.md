@@ -53,7 +53,7 @@ ui/
 - **Real-time data**: Displays current exchange rates from Binance P2P and BCV
 - **Historical charts**: Interactive charts showing rate history using Chart.js
 - **Responsive design**: Optimized for desktop and mobile devices
-- **Auto-refresh**: Automatically updates data every 30 seconds
+- **Manual refresh**: Refresh current rates and chart data from the dashboard controls
 - **Data export**: Export historical data to CSV format
 - **PWA support**: Can be installed as a Progressive Web App
 
@@ -77,6 +77,8 @@ ui/
 ## Usage
 
 The frontend is automatically served when you run the FastAPI application. Navigate to the root URL (`/`) to access the dashboard.
+
+The history chart uses hourly UTC intervals for 24h and daily UTC intervals for longer ranges. It loads every API page for the selected period and leaves missing intervals empty. CSV export uses the currently selected range. After editing TypeScript, run `npm run test:ui`, `npx tsc --noEmit`, and `npm run build:ui` to refresh the committed bundle.
 
 ## Customization
 

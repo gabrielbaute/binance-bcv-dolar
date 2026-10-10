@@ -1,4 +1,4 @@
-const CACHE_NAME = "exchange-rate-v3";
+const CACHE_NAME = "exchange-rate-v4";
 const APP_SHELL = [
     "/",
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css",
@@ -53,7 +53,7 @@ self.addEventListener("fetch", (event) => {
         url.pathname.startsWith("/static/css/") ||
         url.pathname.startsWith("/static/js/");
 
-    if (isSameOrigin && isStaticAsset) {
+    if (isSameOrigin && (isStaticAsset || request.mode === "navigate")) {
         event.respondWith(networkFirst(request));
         return;
     }
