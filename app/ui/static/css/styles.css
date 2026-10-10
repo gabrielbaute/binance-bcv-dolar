@@ -429,8 +429,14 @@ body {
 }
 
 #rateChart {
-    height: 385px !important;
+    height: 420px !important;
     width: 100% !important;
+}
+
+.chart-feedback {
+    margin: 0.75rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
 }
 
 .controls-grid {
@@ -788,7 +794,7 @@ a:focus-visible {
     }
 
     #rateChart {
-        height: 300px !important;
+        height: 320px !important;
     }
 
     .currency-toggle {

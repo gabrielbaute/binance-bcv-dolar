@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -9,17 +9,41 @@ from app.scheduler.dolar_scheduler import DolarScheduler
 
 class TestDolarScheduler:
     @pytest.mark.asyncio
-    async def test_save_currency_binance_rate_returns_false_when_a_pair_is_missing(self):
-        scheduler = DolarScheduler(databasesession=MagicMock(), config=Config())
-        sell_result = MagicMock(average_price=123.456)
-        scheduler.binance_service.save_binance_currency = AsyncMock(
-            side_effect=[None, sell_result]
-        )
+    async def test_each_binance_run_uses_a_fresh_session(self):
+        sessions = [MagicMock(), MagicMock()]
+        contexts = []
+        for session in sessions:
+            context = MagicMock()
+            context.__aenter__ = AsyncMock(return_value=session)
+            context.__aexit__ = AsyncMock(return_value=None)
+            contexts.append(context)
+        session_maker = MagicMock(side_effect=contexts)
+        scheduler = DolarScheduler(session_maker=session_maker, config=Config())
         scheduler._send_alert = AsyncMock()
 
-        result = await scheduler.save_currency_binance_rate(
+        with patch("app.scheduler.dolar_scheduler.BinanceService") as service_class:
+            service = service_class.return_value
+            service.save_binance_currency = AsyncMock(return_value=MagicMock(average_price=123.0))
+            service.close = AsyncMock()
+            await scheduler.save_currency_binance_rate(FiatCurrency.VES, BinanceAsset.USDT)
+            await scheduler.save_currency_binance_rate(FiatCurrency.VES, BinanceAsset.USDT)
+
+        assert session_maker.call_count == 2
+        assert [call.kwargs["database_session"] for call in service_class.call_args_list] == sessions
+        assert service.close.await_count == 2
+
+    @pytest.mark.asyncio
+    async def test_save_currency_binance_rate_returns_false_when_a_pair_is_missing(self):
+        scheduler = DolarScheduler(session_maker=MagicMock(), config=Config())
+        sell_result = MagicMock(average_price=123.456)
+        service = MagicMock()
+        service.save_binance_currency = AsyncMock(side_effect=[None, sell_result])
+        scheduler._send_alert = AsyncMock()
+
+        result = await scheduler._save_currency_binance_rate(
             currency=FiatCurrency.VES,
             asset=BinanceAsset.USDT,
+            binance_service=service,
         )
 
         assert result is False
@@ -27,7 +51,7 @@ class TestDolarScheduler:
 
     @pytest.mark.asyncio
     async def test_shutdown_stops_scheduler_and_closes_notifier(self):
-        scheduler = DolarScheduler(databasesession=MagicMock(), config=Config())
+        scheduler = DolarScheduler(session_maker=MagicMock(), config=Config())
         scheduler.scheduler = MagicMock()
         scheduler.scheduler.running = True
         scheduler.notifier.close = AsyncMock()
@@ -39,16 +63,16 @@ class TestDolarScheduler:
 
     @pytest.mark.asyncio
     async def test_save_currency_binance_rate_returns_false_when_sell_pair_is_missing(self):
-        scheduler = DolarScheduler(databasesession=MagicMock(), config=Config())
+        scheduler = DolarScheduler(session_maker=MagicMock(), config=Config())
         buy_result = MagicMock(average_price=123.456)
-        scheduler.binance_service.save_binance_currency = AsyncMock(
-            side_effect=[buy_result, None]
-        )
+        service = MagicMock()
+        service.save_binance_currency = AsyncMock(side_effect=[buy_result, None])
         scheduler._send_alert = AsyncMock()
 
-        result = await scheduler.save_currency_binance_rate(
+        result = await scheduler._save_currency_binance_rate(
             currency=FiatCurrency.VES,
             asset=BinanceAsset.USDT,
+            binance_service=service,
         )
 
         assert result is False

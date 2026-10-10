@@ -1,10 +1,12 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from unittest.mock import AsyncMock
 
 import pytest
 
 from app.enums import BinanceAsset, Currency, FiatCurrency, TradeType
-from app.errors import BinanceRequestError, DatabaseSessionError
+from app.errors import BCVReadingRateError, BinanceRequestError, DatabaseSessionError
+from app.config import Config
 from app.schemas import (
     BCVCurrencyRealTimeResponse,
     BinanceRealTimeResponse,
@@ -15,13 +17,9 @@ from app.services import (
     BCVService,
     BinanceService,
     FiatExchangeService,
-    NtfyWebhookService,
     NtfysService,
 )
 
-
-def test_ntfy_webhook_service_compatibility_alias():
-    assert NtfyWebhookService is NtfysService
 
 
 @pytest.mark.asyncio
@@ -29,6 +27,8 @@ async def test_ntfy_service_reuses_injected_client_without_is_closed():
     class DummyConfig:
         NTFY_URL = "https://ntfy.example.com"
         NTFY_TOPIC = "test-topic"
+        NTFY_USER = "test-user"
+        NTFY_PASSWORD = "test-password"
         APP_NAME = "test-app"
         APP_VERSION = "1.0.0"
 
@@ -39,11 +39,11 @@ async def test_ntfy_service_reuses_injected_client_without_is_closed():
     client = DummyClient()
     service = NtfysService(config=DummyConfig(), client=client)
 
-    resolved_client = await service._get_client()
+    resolved_client = await service._get_client_locked()
 
     assert resolved_client is client
     await service.close()
-    assert service._client is None
+    assert service._client is client
 
 
 def test_ntfy_service_omits_missing_event_in_fallback_title():
@@ -52,6 +52,8 @@ def test_ntfy_service_omits_missing_event_in_fallback_title():
         NTFY_TOPIC = "test-topic"
         APP_NAME = "test-app"
         APP_VERSION = "1.0.0"
+        NTFY_USER = "test-user"
+        NTFY_PASSWORD = "test-password"
 
     service = NtfysService(config=DummyConfig())
     headers = service._format_headers(NTFYPayload(description="desc"))
@@ -68,16 +70,17 @@ def test_bcv_service_uses_default_tls_verification(monkeypatch):
 
     monkeypatch.setattr("app.services.bcv_service.AsyncClient", DummyClient)
 
-    service = BCVService()
+    service = BCVService(config=Config())
+    service._build_ssl_context = lambda: "test-ssl-context"
     service._get_client()
 
-    assert "verify" not in captured_kwargs
+    assert captured_kwargs["verify"] == "test-ssl-context"
     assert captured_kwargs["timeout"] == 15.0
 
 
 @pytest.mark.asyncio
 async def test_bcv_service_preserves_database_session_error():
-    service = BCVService()
+    service = BCVService(config=Config())
     service.get_real_time_exchange_rate = AsyncMock(
         return_value=BCVCurrencyRealTimeResponse(
             currency=Currency.DOLAR,
@@ -142,6 +145,33 @@ def test_binance_service_rejects_invalid_row_counts(rows):
             trade_type=TradeType.BUY,
             asset=BinanceAsset.USDT,
         )
+
+
+def test_binance_prices_are_aggregated_as_decimal():
+    service = BinanceService()
+    payload = {
+        "code": "000000",
+        "data": [{"adv": {"price": price}} for price in ("0.1", "0.2", "0.3")],
+    }
+    prices = service._colect_prices(payload, FiatCurrency.VES)
+    assert prices == [Decimal("0.1"), Decimal("0.2"), Decimal("0.3")]
+    assert service._calculate_med(prices) == {"median_price": 0.2, "average_price": 0.2}
+
+
+@pytest.mark.parametrize("price", ["0", "-1", "NaN", "Infinity", "invalid"])
+def test_binance_rejects_invalid_prices(price):
+    service = BinanceService()
+    payload = {"code": "000000", "data": [{"adv": {"price": price}}]}
+    assert service._colect_prices(payload, FiatCurrency.VES) is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("raw_rate", ["0", "-1", "NaN", "Infinity", "invalid"])
+async def test_bcv_rejects_invalid_rates(raw_rate):
+    service = BCVService(config=Config())
+    service._get_currency_raw = AsyncMock(return_value=raw_rate)
+    with pytest.raises(BCVReadingRateError):
+        await service.get_real_time_exchange_rate(Currency.DOLAR)
 
 
 @pytest.mark.asyncio

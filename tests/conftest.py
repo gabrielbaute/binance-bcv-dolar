@@ -82,8 +82,8 @@ async def db_session(in_memory_engine) -> AsyncGenerator[AsyncSession, None]:
 def mock_binance_service():
     """Return a fully mocked BinanceService."""
     svc = MagicMock()
-    svc.get_real_time_usdt_ves_pair = MagicMock()
-    svc.get_real_time_pair = MagicMock()
+    svc.get_real_time_usdt_ves_pair = AsyncMock()
+    svc.get_real_time_pair = AsyncMock()
     svc.get_last_saved_binance_fiat = AsyncMock()
     svc.get_all_saved_binance_pair = AsyncMock()
     svc.get_binance_pair_by_time_range = AsyncMock()
@@ -94,7 +94,7 @@ def mock_binance_service():
 def mock_bcv_service():
     """Return a fully mocked BCVService."""
     svc = MagicMock()
-    svc.get_real_time_exchange_rate = MagicMock()
+    svc.get_real_time_exchange_rate = AsyncMock()
     svc.get_exchange_rate = AsyncMock()
     svc.get_currency_exchange_rates_by_range = AsyncMock()
     svc.get_all_currency_registers = AsyncMock()
@@ -106,7 +106,7 @@ def mock_dolar_service():
     """Return a fully mocked DolarVenezuelaService."""
     svc = MagicMock()
     svc.get_average_dolar_last_register = AsyncMock()
-    svc.get_real_time_average_dolar = MagicMock()
+    svc.get_real_time_average_dolar = AsyncMock()
     return svc
 
 
@@ -115,7 +115,7 @@ def mock_fiat_exchange_service():
     """Return a fully mocked FiatExchangeService."""
     svc = MagicMock()
     svc.get_pair = AsyncMock()
-    svc.get_real_time_pair = MagicMock()
+    svc.get_real_time_pair = AsyncMock()
     svc.get_historical_pair = AsyncMock()
     return svc
 

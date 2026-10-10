@@ -1,5 +1,6 @@
 """Fiat Pair Service module."""
 import logging
+from decimal import Decimal
 from datetime import datetime
 from typing import Optional, Union, List
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -88,7 +89,9 @@ class FiatExchangeService:
             self.logger.warning(f"Incomplete pricing data matrices to process ratio cross between {fiat_1.fiat} and {fiat_2.fiat}")
             return None
 
-        return fiat_2.average_price / fiat_1.average_price
+        return float(
+            Decimal(str(fiat_2.average_price)) / Decimal(str(fiat_1.average_price))
+        )
 
     async def get_pair(self, fiat_1: FiatCurrency, fiat_2: FiatCurrency) -> FiatPairResponse:
         """

@@ -2,7 +2,8 @@ import { ApiClient } from "./services/apiClient";
 import { Calculator } from "./calculator";
 import { ChartManager } from "./chartManager";
 import { getById, queryAll, setText } from "./dom";
-import { formatChartDate, formatRate, formatTime } from "./formatters";
+import { formatRate, formatTime } from "./formatters";
+import { buildHistorySeries } from "./history";
 import { showNotification } from "./notification";
 import { updateFreshness, updateStatus } from "./status";
 import { Tabs } from "./tabs";
@@ -24,10 +25,18 @@ export class ExchangeRateApp {
     average: 0,
   };
   private activeRange: TimeRange = "24h";
+  private chartRequestId = 0;
 
   private readonly observedAt: Partial<Record<"binance" | "bcv" | "average", string>> = {};
 
   async init(): Promise<void> {
+    const previousYear = new Date().getUTCFullYear() - 1;
+    const previousYearPreset = document.getElementById("previous-year-preset");
+    if (previousYearPreset) previousYearPreset.textContent = String(previousYear);
+    const previousYearOption = getById<HTMLSelectElement>("time-range").querySelector<HTMLOptionElement>(
+      'option[value="previous-year"]',
+    );
+    if (previousYearOption) previousYearOption.textContent = `Año anterior (${previousYear})`;
     this.bindEvents();
     await this.loadInitialData();
     this.tabs.switchTo("history");
@@ -221,70 +230,37 @@ export class ExchangeRateApp {
   }
 
   private async updateChart(range: TimeRange): Promise<void> {
+    const requestId = ++this.chartRequestId;
+    this.chart.update({ dates: [], labels: [], binance: [], bcv: [] }, range);
+    setText("chart-feedback", "Cargando histórico...");
     try {
       const history = await this.api.getHistory(range);
-      const allDates = new Set<string>();
-
-      history.bcv.currencies?.forEach((item) => {
-        if (item.date) {
-          allDates.add(item.date.split("T")[0]);
-        }
-      });
-
-      history.binance.currencies?.forEach((item) => {
-        if (item.date) {
-          allDates.add(item.date.split("T")[0]);
-        }
-      });
-
-      if (allDates.size === 0) {
-        await this.renderRealtimeChartSnapshot();
-        return;
-      }
-
-      const sortedDates = Array.from(allDates).sort();
-      const labels = sortedDates.map(formatChartDate);
-
-      const bcvValues = sortedDates.map((date) => {
-        const item = history.bcv.currencies?.find((entry) => entry.date?.startsWith(date));
-        return item ? Number(item.rate) : null;
-      });
-
-      const binanceValues = sortedDates.map((date) => {
-        const item = history.binance.currencies?.find((entry) => entry.date?.startsWith(date));
-        return item ? Number(item.average_price) : null;
-      });
-
-      this.chart.update(labels, binanceValues, bcvValues);
+      if (requestId !== this.chartRequestId) return;
+      const series = buildHistorySeries(history, range);
+      this.chart.update(series, range);
+      const firstDate = series.dates[0]?.slice(0, 10);
+      const lastDate = series.dates[series.dates.length - 1]?.slice(0, 10);
+      const formatDate = (date: string) =>
+        new Intl.DateTimeFormat("es-VE", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC",
+        }).format(new Date(`${date}T00:00:00Z`));
+      setText(
+        "chart-feedback",
+        series.dates.length === 0
+          ? range === "previous-year"
+            ? `No hay registros históricos para ${new Date().getUTCFullYear() - 1}.`
+            : "No hay registros históricos para este período."
+          : `Datos disponibles del ${formatDate(firstDate)} al ${formatDate(lastDate)} (UTC). Los intervalos sin registros quedan vacíos.`,
+      );
     } catch (error) {
+      if (requestId !== this.chartRequestId) return;
       console.error("Error updating chart", error);
+      setText("chart-feedback", "No se pudo cargar el histórico. Intenta actualizarlo.");
       showNotification("No se pudo actualizar el gráfico", "error");
     }
-  }
-
-  private async renderRealtimeChartSnapshot(): Promise<void> {
-    const [binanceResult, bcvResult] = await Promise.allSettled([
-      this.api.getBinanceRealtime(),
-      this.api.getBcvRealtime(),
-    ]);
-
-    const binanceRate =
-      binanceResult.status === "fulfilled" ? Number(binanceResult.value.average_price) : null;
-    const bcvRate = bcvResult.status === "fulfilled" ? Number(bcvResult.value.rate) : null;
-
-    if (binanceRate == null && bcvRate == null) {
-      this.chart.update([], [], []);
-      return;
-    }
-
-    const label = new Intl.DateTimeFormat("es-VE", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date());
-
-    this.chart.update([label], [binanceRate], [bcvRate]);
   }
 
   private async refreshData(): Promise<void> {
@@ -309,36 +285,22 @@ export class ExchangeRateApp {
 
   private async exportData(): Promise<void> {
     try {
-      const history = await this.api.getHistory("30d");
-      const allDates = new Set<string>();
-
-      history.bcv.currencies?.forEach((item) => {
-        if (item.date) {
-          allDates.add(item.date.split("T")[0]);
-        }
-      });
-
-      history.binance.currencies?.forEach((item) => {
-        if (item.date) {
-          allDates.add(item.date.split("T")[0]);
-        }
-      });
-
-      const sortedDates = Array.from(allDates).sort();
-      let csv = "Date,BCV_Rate,Binance_Rate\n";
-
-      sortedDates.forEach((date) => {
-        const bcvItem = history.bcv.currencies?.find((entry) => entry.date?.startsWith(date));
-        const binanceItem = history.binance.currencies?.find((entry) => entry.date?.startsWith(date));
-
-        csv += `${date},${bcvItem?.rate ?? ""},${binanceItem?.average_price ?? ""}\n`;
-      });
+      const history = await this.api.getHistory(this.activeRange);
+      const series = buildHistorySeries(history, this.activeRange);
+      if (series.dates.length === 0) {
+        showNotification("No hay datos históricos para exportar", "info");
+        return;
+      }
+      const rows = series.dates.map((date, index) =>
+        `${date},${series.bcv[index] ?? ""},${series.binance[index] ?? ""}`,
+      );
+      const csv = `Fecha_UTC,BCV_VES,Binance_VES\n${rows.join("\n")}\n`;
 
       const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `exchange_rates_${new Date().toISOString().split("T")[0]}.csv`;
+      link.download = `exchange_rates_${this.activeRange}_${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(link);
       link.click();
       URL.revokeObjectURL(url);

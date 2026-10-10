@@ -1,4 +1,4 @@
-export type TimeRange = "24h" | "7d" | "30d" | "90d" | "ytd";
+export type TimeRange = "24h" | "7d" | "30d" | "90d" | "ytd" | "previous-year";
 
 export type CurrencyMode = "USD" | "VES";
 
@@ -25,7 +25,8 @@ export interface AverageRealtimeResponse {
 }
 
 export interface HistoryResponse<T> {
-  currencies?: T[];
+  currencies: T[];
+  count: number;
 }
 
 export interface BcvHistoryItem {

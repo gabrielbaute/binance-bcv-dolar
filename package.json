@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "scripts": {
     "build:ui": "esbuild app/ui/src/main.ts --bundle --minify --target=es2020 --outfile=app/ui/static/js/app.js",
-    "build:ui:dev": "esbuild app/ui/src/main.ts --bundle --sourcemap --target=es2020 --outfile=app/ui/static/js/app.js --watch"
+    "build:ui:dev": "esbuild app/ui/src/main.ts --bundle --sourcemap --target=es2020 --outfile=app/ui/static/js/app.js --watch",
+    "test:ui": "esbuild tests/ui_history.test.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/ui_history.test.cjs && node node_modules/.cache/ui_history.test.cjs"
   },
   "devDependencies": {
     "esbuild": "^0.25.6",

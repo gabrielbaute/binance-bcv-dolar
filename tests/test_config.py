@@ -70,6 +70,12 @@ class TestConfig:
         c = Config(_env_file=None)
         assert c.API_PORT == 9000
 
+    def test_database_url_follows_instance_dir(self, monkeypatch, tmp_path):
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        instance_dir = tmp_path / "instance"
+        c = Config(INSTANCE_DIR=instance_dir, LOGS_DIR=tmp_path / "logs", _env_file=None)
+        assert c.DATABASE_URL == f"sqlite+aiosqlite:///{instance_dir / 'dolar_vzla.db'}"
+
 
 class TestDolarVzlaLogger:
     def test_setup_logging_creates_log_file(self, tmp_path):

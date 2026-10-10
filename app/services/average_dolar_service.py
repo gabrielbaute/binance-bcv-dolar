@@ -1,5 +1,6 @@
 """Average dolar exchange rate module."""
 import logging
+from decimal import Decimal
 from typing import Optional
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,7 +60,9 @@ class DolarVenezuelaService:
             )
             return None
 
-        average_price = (binance_usdt_ves.average_price + bcv_dolar.rate) / 2
+        average_price = float(
+            (Decimal(str(binance_usdt_ves.average_price)) + Decimal(str(bcv_dolar.rate))) / 2
+        )
 
         return RealTimeDolarResponse(
             bcv_dolar=bcv_dolar,
@@ -93,7 +96,9 @@ class DolarVenezuelaService:
                 )
                 return None
 
-            average_price = (binance_usdt_ves.average_price + bcv_dolar.rate) / 2 #type: ignore
+            average_price = float(
+                (Decimal(str(binance_usdt_ves.average_price)) + Decimal(str(bcv_dolar.rate))) / 2
+            )
 
             return DolarResponse(
                 bcv_dolar=bcv_dolar,

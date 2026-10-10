@@ -2,6 +2,7 @@
 import certifi
 import logging
 import ssl
+from decimal import Decimal, InvalidOperation
 from typing import Optional
 from datetime import datetime
 from bs4 import BeautifulSoup
@@ -185,14 +186,17 @@ class BCVService:
 
         try:
             self.logger.info(f"Getting exchange rate for: {currency}")
-            rate = float(raw_value.replace(",", "."))
+            parsed_rate = Decimal(raw_value.replace(",", "."))
+            if not parsed_rate.is_finite() or parsed_rate <= 0:
+                raise InvalidOperation("BCV rate must be finite and positive")
+            rate = float(parsed_rate)
             return BCVCurrencyRealTimeResponse(
                 currency=currency,
                 trade_type=TradeType.SELL,
                 rate=rate,
                 date=datetime.now()
             )
-        except ValueError as e:
+        except (ValueError, InvalidOperation) as e:
             self.logger.exception(f"Error parsing value '{raw_value}' for currency {currency}.")
             raise BCVReadingRateError(
                 message="Error parsing the rate from the BCV website.",

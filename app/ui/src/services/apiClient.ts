@@ -4,31 +4,13 @@ import {
   BinanceRealtimeResponse,
   BcvHistoryItem,
   HistoryData,
+  HistoryResponse,
   TimeRange,
 } from "../types";
+import { toDateRange } from "../history";
 
-function toDateRange(timeRange: TimeRange): { start: string; end: string } {
-  const endDate = new Date();
-  const startDate = new Date(endDate);
-
-  if (timeRange === "24h") {
-    startDate.setUTCHours(startDate.getUTCHours() - 24);
-  } else if (timeRange === "7d") {
-    startDate.setUTCDate(startDate.getUTCDate() - 7);
-  } else if (timeRange === "30d") {
-    startDate.setUTCDate(startDate.getUTCDate() - 30);
-  } else if (timeRange === "90d") {
-    startDate.setUTCDate(startDate.getUTCDate() - 90);
-  } else {
-    startDate.setUTCMonth(0, 1);
-    startDate.setUTCHours(0, 0, 0, 0);
-  }
-
-  return {
-    start: startDate.toISOString(),
-    end: endDate.toISOString(),
-  };
-}
+const HISTORY_PAGE_SIZE = 1000;
+const MAX_HISTORY_RECORDS = 50000;
 
 export class ApiClient {
   constructor(private readonly baseUrl: string = "/api/v1") {}
@@ -73,17 +55,47 @@ export class ApiClient {
     const { start, end } = toDateRange(range);
 
     const [bcv, binance] = await Promise.all([
-      this.fetchJsonOrDefault<HistoryData["bcv"]>(
-        `/history/bcv?start_date=${start}&end_date=${end}&currency=dolar`,
-        { currencies: [] },
+      this.fetchHistoryPages<HistoryData["bcv"]["currencies"][number]>(
+        `/history/bcv?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}&currency=dolar`,
       ),
-      this.fetchJsonOrDefault<HistoryData["binance"]>(
-        `/history/binance?start_date=${start}&end_date=${end}&fiat=VES&asset=USDT&trade_type=BUY`,
-        { currencies: [] },
+      this.fetchHistoryPages<HistoryData["binance"]["currencies"][number]>(
+        `/history/binance?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}&fiat=VES&asset=USDT&trade_type=BUY`,
       ),
     ]);
 
     return { bcv, binance };
+  }
+
+  private async fetchHistoryPages<T>(path: string): Promise<HistoryResponse<T>> {
+    const currencies: T[] = [];
+    let count = 0;
+
+    do {
+      const separator = path.includes("?") ? "&" : "?";
+      const page = await this.fetchJsonOrDefault<HistoryResponse<T>>(
+        `${path}${separator}skip=${currencies.length}&limit=${HISTORY_PAGE_SIZE}`,
+        { currencies: [], count: 0 },
+      );
+      if (
+        !Array.isArray(page.currencies) ||
+        page.currencies.length > HISTORY_PAGE_SIZE ||
+        !Number.isInteger(page.count) ||
+        page.count < page.currencies.length ||
+        (page.count === 0 && currencies.length > 0)
+      ) {
+        throw new Error("Invalid history payload");
+      }
+      count = page.count;
+      if (count > MAX_HISTORY_RECORDS) {
+        throw new Error("History exceeds the supported record limit");
+      }
+      currencies.push(...page.currencies);
+      if (page.currencies.length === 0 && currencies.length < count) {
+        throw new Error("History pagination stopped before all records were returned");
+      }
+    } while (currencies.length < count);
+
+    return { currencies, count };
   }
 
   private async getBcvRealtimeWithFallback(): Promise<BcvRealtimeResponse> {

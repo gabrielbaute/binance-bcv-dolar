@@ -46,8 +46,8 @@ FROM python:3.13-slim AS runtime
 # Mantener consistencia con las variables de optimización de python
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    LOG_DIR="/logs" \
-    INSTANCE_DIR="/instance" \
+    LOGS_DIR="/app/logs" \
+    INSTANCE_DIR="/app/instance" \
     API_PORT=8000 \
     API_HOST="0.0.0.0"
 
@@ -65,8 +65,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Crear usuario, grupo sin privilegios y directorios de persistencia necesarios
 RUN groupadd -r dolar_vzl -g 1000 && \
     useradd -u 1000 -g dolar_vzl -m -s /bin/bash dolar_vzl && \
-    mkdir -p /logs /instance && \
-    chown -R dolar_vzl:dolar_vzl /logs /instance /app
+    mkdir -p /app/logs /app/instance && \
+    chown -R dolar_vzl:dolar_vzl /app
 
 # Copiar el entorno virtual aislado desde la etapa de compilación
 COPY --from=builder --chown=dolar_vzl:dolar_vzl /app/.venv /app/.venv
@@ -79,7 +79,7 @@ COPY --from=ui-builder --chown=dolar_vzl:dolar_vzl /app/app/ui/static/js/app.js 
 
 # Diagnóstico de salud del contenedor usando la ruta asignada
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:${API_PORT}/health || exit 1
+    CMD curl -f http://localhost:${API_PORT}/api/v1/health || exit 1
 
 # Exponer el puerto de la API configurado
 EXPOSE 8000

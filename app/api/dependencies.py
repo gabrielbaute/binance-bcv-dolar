@@ -16,7 +16,7 @@ from app.services import (
     BinanceService,
     DolarVenezuelaService,
     FiatExchangeService,
-    NtfyWebhookService,
+    NtfysService,
 )
 
 
@@ -40,7 +40,7 @@ def get_db_manager() -> DatabaseManager:
     return db_manager
 
 
-def get_ntfy_service(config_inst: Config = Depends(get_config_instance)) -> NtfyWebhookService:
+def get_ntfy_service(config_inst: Config = Depends(get_config_instance)) -> NtfysService:
     """
     Instantiate the notifications webhook communication channel.
 
@@ -50,12 +50,12 @@ def get_ntfy_service(config_inst: Config = Depends(get_config_instance)) -> Ntfy
     Returns:
         NtfysService: Operational real-time alert messaging component.
     """
-    return NtfyWebhookService(config=config_inst)
+    return NtfysService(config=config_inst)
 
 
 async def get_db_session(
     db_manager: DatabaseManager = Depends(get_db_manager)
-) -> AsyncGenerator[AsyncSession, None]:
+) -> AsyncGenerator[AsyncSession]:
     """
     Generate and manage the lifecycle of an isolated transactional database session.
 
@@ -66,7 +66,7 @@ async def get_db_session(
         db_mngr (DatabaseManager): The multi-pool database engine mapping reference.
 
     Yields:
-        AsyncGenerator[AsyncSession, None]: Active transactional pipeline targeting SQLite storage layers.
+        AsyncGenerator[AsyncSession]: Active transactional pipeline targeting SQLite storage layers.
     """
     async for session in db_manager.get_session():
         yield session
