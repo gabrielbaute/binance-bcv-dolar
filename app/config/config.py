@@ -46,6 +46,7 @@ class Config(BaseSettings):
     NTFY_MOBILE_PUSH_TOPIC: str = ""
     NTFY_USER: str = ""
     NTFY_PASSWORD: str = ""
+    NTFY_TOKEN: str = ""
 
     # ----------- CRONJOBS ------------
     BINANCE_EXTRA_FIATS: str = ""
