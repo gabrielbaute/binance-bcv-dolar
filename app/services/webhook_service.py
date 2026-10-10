@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import logging
 from typing import Dict, Optional
 from httpx import AsyncClient, HTTPError
@@ -36,6 +37,19 @@ class NtfysService:
             self._owns_client = True
         return self._client
 
+    def _generate_auth_header(self) -> str:
+        """
+        Construye el token de autenticación a partir del usuario y contraseña
+
+        Return:
+            str: cuerpo del token de autenticación.
+        """
+        string_code: str = f"{self.config.NTFY_USER}:{self.config.NTFY_PASSWORD}"
+        string_bytes = string_code.encode("utf-8")
+        base64_bytes = base64.b64encode(string_bytes)
+        base64_string = base64_bytes.decode("utf-8")
+        return f"Basic {base64_string}"
+
     def _format_message(self, payload: NTFYPayload) -> str:
         """Formatea el cuerpo del mensaje priorizando el contenido principal y firmando al final.
 
@@ -65,6 +79,12 @@ class NtfysService:
             "Tags": payload.tags if payload.tags else "robot",
             "Markdown": "yes",
         }
+
+        # Si el servidor requiere autenticación para escribir o enviar mensajes:
+        if self.config.NTFY_USER:
+            headers.update(
+                {"Authorization": self._generate_auth_header(),}
+            )
 
         # El título en la cabecera es independiente del cuerpo
         if payload.title:
