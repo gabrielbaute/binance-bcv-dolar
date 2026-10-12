@@ -10,6 +10,14 @@ export interface CurrentRates {
   average: number;
 }
 
+export type RateSource = keyof CurrentRates;
+
+export interface RateSnapshot {
+  value: number | null;
+  observedAt: string | null;
+  status: "loading" | "ready" | "error";
+}
+
 export interface BinanceRealtimeResponse {
   average_price: number;
   date?: string;
@@ -43,4 +51,5 @@ export interface BinanceHistoryItem {
 export interface HistoryData {
   bcv: HistoryResponse<BcvHistoryItem>;
   binance: HistoryResponse<BinanceHistoryItem>;
+  bcvReference?: BcvHistoryItem | null;
 }

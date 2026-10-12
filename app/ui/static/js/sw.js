@@ -1,7 +1,8 @@
-const CACHE_NAME = "exchange-rate-v5";
+const CACHE_NAME = "exchange-rate-v6";
 const APP_SHELL = [
     "/",
-    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css",
+    "/static/css/app.css",
+    "/static/js/app.js",
 ];
 
 self.addEventListener("install", (event) => {

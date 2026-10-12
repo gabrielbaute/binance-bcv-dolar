@@ -3,19 +3,24 @@ import {
   BcvRealtimeResponse,
   BinanceRealtimeResponse,
   BcvHistoryItem,
+  BinanceHistoryItem,
   HistoryData,
   HistoryResponse,
   TimeRange,
 } from "../types";
-import { toDateRange } from "../history";
+import { MAX_BCV_REFERENCE_AGE_MS, toDateRange } from "../history";
 
 const HISTORY_PAGE_SIZE = 1000;
 const MAX_HISTORY_RECORDS = 50000;
+const FETCH_TIMEOUT_MS = 15000;
 
 export class ApiClient {
   constructor(private readonly baseUrl: string = "/api/v1") {}
 
-  private async fetchJsonOrDefault<T>(path: string, defaultValue: T): Promise<T> {
+  private async fetchJsonOrDefault<T>(
+    path: string,
+    defaultValue: T,
+  ): Promise<T> {
     try {
       return await this.fetchJson<T>(path);
     } catch (error) {
@@ -29,7 +34,9 @@ export class ApiClient {
   }
 
   private async fetchJson<T>(path: string): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`);
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
 
     if (!response.ok) {
       const body = await response.text();
@@ -63,10 +70,45 @@ export class ApiClient {
       ),
     ]);
 
-    return { bcv, binance };
+    if (range !== "24h" || binance.currencies.length === 0) {
+      return { bcv, binance };
+    }
+
+    const referenceStart = new Date(
+      Date.parse(start) - MAX_BCV_REFERENCE_AGE_MS,
+    ).toISOString();
+    const previousBcv = await this.fetchJsonOrDefault<
+      HistoryResponse<BcvHistoryItem>
+    >(
+      `/history/bcv?start_date=${encodeURIComponent(referenceStart)}&end_date=${encodeURIComponent(start)}&currency=dolar&skip=0&limit=1`,
+      { currencies: [], count: 0 },
+    );
+    return { bcv, binance, bcvReference: previousBcv.currencies[0] ?? null };
   }
 
-  private async fetchHistoryPages<T>(path: string): Promise<HistoryResponse<T>> {
+  async getLatestSavedDates(): Promise<{
+    bcv: string | null;
+    binance: string | null;
+  }> {
+    const [bcv, binance] = await Promise.all([
+      this.fetchJsonOrDefault<HistoryResponse<BcvHistoryItem>>(
+        "/history/bcv?currency=dolar&skip=0&limit=1",
+        { currencies: [], count: 0 },
+      ),
+      this.fetchJsonOrDefault<HistoryResponse<BinanceHistoryItem>>(
+        "/history/binance?fiat=VES&asset=USDT&trade_type=BUY&skip=0&limit=1",
+        { currencies: [], count: 0 },
+      ),
+    ]);
+    return {
+      bcv: bcv.currencies[0]?.date ?? null,
+      binance: binance.currencies[0]?.date ?? null,
+    };
+  }
+
+  private async fetchHistoryPages<T>(
+    path: string,
+  ): Promise<HistoryResponse<T>> {
     const currencies: T[] = [];
     let count = 0;
 
@@ -91,7 +133,9 @@ export class ApiClient {
       }
       currencies.push(...page.currencies);
       if (page.currencies.length === 0 && currencies.length < count) {
-        throw new Error("History pagination stopped before all records were returned");
+        throw new Error(
+          "History pagination stopped before all records were returned",
+        );
       }
     } while (currencies.length < count);
 
@@ -100,9 +144,11 @@ export class ApiClient {
 
   private async getBcvRealtimeWithFallback(): Promise<BcvRealtimeResponse> {
     try {
-      const realtimeList = await this.fetchJson<BcvHistoryItem[]>("/bcv/realtime");
+      const realtimeList =
+        await this.fetchJson<BcvHistoryItem[]>("/bcv/realtime");
       const dolar = realtimeList.find(
-        (item) => String(item.currency).toLowerCase() === "dolar" && item.rate != null,
+        (item) =>
+          String(item.currency).toLowerCase() === "dolar" && item.rate != null,
       );
 
       if (dolar) {
@@ -115,7 +161,9 @@ export class ApiClient {
       // Fallback to persisted endpoint when realtime endpoint is unavailable.
     }
 
-    const lastSaved = await this.fetchJson<BcvRealtimeResponse | null>("/bcv/dolar");
+    const lastSaved = await this.fetchJson<BcvRealtimeResponse | null>(
+      "/bcv/dolar",
+    );
     if (!lastSaved || lastSaved.rate == null) {
       throw new Error("BCV payload does not contain dolar rate");
     }
@@ -135,7 +183,9 @@ export class ApiClient {
       // Fallback to persisted endpoint when realtime endpoint is unavailable.
     }
 
-    const lastSaved = await this.fetchJson<AverageRealtimeResponse | null>("/dolar/dolar_promedio");
+    const lastSaved = await this.fetchJson<AverageRealtimeResponse | null>(
+      "/dolar/dolar_promedio",
+    );
     if (!lastSaved || lastSaved.average_usdt_ves == null) {
       throw new Error("Average payload does not contain average_usdt_ves");
     }

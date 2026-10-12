@@ -23,15 +23,17 @@ Debemos agradecer al usuario @DevOpsLP, quien publicó primero un script en .gs 
 - **API REST con FastAPI:** Documentada automáticamente en `/docs` con OpenAPI/Swagger.  
 - **SQLite + Docker:** Persistencia ligera y despliegue reproducible en contenedores.  
 - **Healthcheck:** Endpoint `/api/v1/health` para monitoreo y despliegues en producción.
+- **Dashboard:** Resumen de tasas, histórico, brecha Binance–BCV y calculadora USD/VES con Svelte 5 y TanStack Charts.
 
 ---
 
 ## 🛠️ Instalación y Uso
 
 ### Prerrequisitos
-- Python 3.11+
+- Python 3.13
 - [uv](https://docs.astral.sh/uv/) (Administrador de paquetes y entornos de Python)
 - Docker y Docker Compose (para despliegue recomendado)
+- Node.js 22 y npm (para compilar la interfaz en desarrollo)
 
 ### Instalación local
 
@@ -109,6 +111,23 @@ Puedes emplear el archivo de ejemplo de docker compose que tenemos en el repo, t
    ```
    http://localhost:8000/
    ```
+
+### Interfaz web
+
+Para desarrollar el dashboard, ejecuta `npm ci` y `npm run build:ui` antes de iniciar FastAPI. `npm run build:ui:dev` recompila la UI al cambiar fuentes; `npm run check:ui` y `npm run test:ui` verifican tipos y cálculos. Docker compila los assets automáticamente.
+
+La UI ofrece tabs de **Resumen** (tasas actuales comparadas), **Histórico** (BCV y Binance), **Brecha** (Binance − BCV en Bs. y porcentaje) y **Calculadora**. El histórico usa intervalos UTC y no sustituye registros ausentes por cero. La brecha diaria requiere datos válidos de ambas fuentes en el mismo día; la brecha de 24 h compara Binance con la última tasa BCV guardada antes de cada observación, hasta 72 h de antigüedad, e indica la fecha de esa referencia. Puedes exportar el histórico del rango seleccionado a CSV. Consulta [la documentación de la UI](app/ui/README.md) para los endpoints y el flujo de desarrollo.
+
+### Importar el histórico oficial del BCV
+
+Los archivos trimestrales `2_1_2*_smc.xls` de la [serie SMC del BCV](https://www.bcv.org.ve/estadisticas/tipo-cambio-de-referencia-smc) contienen las tasas de referencia. El importador lee la columna **Bs./M.E. Venta (ASK)** de USD, EUR, CNY, TRY y RUB. Usa la fecha de operación y la hora de publicación convertida de Venezuela a UTC; esta fecha corresponde al registro histórico de la tasa publicada, mientras que el archivo también indica una fecha de valor posterior. No rellena fines de semana ni días sin hoja oficial. La tabla de intervenciones cambiarias tiene otro propósito y no se importa.
+
+Primero ejecuta la simulación; agrega `--apply` para crear un respaldo SQLite consistente e insertar las tasas ausentes. Los registros existentes no se modifican y repetir la importación no duplica los registros creados por ella.
+
+```sh
+uv run python -m app.migration.bcv_history_import "/ruta/a/los/xls" "instance/dolar_vzla.db"
+uv run python -m app.migration.bcv_history_import "/ruta/a/los/xls" "instance/dolar_vzla.db" --apply
+```
 ---
 
 ### Variables de Entorno

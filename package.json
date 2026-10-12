@@ -3,15 +3,22 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "build:ui": "esbuild app/ui/src/main.ts --bundle --minify --target=es2020 --outfile=app/ui/static/js/app.js",
-    "build:ui:dev": "esbuild app/ui/src/main.ts --bundle --sourcemap --target=es2020 --outfile=app/ui/static/js/app.js --watch",
+    "build:ui": "vite build",
+    "build:ui:dev": "vite build --watch",
+    "check:ui": "svelte-check --tsconfig ./tsconfig.json",
     "test:ui": "esbuild tests/ui_history.test.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/ui_history.test.cjs && node node_modules/.cache/ui_history.test.cjs"
   },
   "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^6.1.0",
     "esbuild": "^0.25.6",
-    "typescript": "^5.8.3"
+    "prettier": "^3.9.10",
+    "prettier-plugin-svelte": "^4.1.1",
+    "svelte-check": "^4.3.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.1.0"
   },
   "dependencies": {
-    "chart.js": "^4.5.1"
+    "@tanstack/charts": "1.1.0",
+    "svelte": "^5.39.0"
   }
 }

@@ -14,5 +14,7 @@ __pycache__/
 .gitignore
 
 # Otros
+node_modules/
+.playwright-cli/
 *.sqlite
 *.db

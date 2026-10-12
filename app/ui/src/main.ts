@@ -1,23 +1,7 @@
-import { ExchangeRateApp } from "./app";
+import { mount } from "svelte";
+import App from "./App.svelte";
+import "./app.css";
 
-declare global {
-  interface Window {
-    exchangeRateApp?: ExchangeRateApp;
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const app = new ExchangeRateApp();
-  window.exchangeRateApp = app;
-  void app.init();
-});
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    void navigator.serviceWorker
-      .register("/static/js/sw.js", { updateViaCache: "none" })
-      .catch((error) => {
-      console.error("Service worker registration failed", error);
-    });
-  });
-}
+const target = document.getElementById("app");
+if (!target) throw new Error("No se encontró el contenedor de la UI");
+mount(App, { target });
