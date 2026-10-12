@@ -3,12 +3,11 @@ export function formatRate(rate: number): string {
     return "--";
   }
 
-  return new Intl.NumberFormat("es-VE", {
-    style: "currency",
-    currency: "VES",
+  const amount = new Intl.NumberFormat("es-VE", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(rate);
+  }).format(Math.abs(rate));
+  return `${rate < 0 ? "-" : ""}Bs. ${amount}`;
 }
 
 export function formatAmount(amount: number): string {

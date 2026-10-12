@@ -1,93 +1,32 @@
-# UI Frontend
+# UI del dashboard
 
-This folder contains the frontend user interface for the P2P Exchange Rate API with advanced tab navigation and calculator functionality.
+La interfaz se sirve desde `/` mediante FastAPI. El front está implementado con Svelte 5 y TanStack Charts 1.1.0. Los estilos editables están en `app/ui/src/app.css`; Vite genera `app/ui/static/js/app.js` y `app/ui/static/css/app.css`.
 
-## Structure
+## Vistas
 
-```
-ui/
-├── index.html              # Main HTML file with tab navigation
-├── static/
-│   ├── css/
-│   │   └── styles.css      # Main stylesheet with responsive design and tab/calculator styles
-│   ├── js/
-│   │   ├── app.js          # Main JavaScript application with tab and calculator functionality
-│   │   └── sw.js           # Service Worker for PWA functionality
-│   ├── assets/
-│   │   └── README.md       # Assets folder for images, icons, etc.
-│   └── manifest.json       # PWA manifest file
-```
+- **Resumen:** BCV USD/VES, Binance P2P USDT/VES y tasa de referencia actuales en una gráfica de barras. La brecha actual compara Binance con BCV.
+- **Histórico:** líneas y puntos de BCV y Binance. El rango de 24 h usa intervalos horarios UTC; los demás usan días UTC. Se muestra la última observación válida de cada fuente dentro de cada intervalo, sin rellenar huecos. Un rango con una sola observación también muestra su punto.
+- **Brecha:** diferencia Binance − BCV en bolívares y porcentaje relativo al BCV. En rangos diarios solo se comparan días con valores de ambas fuentes. En 24 h, cada observación horaria de Binance usa la tasa BCV guardada más reciente antes de ella, con un máximo de 72 h de antigüedad. La vista indica la fecha de la tasa BCV usada para el último punto; no se presenta como una nueva observación BCV.
+- **Calculadora:** conversión USD ↔ VES con cada tasa disponible. Una tasa ausente se muestra como no disponible.
 
-## New Features Added
+Los rangos son 24 h, 7, 30 y 90 días, año en curso y año calendario anterior. La selección inicial es **7 días** porque una ventana de 24 h puede no contener una observación BCV comparable, incluso si Binance tiene datos recientes. El CSV del histórico exporta el rango seleccionado con celdas vacías cuando falta una observación. La navegación admite teclado y enlaces con `?tab=summary|history|spread|calculator`; el acceso directo PWA de calculadora sigue usando `?tab=calculator`.
 
-### Tab Navigation System
-- **Rate History Tab**: Historical charts and data export functionality
-- **Calculator Tab**: Bi-directional currency conversion tool
-- **Smooth Transitions**: Animated tab switching with modern design
+El rango **24 h** es móvil y se cuenta desde la hora actual en UTC. Si no hay registros dentro de esa ventana, Histórico y Brecha muestran la fecha de los últimos registros guardados y ofrecen abrir 7 días. Esto permite distinguir una base con datos antiguos de una base sin registros.
 
-### Advanced Calculator
-- **Bi-directional conversion**: Convert USD ↔ VES
-- **Multiple rate sources**: Binance P2P, BCV Official, and Average rates
-- **Real-time calculations**: Updates as you type
-- **Currency toggle**: Easy switching between input currencies
-- **Clear functionality**: Reset calculator with one click
+## Datos
 
-## Structure
+La UI consume las rutas existentes `/api/v1/binance/realtime_ves`, `/api/v1/bcv/realtime` (con respaldo en `/api/v1/bcv/dolar`), `/api/v1/dolar/realtime_dolar_promedio` (con respaldo en `/api/v1/dolar/dolar_promedio`), `/api/v1/history/bcv` y `/api/v1/history/binance`. La paginación histórica carga todas las páginas dentro del límite configurado por el cliente. No se agregan endpoints ni se mezclan fiats con unidades distintas.
 
-```
-ui/
-├── index.html              # Main HTML file
-├── static/
-│   ├── css/
-│   │   └── styles.css      # Main stylesheet with responsive design
-│   ├── js/
-│   │   ├── app.js          # Main JavaScript application
-│   │   └── sw.js           # Service Worker for PWA functionality
-│   ├── assets/
-│   │   └── README.md       # Assets folder for images, icons, etc.
-│   └── manifest.json       # PWA manifest file
+## Desarrollo
+
+Desde la raíz del repositorio:
+
+```sh
+npm ci
+npm run build:ui
+npm run build:ui:dev
+npm run check:ui
+npm run test:ui
 ```
 
-## Features
-
-- **Real-time data**: Displays current exchange rates from Binance P2P and BCV
-- **Historical charts**: Interactive charts showing rate history using Chart.js
-- **Responsive design**: Optimized for desktop and mobile devices
-- **Manual refresh**: Refresh current rates and chart data from the dashboard controls
-- **Data export**: Export historical data to CSV format
-- **PWA support**: Can be installed as a Progressive Web App
-
-## API Endpoints Used
-
-- `/binance/realtime_ves` - Binance P2P USDT/VES rate
-- `/bcv/dolar` - BCV USD/VES rate
-- `/dolar/venezuela` - Average rate calculation
-- `/history/bcv` - BCV historical data
-- `/history/binance` - Binance historical data
-
-## Technologies
-
-- **HTML5** with semantic markup
-- **CSS3** with flexbox and grid layouts
-- **Vanilla JavaScript** (ES6+) with async/await
-- **Chart.js** for data visualization
-- **Font Awesome** for icons
-- **Service Worker** for PWA capabilities
-
-## Usage
-
-The frontend is automatically served when you run the FastAPI application. Navigate to the root URL (`/`) to access the dashboard.
-
-The history chart uses hourly UTC intervals for 24h and daily UTC intervals for longer ranges. "Año anterior" selects the complete previous calendar year; available data may cover only part of it. The chart loads every API page for the selected period and leaves missing intervals empty. CSV export uses the currently selected range. After editing TypeScript, run `npm run test:ui`, `npx tsc --noEmit`, and `npm run build:ui` to refresh the committed bundle.
-
-## Customization
-
-- Modify `styles.css` to change the appearance
-- Update `app.js` to add new features or modify API calls
-- Add images and icons to the `assets/` folder
-- Customize the PWA manifest in `manifest.json`
-
-## Siguientes pasos:
-
-- Integrar `npm run build:ui` en tu flujo de Docker/CI para que el bundle siempre se regenere antes del despliegue.
-- Hacer una segunda pasada de UX con microinteracciones adicionales y mejoras de accesibilidad (focus states, contrastes, navegación por teclado).
+`npm run build:ui:dev` recompila al modificar fuentes. Ejecuta FastAPI con `uv run uvicorn app.main:app --reload` después de crear el bundle. La imagen Docker usa Node 22 para construir los assets con `npm ci`. Si cambias estilos o la plantilla, verifica también la vista móvil y actualiza el cache del service worker cuando cambien las rutas de assets.

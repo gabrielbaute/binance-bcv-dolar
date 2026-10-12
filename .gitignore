@@ -29,7 +29,7 @@ repomix-output.xml
 
 # Frontend build
 node_modules/
+.playwright-cli/
 npm-debug.log*
-package-lock.json
 
 architecture.xml
