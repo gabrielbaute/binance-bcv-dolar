@@ -233,7 +233,7 @@ class DolarScheduler:
         async with self.session_maker() as session:
             service = BCVService(config=self.config, database_session=session)
             pairs = await service.get_all_exchange_rates()
-            msg = f"{pairs.dolar:.3f} VES/USD • {pairs.euro:3f} VES/EUR"
+            msg = f"{pairs.dolar.rate:.3f} VES/USD • {pairs.euro.rate:3f} VES/EUR" #type: ignore
             await self._send_alert(
                 topic=self.config.NTFY_MOBILE_PUSH_TOPIC,
                 title="BCV HOY",
