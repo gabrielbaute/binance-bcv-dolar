@@ -5,14 +5,10 @@ FROM node:22-alpine AS ui-builder
 
 WORKDIR /app
 
-ARG VCS_REF=local
-ARG BUILD_DATE=unknown
-
-COPY package.json package-lock.json tsconfig.json vite.config.ts ./
-RUN npm ci
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY tsconfig.json vite.config.ts ./
 COPY app/ui/src ./app/ui/src
-COPY app/ui/static ./app/ui/static
-RUN echo "ui-build-ref=${VCS_REF} ui-build-date=${BUILD_DATE}" > /tmp/ui-build-info.txt
 RUN npm run build:ui
 
 # ==========================================
@@ -75,8 +71,7 @@ COPY --from=builder --chown=dolar_vzl:dolar_vzl /app/.venv /app/.venv
 COPY --chown=dolar_vzl:dolar_vzl . .
 
 # Sobrescribir el bundle con la compilacion generada en la etapa frontend
-COPY --from=ui-builder --chown=dolar_vzl:dolar_vzl /app/app/ui/static/js/app.js /app/app/ui/static/js/app.js
-COPY --from=ui-builder --chown=dolar_vzl:dolar_vzl /app/app/ui/static/css/app.css /app/app/ui/static/css/app.css
+COPY --from=ui-builder --chown=dolar_vzl:dolar_vzl /app/app/ui/static/ /app/app/ui/static/
 
 # Diagnóstico de salud del contenedor usando la ruta asignada
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
