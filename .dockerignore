@@ -1,5 +1,6 @@
 # Entornos virtuales
 venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
@@ -8,6 +9,8 @@ __pycache__/
 # Archivos de configuración locales
 .env
 *.log
+logs/
+instance/
 
 # Git
 .git
@@ -18,3 +21,5 @@ node_modules/
 .playwright-cli/
 *.sqlite
 *.db
+*.db-wal
+*.db-shm
