@@ -13,6 +13,8 @@ Los rangos rápidos son 24 h, 7, 30 y 90 días y año en curso. Cada selección 
 
 El rango **24 h** es móvil y se cuenta desde la hora actual en UTC. Si no hay registros dentro de esa ventana, Histórico y Brecha muestran la fecha de los últimos registros guardados y ofrecen abrir 7 días. Esto permite distinguir una base con datos antiguos de una base sin registros.
 
+El límite superior del calendario se actualiza al cambiar el día UTC. **Actualizar tasas** también vuelve a consultar los años disponibles y sincroniza los rangos rápidos con la fecha actual, sin sobrescribir fechas personalizadas pendientes de aplicar. Si falla la consulta de años, aparece **Reintentar**; una base vacía muestra **Sin años**.
+
 ## Datos
 
 La UI consume las rutas existentes `/api/v1/binance/realtime_ves`, `/api/v1/bcv/realtime` (con respaldo en `/api/v1/bcv/dolar`), `/api/v1/dolar/realtime_dolar_promedio` (con respaldo en `/api/v1/dolar/dolar_promedio`), `/api/v1/history/bcv` y `/api/v1/history/binance`. La paginación histórica carga todas las páginas dentro del límite configurado por el cliente. No se agregan endpoints ni se mezclan fiats con unidades distintas.

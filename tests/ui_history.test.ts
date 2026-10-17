@@ -134,6 +134,19 @@ test("available years span the stored BCV and Binance dates", async () => {
   }
 });
 
+test("year lookup distinguishes empty coverage from a recoverable server failure", async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => new Response("Not found", { status: 404 });
+    assert.deepEqual(await new ApiClient().getAvailableYears(), []);
+
+    globalThis.fetch = async () => new Response("Unavailable", { status: 503 });
+    await assert.rejects(new ApiClient().getAvailableYears(), /HTTP 503/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("a BCV-only year keeps its official rates without creating spread points", () => {
   const series = buildHistorySeries(
     {

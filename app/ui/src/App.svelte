@@ -33,7 +33,6 @@
     { id: "90d", label: "90 días" },
     { id: "ytd", label: "Este año" },
   ];
-  const today = new Date().toISOString().slice(0, 10);
   const initialDates = toDateRange("7d");
   const emptySeries: HistorySeries = {
     dates: [],
@@ -49,7 +48,9 @@
 
   let activeTab = $state<Tab>("summary");
   let activeRange = $state<TimeRange>("7d");
+  let today = $state(new Date().toISOString().slice(0, 10));
   let availableYears = $state<number[]>([]);
+  let yearStatus = $state<"loading" | "ready" | "error">("loading");
   let selectedYear = $state<number | null>(null);
   let customFrom = $state(initialDates.start.slice(0, 10));
   let customTo = $state(initialDates.end.slice(0, 10));
@@ -72,6 +73,7 @@
   let mode = $state<"USD" | "VES">("USD");
   let amount = $state("");
   let requestId = 0;
+  let yearRequestId = 0;
   const dateMin = $derived(
     selectedYear == null ? undefined : `${selectedYear}-01-01`,
   );
@@ -227,13 +229,45 @@
   }
 
   async function refresh(): Promise<void> {
+    updateToday();
+    if (activeRange !== "custom") {
+      const hasDraft = customFrom !== appliedFrom || customTo !== appliedTo;
+      const dates = toDateRange(activeRange, new Date(), {
+        year: selectedYear ?? undefined,
+      });
+      appliedFrom = dates.start.slice(0, 10);
+      appliedTo = dates.end.slice(0, 10);
+      if (!hasDraft) {
+        customFrom = appliedFrom;
+        customTo = appliedTo;
+      }
+    }
     refreshing = true;
-    await Promise.all([loadRates(), loadHistory()]);
+    await Promise.all([loadRates(), loadHistory(), loadAvailableYears()]);
     refreshing = false;
   }
 
+  function updateToday(): void {
+    today = new Date().toISOString().slice(0, 10);
+  }
+
+  async function loadAvailableYears(): Promise<void> {
+    const currentRequest = ++yearRequestId;
+    yearStatus = "loading";
+    try {
+      const years = await api.getAvailableYears();
+      if (currentRequest !== yearRequestId) return;
+      availableYears = years;
+      yearStatus = "ready";
+    } catch (error) {
+      if (currentRequest !== yearRequestId) return;
+      yearStatus = "error";
+      console.error("No se pudieron consultar los años disponibles", error);
+    }
+  }
+
   function changeRange(range: TimeRange): void {
-    if (range === activeRange) return;
+    updateToday();
     const dates = toDateRange(range);
     activeRange = range;
     selectedYear = null;
@@ -246,6 +280,7 @@
   }
 
   function changeYear(year: number | null): void {
+    updateToday();
     if (year == null) {
       selectedYear = null;
       activeRange = "custom";
@@ -266,6 +301,7 @@
 
   function applyCustomRange(event: SubmitEvent): void {
     event.preventDefault();
+    updateToday();
     try {
       toDateRange("custom", new Date(), { from: customFrom, to: customTo });
       if (
@@ -355,19 +391,33 @@
     const tab = new URLSearchParams(window.location.search).get("tab");
     if (tabs.some((item) => item.id === tab)) activeTab = tab as Tab;
     void refresh();
-    void api
-      .getAvailableYears()
-      .then((years) => {
-        availableYears = years;
-      })
-      .catch((error) =>
-        console.error("No se pudieron consultar los años disponibles", error),
+    let rolloverTimeout: ReturnType<typeof setTimeout>;
+    function scheduleUtcRollover(): void {
+      const now = new Date();
+      const nextDay = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 1,
       );
+      rolloverTimeout = setTimeout(
+        () => {
+          updateToday();
+          scheduleUtcRollover();
+        },
+        nextDay - now.getTime() + 100,
+      );
+    }
+    scheduleUtcRollover();
+    document.addEventListener("visibilitychange", updateToday);
     if ("serviceWorker" in navigator) {
       void navigator.serviceWorker
         .register("/static/js/sw.js", { updateViaCache: "none" })
         .catch((error) => console.error("No se pudo registrar la PWA", error));
     }
+    return () => {
+      clearTimeout(rolloverTimeout);
+      document.removeEventListener("visibilitychange", updateToday);
+    };
   });
 </script>
 
@@ -395,7 +445,13 @@
             )}
         >
           <option value=""
-            >{availableYears.length ? "Cualquier año" : "Sin años"}</option
+            >{availableYears.length
+              ? "Cualquier año"
+              : yearStatus === "loading"
+                ? "Cargando años…"
+                : yearStatus === "error"
+                  ? "Error al cargar años"
+                  : "Sin años"}</option
           >
           {#each availableYears as year}<option value={year}>{year}</option
             >{/each}
@@ -429,6 +485,14 @@
         <button class="secondary-button" type="submit">Aplicar fechas</button>
       </form>
     </div>
+    {#if yearStatus === "error"}
+      <p class="date-error" role="alert">
+        No se pudieron cargar los años.
+        <button class="text-action" onclick={() => void loadAvailableYears()}
+          >Reintentar</button
+        >
+      </p>
+    {/if}
     {#if datesChanged}
       <p class="period-summary" role="status">
         Fechas modificadas. Pulsa Aplicar fechas para actualizar la gráfica.
