@@ -62,21 +62,95 @@ test("longer history keeps one latest sample per UTC day", () => {
   );
 });
 
-test("previous year selects the complete prior calendar year, including leap years", () => {
+test("selected year covers the complete calendar year, including leap years", () => {
   assert.deepEqual(
-    toDateRange("previous-year", new Date("2026-10-09T12:00:00Z")),
+    toDateRange("year", new Date("2026-10-09T12:00:00Z"), { year: 2025 }),
     {
       start: "2025-01-01T00:00:00.000Z",
       end: "2025-12-31T23:59:59.999Z",
     },
   );
   assert.deepEqual(
-    toDateRange("previous-year", new Date("2025-02-01T00:00:00Z")),
+    toDateRange("year", new Date("2026-02-01T00:00:00Z"), { year: 2024 }),
     {
       start: "2024-01-01T00:00:00.000Z",
       end: "2024-12-31T23:59:59.999Z",
     },
   );
+  assert.deepEqual(
+    toDateRange("year", new Date("2026-10-17T12:00:00Z"), { year: 2026 }),
+    {
+      start: "2026-01-01T00:00:00.000Z",
+      end: "2026-10-17T12:00:00.000Z",
+    },
+  );
+});
+
+test("custom dates are inclusive and invalid intervals are rejected", () => {
+  const now = new Date("2026-10-13T12:00:00Z");
+  assert.deepEqual(
+    toDateRange("custom", now, { from: "2020-03-27", to: "2020-03-30" }),
+    {
+      start: "2020-03-27T00:00:00.000Z",
+      end: "2020-03-30T23:59:59.999Z",
+    },
+  );
+  assert.throws(() =>
+    toDateRange("custom", now, { from: "2020-02-30", to: "2020-03-30" }),
+  );
+  assert.throws(() =>
+    toDateRange("custom", now, { from: "2021-01-01", to: "2020-01-01" }),
+  );
+  assert.throws(() =>
+    toDateRange("custom", now, { from: "2026-10-13", to: "2026-10-14" }),
+  );
+});
+
+test("available years span the stored BCV and Binance dates", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input) => {
+    const url = new URL(String(input), "http://localhost");
+    const bcv = url.pathname.endsWith("/bcv");
+    const count = bcv ? 3 : 2;
+    const first = Number(url.searchParams.get("skip")) === 0;
+    const date = bcv
+      ? first
+        ? "2026-10-12T00:00:00"
+        : "2020-03-27T00:00:00"
+      : first
+        ? "2026-10-13T00:00:00"
+        : "2025-11-22T00:00:00";
+    return new Response(JSON.stringify({ count, currencies: [{ date }] }), {
+      status: 200,
+    });
+  };
+  try {
+    assert.deepEqual(
+      await new ApiClient().getAvailableYears(),
+      [2026, 2025, 2024, 2023, 2022, 2021, 2020],
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("a BCV-only year keeps its official rates without creating spread points", () => {
+  const series = buildHistorySeries(
+    {
+      bcv: {
+        count: 2,
+        currencies: [
+          { date: "2024-07-01T19:40:00Z", rate: 36.45 },
+          { date: "2024-07-03T00:00:00Z", rate: 36.5 },
+        ],
+      },
+      binance: { count: 0, currencies: [] },
+    },
+    "year",
+  );
+  assert.deepEqual(series.bcv, [36.45, null, 36.5]);
+  assert.deepEqual(series.binance, [null, null, null]);
+  assert.ok(buildSpreadSeries(series).every((point) => point.percent == null));
 });
 
 test("history client loads all pages for both providers", async () => {

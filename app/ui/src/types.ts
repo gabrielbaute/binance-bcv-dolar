@@ -1,4 +1,11 @@
-export type TimeRange = "24h" | "7d" | "30d" | "90d" | "ytd" | "previous-year";
+export type TimeRange =
+  "24h" | "7d" | "30d" | "90d" | "ytd" | "year" | "custom";
+
+export interface DateSelection {
+  year?: number;
+  from?: string;
+  to?: string;
+}
 
 export type CurrencyMode = "USD" | "VES";
 
