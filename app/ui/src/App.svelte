@@ -6,6 +6,7 @@
   import {
     buildHistorySeries,
     buildSpreadSeries,
+    toDateRange,
     type HistorySeries,
   } from "./history";
   import { formatAmount, formatRate, formatTime } from "./formatters";
@@ -31,8 +32,8 @@
     { id: "30d", label: "30 días" },
     { id: "90d", label: "90 días" },
     { id: "ytd", label: "Este año" },
-    { id: "previous-year", label: String(new Date().getUTCFullYear() - 1) },
   ];
+  const initialDates = toDateRange("7d");
   const emptySeries: HistorySeries = {
     dates: [],
     labels: [],
@@ -47,6 +48,15 @@
 
   let activeTab = $state<Tab>("summary");
   let activeRange = $state<TimeRange>("7d");
+  let today = $state(new Date().toISOString().slice(0, 10));
+  let availableYears = $state<number[]>([]);
+  let yearStatus = $state<"loading" | "ready" | "error">("loading");
+  let selectedYear = $state<number | null>(null);
+  let customFrom = $state(initialDates.start.slice(0, 10));
+  let customTo = $state(initialDates.end.slice(0, 10));
+  let appliedFrom = $state(initialDates.start.slice(0, 10));
+  let appliedTo = $state(initialDates.end.slice(0, 10));
+  let dateError = $state("");
   let rates = $state<Record<RateSource, RateSnapshot>>({
     binance: emptyRate(),
     bcv: emptyRate(),
@@ -63,6 +73,20 @@
   let mode = $state<"USD" | "VES">("USD");
   let amount = $state("");
   let requestId = 0;
+  let yearRequestId = 0;
+  const dateMin = $derived(
+    selectedYear == null ? undefined : `${selectedYear}-01-01`,
+  );
+  const dateMax = $derived(
+    selectedYear == null
+      ? today
+      : selectedYear === new Date().getUTCFullYear()
+        ? today
+        : `${selectedYear}-12-31`,
+  );
+  const datesChanged = $derived(
+    customFrom !== appliedFrom || customTo !== appliedTo,
+  );
 
   const spreadPoints = $derived(
     buildSpreadSeries(history ?? emptySeries, {
@@ -171,7 +195,11 @@
     bcvReference = null;
     latestSaved = null;
     try {
-      const data = await api.getHistory(range);
+      const data = await api.getHistory(range, {
+        year: selectedYear ?? undefined,
+        from: appliedFrom,
+        to: appliedTo,
+      });
       if (currentRequest !== requestId) return;
       const series = buildHistorySeries(data, range);
       history = series;
@@ -201,15 +229,99 @@
   }
 
   async function refresh(): Promise<void> {
+    updateToday();
+    if (activeRange !== "custom") {
+      const hasDraft = customFrom !== appliedFrom || customTo !== appliedTo;
+      const dates = toDateRange(activeRange, new Date(), {
+        year: selectedYear ?? undefined,
+      });
+      appliedFrom = dates.start.slice(0, 10);
+      appliedTo = dates.end.slice(0, 10);
+      if (!hasDraft) {
+        customFrom = appliedFrom;
+        customTo = appliedTo;
+      }
+    }
     refreshing = true;
-    await Promise.all([loadRates(), loadHistory()]);
+    await Promise.all([loadRates(), loadHistory(), loadAvailableYears()]);
     refreshing = false;
   }
 
+  function updateToday(): void {
+    today = new Date().toISOString().slice(0, 10);
+  }
+
+  async function loadAvailableYears(): Promise<void> {
+    const currentRequest = ++yearRequestId;
+    yearStatus = "loading";
+    try {
+      const years = await api.getAvailableYears();
+      if (currentRequest !== yearRequestId) return;
+      availableYears = years;
+      yearStatus = "ready";
+    } catch (error) {
+      if (currentRequest !== yearRequestId) return;
+      yearStatus = "error";
+      console.error("No se pudieron consultar los años disponibles", error);
+    }
+  }
+
   function changeRange(range: TimeRange): void {
-    if (range === activeRange) return;
+    updateToday();
+    const dates = toDateRange(range);
     activeRange = range;
+    selectedYear = null;
+    customFrom = dates.start.slice(0, 10);
+    customTo = dates.end.slice(0, 10);
+    appliedFrom = customFrom;
+    appliedTo = customTo;
+    dateError = "";
     void loadHistory(range);
+  }
+
+  function changeYear(year: number | null): void {
+    updateToday();
+    if (year == null) {
+      selectedYear = null;
+      activeRange = "custom";
+      void loadHistory("custom");
+      return;
+    }
+    if (!availableYears.includes(year)) return;
+    const dates = toDateRange("year", new Date(), { year });
+    selectedYear = year;
+    activeRange = "year";
+    customFrom = dates.start.slice(0, 10);
+    customTo = dates.end.slice(0, 10);
+    appliedFrom = customFrom;
+    appliedTo = customTo;
+    dateError = "";
+    void loadHistory("year");
+  }
+
+  function applyCustomRange(event: SubmitEvent): void {
+    event.preventDefault();
+    updateToday();
+    try {
+      toDateRange("custom", new Date(), { from: customFrom, to: customTo });
+      if (
+        selectedYear != null &&
+        (!customFrom.startsWith(`${selectedYear}-`) ||
+          !customTo.startsWith(`${selectedYear}-`))
+      ) {
+        throw new Error("Dates outside the selected year");
+      }
+      dateError = "";
+      appliedFrom = customFrom;
+      appliedTo = customTo;
+      activeRange = "custom";
+      void loadHistory("custom");
+    } catch {
+      dateError =
+        selectedYear == null
+          ? "Elige fechas válidas, desde el inicio hasta el fin."
+          : "Elige fechas válidas dentro del año seleccionado, desde el inicio hasta el fin.";
+    }
   }
 
   function changeTab(tab: Tab): void {
@@ -247,7 +359,13 @@
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = `exchange_rates_${activeRange}_${new Date().toISOString().slice(0, 10)}.csv`;
+    const rangeLabel =
+      activeRange === "year"
+        ? String(selectedYear)
+        : activeRange === "custom"
+          ? `${appliedFrom}_${appliedTo}`
+          : activeRange;
+    link.download = `exchange_rates_${rangeLabel}_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -273,13 +391,120 @@
     const tab = new URLSearchParams(window.location.search).get("tab");
     if (tabs.some((item) => item.id === tab)) activeTab = tab as Tab;
     void refresh();
+    let rolloverTimeout: ReturnType<typeof setTimeout>;
+    function scheduleUtcRollover(): void {
+      const now = new Date();
+      const nextDay = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 1,
+      );
+      rolloverTimeout = setTimeout(
+        () => {
+          updateToday();
+          scheduleUtcRollover();
+        },
+        nextDay - now.getTime() + 100,
+      );
+    }
+    scheduleUtcRollover();
+    document.addEventListener("visibilitychange", updateToday);
     if ("serviceWorker" in navigator) {
       void navigator.serviceWorker
         .register("/static/js/sw.js", { updateViaCache: "none" })
         .catch((error) => console.error("No se pudo registrar la PWA", error));
     }
+    return () => {
+      clearTimeout(rolloverTimeout);
+      document.removeEventListener("visibilitychange", updateToday);
+    };
   });
 </script>
+
+{#snippet historyControls(label: string)}
+  <div class="history-navigation">
+    <div class="range-list" role="group" aria-label={label}>
+      {#each ranges as range}<button
+          aria-pressed={activeRange === range.id}
+          class:active={activeRange === range.id}
+          onclick={() => changeRange(range.id)}>{range.label}</button
+        >{/each}
+    </div>
+    <div class="period-controls">
+      <label class="period-field"
+        >Año
+        <select
+          aria-label="Seleccionar año histórico"
+          value={selectedYear ?? ""}
+          disabled={!availableYears.length}
+          onchange={(event) =>
+            changeYear(
+              event.currentTarget.value
+                ? Number(event.currentTarget.value)
+                : null,
+            )}
+        >
+          <option value=""
+            >{availableYears.length
+              ? "Cualquier año"
+              : yearStatus === "loading"
+                ? "Cargando años…"
+                : yearStatus === "error"
+                  ? "Error al cargar años"
+                  : "Sin años"}</option
+          >
+          {#each availableYears as year}<option value={year}>{year}</option
+            >{/each}
+        </select>
+      </label>
+      <form class="custom-range" onsubmit={applyCustomRange}>
+        <label class="period-field"
+          >Desde
+          <input
+            type="date"
+            aria-label="Fecha inicial"
+            min={dateMin}
+            max={customTo || dateMax}
+            bind:value={customFrom}
+            oninput={() => (dateError = "")}
+            required
+          />
+        </label>
+        <label class="period-field"
+          >Hasta
+          <input
+            type="date"
+            aria-label="Fecha final"
+            min={customFrom || dateMin}
+            max={dateMax}
+            bind:value={customTo}
+            oninput={() => (dateError = "")}
+            required
+          />
+        </label>
+        <button class="secondary-button" type="submit">Aplicar fechas</button>
+      </form>
+    </div>
+    {#if yearStatus === "error"}
+      <p class="date-error" role="alert">
+        No se pudieron cargar los años.
+        <button class="text-action" onclick={() => void loadAvailableYears()}
+          >Reintentar</button
+        >
+      </p>
+    {/if}
+    {#if datesChanged}
+      <p class="period-summary" role="status">
+        Fechas modificadas. Pulsa Aplicar fechas para actualizar la gráfica.
+      </p>
+    {:else if activeRange === "year" || activeRange === "custom"}
+      <p class="period-summary">
+        {`Mostrando del ${appliedFrom} al ${appliedTo} (UTC).`}
+      </p>
+    {/if}
+    {#if dateError}<p class="date-error" role="alert">{dateError}</p>{/if}
+  </div>
+{/snippet}
 
 <svelte:head>
   <title>Tasas de cambio en Venezuela | Dolar Pulse VE</title>
@@ -460,13 +685,7 @@
           </div>
         </div>
         <div class="panel-controls">
-          <div class="range-list" role="group" aria-label="Rango del histórico">
-            {#each ranges as range}<button
-                aria-pressed={activeRange === range.id}
-                class:active={activeRange === range.id}
-                onclick={() => changeRange(range.id)}>{range.label}</button
-              >{/each}
-          </div>
+          {@render historyControls("Rango del histórico")}
           <button
             class="secondary-button"
             onclick={exportCsv}
@@ -488,7 +707,7 @@
             No se pudo cargar el histórico. Usa Actualizar tasas para intentarlo
             de nuevo.
           </p>
-        {:else if !historyValues}<div class="chart-message" role="status">
+        {:else if !historyValues}<div class="chart-message empty" role="status">
             <div>
               <p>
                 {activeRange === "24h"
@@ -551,13 +770,7 @@
           </div>
         </div>
         <div class="panel-controls">
-          <div class="range-list" role="group" aria-label="Rango de la brecha">
-            {#each ranges as range}<button
-                aria-pressed={activeRange === range.id}
-                class:active={activeRange === range.id}
-                onclick={() => changeRange(range.id)}>{range.label}</button
-              >{/each}
-          </div>
+          {@render historyControls("Rango de la brecha")}
         </div>
         {#if historyStatus === "loading"}<p class="chart-message" role="status">
             Calculando brecha…
@@ -570,13 +783,21 @@
             nuevo.
           </p>
         {:else if pairedPoints.length === 0}<div
-            class="chart-message"
+            class="chart-message empty"
             role="status"
           >
             <div>
               <p>
-                No hay intervalos con datos de ambas fuentes para este período.
+                {historyValues &&
+                !(history?.binance ?? []).some((value) => value != null)
+                  ? "Hay datos BCV en este período, pero no registros de Binance P2P para calcular la brecha."
+                  : "No hay intervalos con datos de ambas fuentes para este período."}
               </p>
+              {#if (history?.bcv ?? []).some((value) => value != null) && !(history?.binance ?? []).some((value) => value != null)}
+                <button class="text-action" onclick={() => changeTab("history")}
+                  >Ver tasas BCV</button
+                >
+              {/if}
               {#if activeRange === "24h"}
                 {#if !historyValues && latestSavedSummary}<p>
                     Últimos registros guardados: {latestSavedSummary}
