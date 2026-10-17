@@ -1,5 +1,5 @@
 import { formatChartDate } from "./formatters";
-import { BcvHistoryItem, HistoryData, TimeRange } from "./types";
+import { BcvHistoryItem, DateSelection, HistoryData, TimeRange } from "./types";
 
 export const MAX_BCV_REFERENCE_AGE_MS = 72 * 60 * 60 * 1000;
 
@@ -90,7 +90,52 @@ export function buildSpreadSeries(
 export function toDateRange(
   timeRange: TimeRange,
   now = new Date(),
+  selection: DateSelection = {},
 ): { start: string; end: string } {
+  if (timeRange === "year") {
+    const year = selection.year;
+    if (
+      year == null ||
+      !Number.isInteger(year) ||
+      year < 2000 ||
+      year > now.getUTCFullYear()
+    ) {
+      throw new Error("Invalid historical year");
+    }
+    return {
+      start: new Date(Date.UTC(year, 0, 1)).toISOString(),
+      end:
+        year === now.getUTCFullYear()
+          ? now.toISOString()
+          : new Date(Date.UTC(year + 1, 0, 1) - 1).toISOString(),
+    };
+  }
+  if (timeRange === "custom") {
+    const from = selection.from;
+    const to = selection.to;
+    if (
+      !from ||
+      !to ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(from) ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(to)
+    ) {
+      throw new Error("Invalid custom dates");
+    }
+    const start = new Date(`${from}T00:00:00.000Z`);
+    const end = new Date(`${to}T23:59:59.999Z`);
+    if (
+      Number.isNaN(start.getTime()) ||
+      Number.isNaN(end.getTime()) ||
+      start.toISOString().slice(0, 10) !== from ||
+      end.toISOString().slice(0, 10) !== to ||
+      start > end ||
+      start > now ||
+      to > now.toISOString().slice(0, 10)
+    ) {
+      throw new Error("Invalid custom date range");
+    }
+    return { start: start.toISOString(), end: end.toISOString() };
+  }
   const start = new Date(now);
   if (timeRange === "24h") {
     start.setUTCHours(start.getUTCHours() - 24);
@@ -103,12 +148,6 @@ export function toDateRange(
   } else if (timeRange === "ytd") {
     start.setUTCMonth(0, 1);
     start.setUTCHours(0, 0, 0, 0);
-  } else {
-    const year = now.getUTCFullYear() - 1;
-    return {
-      start: new Date(Date.UTC(year, 0, 1)).toISOString(),
-      end: new Date(Date.UTC(year + 1, 0, 1) - 1).toISOString(),
-    };
   }
   return { start: start.toISOString(), end: now.toISOString() };
 }

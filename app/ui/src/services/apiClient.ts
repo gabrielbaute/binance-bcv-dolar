@@ -6,6 +6,7 @@ import {
   BinanceHistoryItem,
   HistoryData,
   HistoryResponse,
+  DateSelection,
   TimeRange,
 } from "../types";
 import { MAX_BCV_REFERENCE_AGE_MS, toDateRange } from "../history";
@@ -58,8 +59,11 @@ export class ApiClient {
     return this.getAverageRealtimeWithFallback();
   }
 
-  async getHistory(range: TimeRange): Promise<HistoryData> {
-    const { start, end } = toDateRange(range);
+  async getHistory(
+    range: TimeRange,
+    selection: DateSelection = {},
+  ): Promise<HistoryData> {
+    const { start, end } = toDateRange(range, new Date(), selection);
 
     const [bcv, binance] = await Promise.all([
       this.fetchHistoryPages<HistoryData["bcv"]["currencies"][number]>(
@@ -84,6 +88,39 @@ export class ApiClient {
       { currencies: [], count: 0 },
     );
     return { bcv, binance, bcvReference: previousBcv.currencies[0] ?? null };
+  }
+
+  async getAvailableYears(): Promise<number[]> {
+    const paths = [
+      "/history/bcv?currency=dolar",
+      "/history/binance?fiat=VES&asset=USDT&trade_type=BUY",
+    ];
+    const bounds = await Promise.all(
+      paths.map(async (path) => {
+        const latest = await this.fetchJsonOrDefault<
+          HistoryResponse<{ date?: string }>
+        >(`${path}&skip=0&limit=1`, { currencies: [], count: 0 });
+        if (!latest.count) return [];
+        const earliest = await this.fetchJsonOrDefault<
+          HistoryResponse<{ date?: string }>
+        >(`${path}&skip=${latest.count - 1}&limit=1`, {
+          currencies: [],
+          count: 0,
+        });
+        return [latest.currencies[0]?.date, earliest.currencies[0]?.date]
+          .filter((date): date is string => !!date)
+          .map((date) => Number(date.slice(0, 4)));
+      }),
+    );
+    const years = bounds
+      .flat()
+      .filter((year) => Number.isInteger(year) && year >= 2000);
+    if (!years.length) return [];
+    const maxYear = Math.min(Math.max(...years), new Date().getUTCFullYear());
+    const result: number[] = [];
+    for (let year = maxYear; year >= Math.min(...years); year--)
+      result.push(year);
+    return result;
   }
 
   async getLatestSavedDates(): Promise<{
